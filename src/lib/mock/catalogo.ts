@@ -50,16 +50,130 @@ export const OPORTUNIDADES: Oportunidad[] = [
   { id: "o4", titulo: "Banco de talento TI · Programa de práctica dual", entidad: "Talento TI", tipo: "Programa", cierra: "2026-09-30", estado: "en-evaluacion", aplicaA: ["grande"], descripcion: "Vinculación de practicantes en formación dual con universidades aliadas." },
 ];
 
-export const VERTICALES = [
-  { nombre: "Salud", mesas: 6, participantes: 34, proxima: "2026-10-09", descripcion: "Interoperabilidad, historia clínica electrónica y regulación sectorial." },
-  { nombre: "Financiera", mesas: 8, participantes: 47, proxima: "2026-10-02", descripcion: "FinTech Radar, open finance y ciberseguridad en servicios financieros." },
-  { nombre: "Educación", mesas: 4, participantes: 21, proxima: "2026-10-23", descripcion: "Tecnología educativa, formación dual y pertinencia curricular." },
-  { nombre: "Seguridad Digital", mesas: 5, participantes: 29, proxima: "2026-10-16", descripcion: "Marco de ciberseguridad, protección de datos y respuesta a incidentes." },
+export interface Vertical {
+  nombre: string;
+  mesas: number;
+  participantes: number;
+  proxima: string;
+  temaProxima: string;
+  lugar: string;
+  descripcion: string;
+  documentos: { titulo: string; tipo: string; fecha: string }[];
+  iniciativas: string[];
+}
+
+export const VERTICALES: Vertical[] = [
+  {
+    nombre: "Financiera",
+    mesas: 8,
+    participantes: 47,
+    proxima: "2026-10-02",
+    temaProxima: "FinTech Radar 2026: resultados y lectura del mercado",
+    lugar: "Bogotá · híbrida",
+    descripcion: "Open finance, ciberseguridad en servicios financieros y relación con la banca.",
+    documentos: [
+      { titulo: "FinTech Radar 2026 · informe preliminar", tipo: "Informe", fecha: "2026-09-15" },
+      { titulo: "Acta mesa 7 · interoperabilidad de pagos", tipo: "Acta", fecha: "2026-08-14" },
+    ],
+    iniciativas: ["Posición gremial sobre open finance", "Guía de ciberseguridad para proveedores de banca"],
+  },
+  {
+    nombre: "Salud",
+    mesas: 6,
+    participantes: 34,
+    proxima: "2026-10-09",
+    temaProxima: "Interoperabilidad de historia clínica electrónica",
+    lugar: "Virtual",
+    descripcion: "Historia clínica electrónica, estándares de interoperabilidad y regulación sectorial.",
+    documentos: [
+      { titulo: "Estándares de interoperabilidad · borrador", tipo: "Documento", fecha: "2026-09-02" },
+      { titulo: "Acta mesa 5 · encadenamiento de proveedores", tipo: "Acta", fecha: "2026-07-22" },
+    ],
+    iniciativas: ["Encadenamiento de proveedores de software clínico", "Comentarios a la regulación de datos en salud"],
+  },
+  {
+    nombre: "Seguridad Digital",
+    mesas: 5,
+    participantes: 29,
+    proxima: "2026-10-16",
+    temaProxima: "Respuesta a incidentes: qué debe tener una empresa de software",
+    lugar: "Medellín · presencial",
+    descripcion: "Marco de ciberseguridad, protección de datos personales y respuesta a incidentes.",
+    documentos: [{ titulo: "Marco mínimo de ciberseguridad para MIPYMES TI", tipo: "Guía", fecha: "2026-08-30" }],
+    iniciativas: ["Marco mínimo de ciberseguridad", "Red de respuesta a incidentes del gremio"],
+  },
+  {
+    nombre: "Educación",
+    mesas: 4,
+    participantes: 21,
+    proxima: "2026-10-23",
+    temaProxima: "Pertinencia curricular: qué necesita la industria de las universidades",
+    lugar: "Virtual",
+    descripcion: "Tecnología educativa, formación dual y pertinencia curricular con universidades aliadas.",
+    documentos: [{ titulo: "Mapa de brechas de talento TI 2026", tipo: "Informe", fecha: "2026-09-08" }],
+    iniciativas: ["Programa de práctica dual", "Mesa permanente con decanaturas de ingeniería"],
+  },
 ];
 
-export const COMUNIDADES = [
-  { nombre: "Comunidad de Gerentes", miembros: 118, rol: "gerente", proxima: "2026-10-07" },
-  { nombre: "Líderes de Talento Humano", miembros: 96, rol: "talento", proxima: "2026-10-14" },
+export interface Comunidad {
+  id: string;
+  nombre: string;
+  descripcion: string;
+  rol: "gerente" | "talento" | "todos";
+  miembros: number;
+  cupos: number;
+  proxima: string;
+  temaProxima: string;
+  requiereAprobacion: boolean;
+  materiales: { titulo: string; tipo: string; fecha: string }[];
+}
+
+export const COMUNIDADES: Comunidad[] = [
+  {
+    id: "com-gerentes",
+    nombre: "Comunidad de Gerentes",
+    descripcion:
+      "Espacio de pares para la dirección de empresas de software: estrategia, crecimiento y lectura del sector.",
+    rol: "gerente",
+    miembros: 118,
+    cupos: 140,
+    proxima: "2026-10-07",
+    temaProxima: "Precios y márgenes en proyectos de software a la medida",
+    requiereAprobacion: false,
+    materiales: [
+      { titulo: "Memorias · Rentabilidad por proyecto", tipo: "Presentación", fecha: "2026-08-12" },
+      { titulo: "Benchmark de tarifas del sector 2026", tipo: "Documento", fecha: "2026-07-03" },
+    ],
+  },
+  {
+    id: "com-talento",
+    nombre: "Líderes de Talento Humano",
+    descripcion:
+      "Para quienes atraen, forman y retienen el talento TI: rotación, formación dual y esquemas de compensación.",
+    rol: "talento",
+    miembros: 96,
+    cupos: 120,
+    proxima: "2026-10-14",
+    temaProxima: "Retención de perfiles senior en un mercado que los disputa",
+    requiereAprobacion: false,
+    materiales: [
+      { titulo: "Estudio de rotación en la industria TI", tipo: "Documento", fecha: "2026-09-01" },
+      { titulo: "Guía de práctica dual con universidades", tipo: "Guía", fecha: "2026-06-20" },
+    ],
+  },
+  {
+    id: "com-tecnica",
+    nombre: "Arquitectura y Tecnología",
+    descripcion:
+      "Comunidad técnica para líderes de ingeniería: arquitectura, nube, datos e inteligencia artificial aplicada.",
+    rol: "todos",
+    miembros: 64,
+    cupos: 64,
+    proxima: "2026-10-21",
+    temaProxima: "Agentes de IA en producción: qué funcionó y qué no",
+    requiereAprobacion: true,
+    materiales: [{ titulo: "Repositorio de referencia · plantillas de arquitectura", tipo: "Enlace", fecha: "2026-09-10" }],
+  },
 ];
 
 export const INSIGHTS = [

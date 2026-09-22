@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Bell, Briefcase, Building2, GraduationCap, LayoutGrid, Moon, Receipt,
-  Search, ShieldCheck, Star, Sun, Users,
+  Bell, Briefcase, Building2, GraduationCap, LayoutGrid, Moon, Network, Receipt,
+  Search, ShieldCheck, Star, Sun, Users, UsersRound,
 } from "lucide-react";
 import { Firma, Logo } from "./Logo";
 import { DemoSwitcher } from "./DemoSwitcher";
@@ -25,6 +25,8 @@ const NAV: Entrada[] = [
   { href: "/empresa", etiqueta: "Mi empresa", icono: Building2 },
   { href: "/facturacion", etiqueta: "Facturación", icono: Receipt, soloGerente: true },
   { href: "/formacion", etiqueta: "Formación", icono: GraduationCap },
+  { href: "/comunidades", etiqueta: "Comunidades", icono: UsersRound },
+  { href: "/verticales", etiqueta: "Verticales", icono: Network },
   { href: "/directorio", etiqueta: "Directorio", icono: Search },
   { href: "/oportunidades", etiqueta: "Oportunidades", icono: Briefcase, soloGerente: true },
   { href: "/cuenta-estrategica", etiqueta: "Cuenta estratégica", icono: Star, soloGrande: true },
