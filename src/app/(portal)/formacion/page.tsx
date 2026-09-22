@@ -61,7 +61,7 @@ export default function Formacion() {
               type="checkbox"
               checked={soloAbiertas}
               onChange={(e) => setSoloAbiertas(e.target.checked)}
-              className="h-4 w-4 accent-[var(--azure-700)]"
+              className="h-4 w-4 accent-[var(--navy-700)]"
             />
             Solo inscripciones abiertas
           </label>

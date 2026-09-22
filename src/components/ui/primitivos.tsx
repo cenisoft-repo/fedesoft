@@ -55,7 +55,7 @@ export function Chip({ tono = "neutro", children }: { tono?: Tono; children: Rea
 type Variante = "primario" | "secundario" | "fantasma" | "peligro";
 
 const VARIANTES: Record<Variante, string> = {
-  primario: "bg-[var(--azure-700)] text-white hover:brightness-110",
+  primario: "bg-[var(--navy-700)] text-white hover:brightness-110",
   secundario: "border border-line bg-surface text-ink hover:bg-bg",
   fantasma: "text-link hover:bg-[var(--azure-100)]",
   peligro: "bg-danger text-white hover:brightness-110",

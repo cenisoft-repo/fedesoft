@@ -152,7 +152,7 @@ export default function Certificado() {
                     >
                       <Award
                         size={28}
-                        className={variante === "Color" ? "text-[var(--azure-300)]" : "text-muted"}
+                        className={variante === "Color" ? "text-[var(--azure-200)]" : "text-muted"}
                         aria-hidden
                       />
                     </div>
