@@ -8,7 +8,7 @@ import {
 import { useDemo } from "@/lib/demo";
 import { ACTIVIDADES, OPORTUNIDADES, VERTICALES } from "@/lib/mock/catalogo";
 import { cop, diasHasta, fecha } from "@/lib/format";
-import { Boton, Card, Chip, Eyebrow } from "@/components/ui/primitivos";
+import { Boton, Card, Chip, Eyebrow, Seccion } from "@/components/ui/primitivos";
 
 export default function Inicio() {
   const { escenario, inscripciones } = useDemo();
@@ -26,13 +26,13 @@ export default function Inicio() {
   );
 
   return (
-    <div className="grid gap-8">
+    <div className="grid gap-12">
       {/* Saludo y estado de la afiliación */}
-      <section className="grid gap-4">
+      <section className="grid gap-5">
         <Eyebrow>Tu portal</Eyebrow>
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className="text-[clamp(28px,4.4vw,38px)] font-extrabold leading-tight">
+            <h1 className="font-display text-[clamp(32px,5vw,46px)] font-light leading-[1.05]">
               Hola, {nombreCorto}
             </h1>
             <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[16.5px] text-muted">
@@ -72,14 +72,16 @@ export default function Inicio() {
                 <AlertTriangle size={20} aria-hidden />
               </div>
               <div className="grid gap-1">
-                <p className="font-display text-[17px] font-bold">
+                <p className="font-display text-[19px] font-semibold leading-snug">
                   {alDia
                     ? `Tu cuota anual vence en ${dias} días`
                     : `Tu cuota anual está vencida hace ${Math.abs(dias)} días`}
                 </p>
+                <p className="num font-display text-[34px] font-light leading-none tracking-[-0.02em]">
+                  {cop(cargoPendiente.monto)}
+                </p>
                 <p className="max-w-[58ch] text-[14.5px] text-muted">
-                  {cargoPendiente.concepto} {cargoPendiente.periodo} por{" "}
-                  <strong className="num text-ink">{cop(cargoPendiente.monto)}</strong>, con vencimiento el{" "}
+                  {cargoPendiente.concepto} {cargoPendiente.periodo}, con vencimiento el{" "}
                   {fecha(cargoPendiente.vence)}.
                   {!alDia && " Mientras esté vencida, tu certificado y tu sello no están disponibles."}
                 </p>
@@ -100,9 +102,9 @@ export default function Inicio() {
       )}
 
       {/* Accesos rápidos según el rol */}
-      <section className="grid gap-3">
-        <h2 className="text-[20px] font-extrabold">Accesos rápidos</h2>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <section className="grid gap-4">
+        <Seccion titulo="Accesos rápidos" />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {rol === "gerente" ? (
             <>
               <Acceso href="/facturacion" icono={Receipt} titulo="Estado de cuenta" detalle="Cargos, pagos y facturas" />
@@ -127,10 +129,10 @@ export default function Inicio() {
         </div>
       </section>
 
-      <div className="grid items-start gap-6 lg:grid-cols-[1.4fr_1fr]">
+      <div className="grid items-start gap-8 lg:grid-cols-[1.4fr_1fr]">
         {/* Próximas sesiones */}
-        <section className="grid gap-3">
-          <h2 className="text-[20px] font-extrabold">Tus próximas sesiones</h2>
+        <section className="grid gap-4">
+          <Seccion titulo="Tus próximas sesiones" />
           {misSesiones.length > 0 ? (
             <Card className="divide-y divide-line">
               {misSesiones.map((a) => (
@@ -171,8 +173,8 @@ export default function Inicio() {
         </section>
 
         {/* Novedades filtradas por perfil */}
-        <section className="grid gap-3">
-          <h2 className="text-[20px] font-extrabold">Novedades para ti</h2>
+        <section className="grid gap-4">
+          <Seccion titulo="Novedades para ti" />
           <Card className="divide-y divide-line">
             {rol === "gerente" && oportunidades.slice(0, 2).map((o) => (
               <Link key={o.id} href="/oportunidades" className="block p-4 transition hover:bg-bg">

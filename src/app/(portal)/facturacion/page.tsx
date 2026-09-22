@@ -4,7 +4,7 @@ import Link from "next/link";
 import { ArrowRight, Download, FileText, Lock } from "lucide-react";
 import { useDemo } from "@/lib/demo";
 import { cop, diasHasta, fecha, truncar } from "@/lib/format";
-import { Boton, Card, Chip, PageHeader, Vacio } from "@/components/ui/primitivos";
+import { Boton, Card, Chip, Cifra, PageHeader, Seccion, Vacio } from "@/components/ui/primitivos";
 
 export default function Facturacion() {
   const { escenario } = useDemo();
@@ -17,7 +17,7 @@ export default function Facturacion() {
   const vencido = pendientes.some((c) => c.estado === "vencido");
 
   return (
-    <div className="grid gap-7">
+    <div className="grid gap-10">
       <PageHeader
         eyebrow="Facturación"
         titulo="Estado de cuenta"
@@ -30,8 +30,8 @@ export default function Facturacion() {
       />
 
       <div className="grid items-start gap-5 lg:grid-cols-[1.6fr_1fr]">
-        <section className="grid gap-3">
-          <h2 className="text-[19px] font-extrabold">Cargos</h2>
+        <section className="grid gap-4">
+          <Seccion titulo="Cargos" />
           <Card className="overflow-hidden">
             {pendientes.length === 0 ? (
               <Vacio
@@ -43,10 +43,10 @@ export default function Facturacion() {
                 <table className="w-full min-w-[560px] text-[14.5px]">
                   <thead>
                     <tr className="border-b border-line text-left text-[11.5px] uppercase tracking-wider text-muted">
-                      <th className="px-4 py-3 font-semibold">Concepto</th>
-                      <th className="px-4 py-3 font-semibold">Vence</th>
+                      <th className="px-5 py-3 font-semibold">Concepto</th>
+                      <th className="px-5 py-3 font-semibold">Vence</th>
                       <th className="px-4 py-3 text-right font-semibold">Monto</th>
-                      <th className="px-4 py-3 font-semibold">Estado</th>
+                      <th className="px-5 py-3 font-semibold">Estado</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -54,18 +54,18 @@ export default function Facturacion() {
                       const dias = diasHasta(c.vence);
                       return (
                         <tr key={c.id} className="border-b border-line last:border-0">
-                          <td className="px-4 py-4">
+                          <td className="px-5 py-5">
                             <p className="font-semibold">{c.concepto}</p>
                             <p className="text-[13px] text-muted">Periodo {c.periodo}</p>
                           </td>
-                          <td className="px-4 py-4">
+                          <td className="px-5 py-5">
                             <p>{fecha(c.vence)}</p>
                             <p className="text-[13px] text-muted">
                               {dias >= 0 ? `en ${dias} días` : `hace ${Math.abs(dias)} días`}
                             </p>
                           </td>
-                          <td className="num px-4 py-4 text-right font-semibold">{cop(c.monto)}</td>
-                          <td className="px-4 py-4">
+                          <td className="num px-5 py-5 text-right font-semibold">{cop(c.monto)}</td>
+                          <td className="px-5 py-5">
                             <Chip tono={c.estado === "vencido" ? "error" : "aviso"}>
                               {c.estado === "vencido" ? "Vencido" : "Pendiente"}
                             </Chip>
@@ -79,7 +79,7 @@ export default function Facturacion() {
             )}
           </Card>
 
-          <h2 className="mt-3 text-[19px] font-extrabold">Facturas electrónicas</h2>
+          <div className="mt-6"><Seccion titulo="Facturas electrónicas" /></div>
           <Card className="divide-y divide-line">
             {empresa.facturas.map((f) => (
               <div key={f.numero} className="flex flex-wrap items-center gap-3 p-4">
@@ -100,16 +100,15 @@ export default function Facturacion() {
         </section>
 
         <aside className="grid h-fit gap-3">
-          <Card destacada className="p-5">
-            <p className="text-[13px] font-semibold uppercase tracking-wider text-muted">Total por pagar</p>
-            <p className="num mt-1 font-display text-[34px] font-extrabold leading-none">{cop(total)}</p>
-            <p className="mt-2 text-[14px] text-muted">
+          <Card destacada className="p-6">
+            <Cifra valor={cop(total)} etiqueta="Total por pagar" tamano="lg" />
+            <p className="mt-4 text-[14.5px] leading-relaxed text-muted">
               {vencido
                 ? "Tienes un cargo vencido. Al pagarlo, tu afiliación vuelve a quedar al día de inmediato."
                 : "Al pagar, la factura electrónica se emite automáticamente ante la DIAN."}
             </p>
             {total > 0 && (
-              <Link href="/facturacion/pagar" className="mt-4 block">
+              <Link href="/facturacion/pagar" className="mt-6 block">
                 <Boton className="w-full">
                   Pagar ahora <ArrowRight size={16} aria-hidden />
                 </Boton>
