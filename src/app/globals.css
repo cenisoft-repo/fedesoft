@@ -173,6 +173,30 @@ h1, h2, h3, h4 {
 /* Los íconos oficiales son línea navy; sobre el lienzo oscuro se calan en blanco. */
 .icono-calado { filter: brightness(0) invert(1); }
 
+/* Vidrio y halo del menú: superficie navy translúcida, filo tenue y un
+   resplandor azure por debajo, con la retícula de fondo apenas insinuada. */
+.vidrio-menu {
+  background: rgba(10, 26, 52, 0.82);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 24px 70px rgba(2, 8, 20, 0.7),
+    0 0 80px -30px var(--brand-azure);
+}
+
+@keyframes menu-entra {
+  from { opacity: 0; transform: translateY(-10px) scale(0.985); }
+  to { opacity: 1; transform: none; }
+}
+
+.reticula {
+  background-image:
+    linear-gradient(to right, rgba(165, 201, 230, 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(165, 201, 230, 0.06) 1px, transparent 1px);
+  background-size: 46px 46px;
+}
+
 .num { font-variant-numeric: tabular-nums; }
 
 @media (prefers-reduced-motion: reduce) {

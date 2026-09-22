@@ -6,7 +6,8 @@ import { TextoRevelado } from "@/components/landing/TextoRevelado";
 import { Escala } from "@/components/landing/Escala";
 import { VideoTextura } from "@/components/landing/VideoTextura";
 import { Mosaico, type Pieza } from "@/components/landing/Mosaico";
-import { Logo, Firma } from "@/components/Logo";
+import { Firma } from "@/components/Logo";
+import { MenuPrincipal } from "@/components/landing/MenuPrincipal";
 
 /** Cifras publicadas por Fedesoft, con los íconos del sitio institucional. */
 const SECTOR = [
@@ -108,23 +109,7 @@ const SERVICIOS = [
 export default function Landing() {
   return (
     <div className="min-h-dvh bg-navy-abismo text-white">
-      {/* ── Barra mínima ───────────────────────────────────────────── */}
-      <header className="fixed inset-x-0 top-0 z-30">
-        <div className="mx-auto flex max-w-[1240px] items-center justify-between px-6 py-6">
-          <Logo tema="oscuro" compacto alto={22} />
-          <nav className="flex items-center gap-5 text-[13.5px]">
-            <Link href="#servicios" className="hidden text-white/60 transition hover:text-white sm:block">
-              Qué hacemos
-            </Link>
-            <Link
-              href="/portal"
-              className="inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-white/10 px-4 py-2 font-semibold backdrop-blur transition hover:bg-white/20"
-            >
-              Ingresar al portal <ArrowRight size={14} aria-hidden />
-            </Link>
-          </nav>
-        </div>
-      </header>
+      <MenuPrincipal />
 
       {/* ── Portada: metraje bajo el campo generativo ──────────────── */}
       <section className="relative grid min-h-dvh place-items-center overflow-hidden px-6">
@@ -178,12 +163,18 @@ export default function Landing() {
             </Link>
           </div>
 
-          <div className="mt-16 flex flex-wrap items-center gap-x-10 gap-y-4">
-            {["Cenisoft", "MinTIC", "MinCiencias"].map((s) => (
-              <span key={s} className="font-mono text-[11.5px] uppercase tracking-[0.24em] text-white/30">
-                {s}
-              </span>
-            ))}
+          <div className="mt-16 flex flex-wrap items-center gap-x-6 gap-y-4 border-t border-white/10 pt-7">
+            <Image
+              src="/recursos/logos/cenisoft-fondo-oscuro.webp"
+              alt="Cenisoft"
+              width={121}
+              height={27}
+              className="opacity-80"
+            />
+            <span aria-hidden className="hidden h-5 w-px bg-white/15 sm:block" />
+            <p className="max-w-[46ch] text-[13.5px] font-light leading-relaxed text-white/45">
+              Centro de innovación y productividad de la federación, reconocido por MinCiencias.
+            </p>
           </div>
         </div>
       </section>
