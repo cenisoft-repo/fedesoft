@@ -3,10 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Award, Bell, Briefcase, Building2, GraduationCap, LayoutGrid, Moon, Receipt,
+  Bell, Briefcase, Building2, GraduationCap, LayoutGrid, Moon, Receipt,
   Search, ShieldCheck, Star, Sun, Users,
 } from "lucide-react";
-import { Logo } from "./Logo";
+import { Firma, Logo } from "./Logo";
 import { DemoSwitcher } from "./DemoSwitcher";
 import { useDemo, useTema } from "@/lib/demo";
 import { Chip } from "./ui/primitivos";
@@ -131,11 +131,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <main className="mx-auto max-w-[1200px] px-4 pb-24 pt-8 sm:px-6">{children}</main>
 
       <footer className="border-t border-line">
-        <div className="mx-auto flex max-w-[1200px] flex-wrap items-center gap-x-6 gap-y-2 px-4 py-6 text-[13px] text-muted sm:px-6">
-          <span className="inline-flex items-center gap-1.5">
-            <Award size={14} aria-hidden /> Federación Colombiana de la Industria de Software y TI
-          </span>
-          <span>Prototipo de demostración · datos simulados</span>
+        <div className="mx-auto flex max-w-[1200px] flex-wrap items-center gap-x-5 gap-y-3 px-4 py-7 text-[13px] text-muted sm:px-6">
+          <Firma alto={22} />
+          <span aria-hidden className="hidden h-4 w-px bg-line sm:block" />
+          <span>Federación Colombiana de la Industria de Software y TI</span>
+          <span className="sm:ml-auto">Prototipo de demostración · datos simulados</span>
         </div>
       </footer>
 

@@ -158,6 +158,21 @@ h1, h2, h3, h4 {
   flex: none;
 }
 
+/* Artes de marca: el manual tiene una versión por fondo y se intercambian
+   con los mismos disparadores que los tokens de color, sin JavaScript. */
+.marca-oscuro { display: none; }
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .marca-claro { display: none; }
+  :root:not([data-theme="light"]) .marca-oscuro { display: block; }
+}
+
+[data-theme="dark"] .marca-claro { display: none; }
+[data-theme="dark"] .marca-oscuro { display: block; }
+
+/* Los íconos oficiales son línea navy; sobre el lienzo oscuro se calan en blanco. */
+.icono-calado { filter: brightness(0) invert(1); }
+
 .num { font-variant-numeric: tabular-nums; }
 
 @media (prefers-reduced-motion: reduce) {
