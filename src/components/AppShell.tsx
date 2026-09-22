@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Bell, Briefcase, Building2, GraduationCap, LayoutGrid, Moon, Network, Receipt,
+  Bell, Briefcase, Building2, GraduationCap, LayoutGrid, Moon, Network, Receipt, Sparkles,
   Search, ShieldCheck, Star, Sun, Users, UsersRound,
 } from "lucide-react";
 import { Firma, Logo } from "./Logo";
@@ -28,6 +28,7 @@ const NAV: Entrada[] = [
   { href: "/comunidades", etiqueta: "Comunidades", icono: UsersRound },
   { href: "/verticales", etiqueta: "Verticales", icono: Network },
   { href: "/directorio", etiqueta: "Directorio", icono: Search },
+  { href: "/visibilidad", etiqueta: "Visibilidad", icono: Sparkles },
   { href: "/oportunidades", etiqueta: "Oportunidades", icono: Briefcase, soloGerente: true },
   { href: "/cuenta-estrategica", etiqueta: "Cuenta estratégica", icono: Star, soloGrande: true },
 ];

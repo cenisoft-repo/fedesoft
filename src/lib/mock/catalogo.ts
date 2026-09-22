@@ -177,7 +177,53 @@ export const COMUNIDADES: Comunidad[] = [
 ];
 
 export const INSIGHTS = [
-  { titulo: "Revenue por empleado 2026", tipo: "Estudio sectorial", actualizado: "2026-08-30", exclusivo: true },
-  { titulo: "Cifras del sector software y TI", tipo: "Indicadores", actualizado: "2026-09-10", exclusivo: false },
-  { titulo: "Entérate de regulaciones · boletín normativo", tipo: "Normativa", actualizado: "2026-09-18", exclusivo: true },
+  { titulo: "Revenue por empleado 2026", tipo: "Estudio sectorial", actualizado: "2026-08-30", exclusivo: true, descripcion: "Ingresos por empleado de la industria, segmentado por tamaño de empresa y línea de negocio." },
+  { titulo: "Cifras del sector software y TI", tipo: "Indicadores", actualizado: "2026-09-10", exclusivo: false, descripcion: "Aporte al PIB, empleo generado y crecimiento del sector en el último año." },
+  { titulo: "Entérate de regulaciones · boletín normativo", tipo: "Normativa", actualizado: "2026-09-18", exclusivo: true, descripcion: "Cambios normativos que afectan a las empresas de software: tributario, datos y contratación pública." },
+  { titulo: "FinTech Radar 2026", tipo: "Vertical Financiera", actualizado: "2026-09-15", exclusivo: true, descripcion: "Mapa del ecosistema fintech colombiano y oportunidades para proveedores de software." },
+];
+
+export interface Oferta {
+  id: string;
+  titulo: string;
+  descripcion: string;
+  categoria: string;
+  publicada: string;
+  expira: string;
+  estado: "publicada" | "en-revision" | "expirada";
+  vistas: number;
+}
+
+/** Publicaciones del afiliado en el espacio #AfiliadosFedesoft. */
+export const MIS_OFERTAS: Oferta[] = [
+  {
+    id: "of1",
+    titulo: "Analítica de datos para el sector salud",
+    descripcion: "Acompañamos a IPS y EPS en tableros de gestión clínica e interoperabilidad de historia clínica.",
+    categoria: "Desarrollo a la medida / apps",
+    publicada: "2026-09-05",
+    expira: "2026-12-05",
+    estado: "publicada",
+    vistas: 214,
+  },
+  {
+    id: "of2",
+    titulo: "Automatización de procesos con IA para back office",
+    descripcion: "Agentes de IA sobre procesos repetitivos de facturación, cartera y conciliación.",
+    categoria: "Desarrollo a la medida / apps",
+    publicada: "2026-09-19",
+    expira: "2026-12-19",
+    estado: "en-revision",
+    vistas: 0,
+  },
+  {
+    id: "of3",
+    titulo: "Migración de plataformas legadas a la nube",
+    descripcion: "Modernización de sistemas misionales con estrategia de migración por fases.",
+    categoria: "Consultoría TI",
+    publicada: "2026-05-11",
+    expira: "2026-08-11",
+    estado: "expirada",
+    vistas: 389,
+  },
 ];
