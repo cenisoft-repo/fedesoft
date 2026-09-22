@@ -19,6 +19,7 @@ export default function Facturacion() {
   return (
     <div className="grid gap-10">
       <PageHeader
+        imagen="informacion-exclusiva"
         eyebrow="Facturación"
         titulo="Estado de cuenta"
         lede="Tus cargos, pagos y facturas electrónicas en un solo lugar. Al pagar, la factura se emite sola y tu afiliación queda al día."

@@ -27,6 +27,7 @@ export default function Formacion() {
   return (
     <div className="grid gap-7">
       <PageHeader
+        imagen="formacion-talento"
         eyebrow="Formación"
         titulo="TrainingLAB, TIC Talks y Series C+I"
         lede="Toda la oferta de actualización en un solo catálogo, con inscripción de un clic y el historial de tu equipo."

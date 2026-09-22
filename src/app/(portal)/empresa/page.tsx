@@ -15,6 +15,7 @@ export default function Empresa() {
   return (
     <div className="grid gap-7">
       <PageHeader
+        imagen="visibilidad"
         eyebrow="Mi empresa"
         titulo={empresa.razonSocial}
         lede={

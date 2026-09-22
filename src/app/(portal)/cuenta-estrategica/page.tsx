@@ -33,6 +33,7 @@ export default function CuentaEstrategica() {
   return (
     <div className="grid gap-7">
       <PageHeader
+        imagen="representatividad"
         eyebrow="Cuenta estratégica"
         titulo={`Tu relación con Fedesoft, en un solo panel`}
         lede="Todo lo que tu empresa tiene en curso con la federación, consolidado desde cada módulo. Sin informes que pedir."

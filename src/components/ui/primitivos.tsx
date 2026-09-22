@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Image from "next/image";
 
 /* ── La barra: el gesto del wordmark ───────────────────────────────── */
 export function Eyebrow({ children }: { children: ReactNode }) {
@@ -130,22 +131,49 @@ export function PageHeader({
   titulo,
   lede,
   acciones,
+  imagen,
 }: {
   eyebrow: string;
   titulo: string;
   lede?: string;
   acciones?: ReactNode;
+  /** Tarjeta oficial del servicio (en /recursos/servicios): la pantalla se presenta con su propia imagen. */
+  imagen?: string;
 }) {
+  const texto = (
+    <div className="grid gap-3">
+      <Eyebrow>{eyebrow}</Eyebrow>
+      <h1 className="max-w-[20ch] font-display text-[clamp(30px,4.4vw,44px)] font-light leading-[1.08]">
+        {titulo}
+      </h1>
+      {lede ? <p className="max-w-[62ch] text-[16.5px] leading-relaxed text-muted">{lede}</p> : null}
+    </div>
+  );
+
+  if (!imagen) {
+    return (
+      <header className="flex flex-wrap items-end justify-between gap-6 pb-2">
+        {texto}
+        {acciones ? <div className="flex flex-wrap gap-2 pb-1">{acciones}</div> : null}
+      </header>
+    );
+  }
+
+  /* Con imagen: la tarjeta del sitio a la derecha, en la misma línea que el título,
+     y un velo azul que la funde con la superficie para que no compita con el texto. */
   return (
-    <header className="flex flex-wrap items-end justify-between gap-6 pb-2">
-      <div className="grid gap-3">
-        <Eyebrow>{eyebrow}</Eyebrow>
-        <h1 className="max-w-[20ch] font-display text-[clamp(30px,4.4vw,44px)] font-light leading-[1.08]">
-          {titulo}
-        </h1>
-        {lede ? <p className="max-w-[62ch] text-[16.5px] leading-relaxed text-muted">{lede}</p> : null}
+    <header className="relative overflow-hidden rounded-2xl border border-line bg-surface shadow-[var(--shadow-card)]">
+      <div aria-hidden className="absolute inset-y-0 right-0 hidden w-[42%] md:block">
+        <Image src={`/recursos/servicios/${imagen}.webp`} alt="" fill sizes="480px" className="object-cover" />
+        <div
+          className="absolute inset-0"
+          style={{ background: "linear-gradient(90deg, var(--surface) 0%, rgba(13,35,67,0.15) 55%, rgba(13,35,67,0.35) 100%)" }}
+        />
       </div>
-      {acciones ? <div className="flex flex-wrap gap-2 pb-1">{acciones}</div> : null}
+      <div className="relative flex flex-wrap items-end justify-between gap-6 p-6 sm:p-8 md:pr-[44%]">
+        {texto}
+        {acciones ? <div className="flex flex-wrap gap-2 pb-1">{acciones}</div> : null}
+      </div>
     </header>
   );
 }

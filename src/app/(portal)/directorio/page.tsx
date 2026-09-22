@@ -24,6 +24,7 @@ export default function Directorio() {
   return (
     <div className="grid gap-7">
       <PageHeader
+        imagen="networking"
         eyebrow="Directorio"
         titulo="El directorio de las empresas de software de Colombia"
         lede="Se alimenta del perfil de cada afiliado. La insignia de verificado deriva del estado real de la afiliación, no de un registro aparte."

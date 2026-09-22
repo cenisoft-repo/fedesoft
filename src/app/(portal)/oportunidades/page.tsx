@@ -36,6 +36,7 @@ export default function Oportunidades() {
   return (
     <div className="grid gap-7">
       <PageHeader
+        imagen="proyectos"
         eyebrow="Oportunidades"
         titulo="Proyectos e internacionalización"
         lede={`Convocatorias gestionadas con Cenisoft, filtradas por el perfil de ${empresa.razonSocial}. Solo ves lo que te aplica.`}
