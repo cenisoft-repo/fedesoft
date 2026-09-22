@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, Building2, FileText, GraduationCap, History, Receipt, ShieldCheck, Target } from "lucide-react";
+import { Building2, ChevronRight, FileText, GraduationCap, History, Receipt, ShieldCheck, Target } from "lucide-react";
 import { DATALABS } from "@/lib/mock/empresas";
 import { HISTORIAL_EQUIPO } from "@/lib/mock/catalogo";
 import { cop, fecha, truncar } from "@/lib/format";
@@ -19,18 +19,21 @@ const AUDITORIA = [
 export default function Admin() {
   return (
     <div className="grid gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <Link href="/" className="inline-flex items-center gap-1.5 text-[14px] font-semibold text-link hover:underline">
-          <ArrowLeft size={15} aria-hidden /> Volver al portal del afiliado
-        </Link>
-        <Chip tono="info">Consola interna · vista de Operaciones</Chip>
-      </div>
+      <nav aria-label="Ruta" className="flex flex-wrap items-center gap-1.5 text-[13.5px] text-muted">
+        <span className="font-semibold">Afiliados</span>
+        <ChevronRight size={14} aria-hidden />
+        <span className="text-ink">{e.razonSocial}</span>
+        <span className="ml-auto">
+          Una de <span className="num font-semibold text-ink">518</span> afiliadas. En el prototipo se abre
+          directamente esta ficha.
+        </span>
+      </nav>
 
       <header className="grid gap-3 border-b border-line pb-6">
         <Eyebrow>Ficha 360 de la empresa</Eyebrow>
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className="text-[clamp(24px,3.6vw,32px)] font-extrabold">{e.razonSocial}</h1>
+            <h1 className="font-display text-[clamp(26px,3.8vw,38px)] font-light leading-[1.1]">{e.razonSocial}</h1>
             <p className="mt-1 flex flex-wrap items-center gap-x-2 text-[15px] text-muted">
               <span className="font-mono">{e.nit}</span>
               <span aria-hidden>·</span> {e.ciudad}
@@ -50,7 +53,15 @@ export default function Admin() {
       </header>
 
       <div className="grid gap-5 lg:grid-cols-3">
-        <Panel titulo="Cartera" icono={Receipt}>
+        <Panel
+          titulo="Cartera"
+          icono={Receipt}
+          pie={
+            <Link href="/admin/cartera" className="inline-flex items-center gap-1 text-[13.5px] font-semibold text-link hover:underline">
+              Ver en el tablero de cartera <ChevronRight size={14} aria-hidden />
+            </Link>
+          }
+        >
           <Fila termino="Cuota 2026" valor={cop(e.cargos[0].monto)} />
           <Fila termino="Vence" valor={fecha(e.cargos[0].vence)} />
           <Fila termino="Última factura" valor={e.facturas[0].numero} />
@@ -114,13 +125,24 @@ export default function Admin() {
   );
 }
 
-function Panel({ titulo, icono: Icono, children }: { titulo: string; icono: typeof Receipt; children: React.ReactNode }) {
+function Panel({
+  titulo,
+  icono: Icono,
+  children,
+  pie,
+}: {
+  titulo: string;
+  icono: typeof Receipt;
+  children: React.ReactNode;
+  pie?: React.ReactNode;
+}) {
   return (
     <Card className="p-5">
       <h2 className="flex items-center gap-2 font-display text-[16px] font-bold">
         <Icono size={16} className="text-accent" aria-hidden /> {titulo}
       </h2>
       <dl className="mt-3 grid gap-2.5 text-[14px]">{children}</dl>
+      {pie ? <div className="mt-3">{pie}</div> : null}
     </Card>
   );
 }

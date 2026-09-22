@@ -37,7 +37,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { escenario } = useDemo();
   const { tema, alternar } = useTema();
   const pathname = usePathname();
-  const esAdmin = pathname?.startsWith("/admin");
 
   const contacto = escenario.empresa.contactos.find((c) => c.id === escenario.contactoId);
 
@@ -62,13 +61,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </Link>
 
           <div className="ml-auto flex items-center gap-2">
-            {!esAdmin && (
-              <div className="hidden items-center gap-2 sm:flex">
-                <Chip tono={estadoChip.tono}>
-                  <ShieldCheck size={13} aria-hidden /> {estadoChip.texto}
-                </Chip>
-              </div>
-            )}
+            <div className="hidden items-center gap-2 sm:flex">
+              <Chip tono={estadoChip.tono}>
+                <ShieldCheck size={13} aria-hidden /> {estadoChip.texto}
+              </Chip>
+            </div>
             <button
               type="button"
               className="rounded-lg p-2 text-muted transition hover:bg-bg hover:text-ink"
@@ -96,39 +93,37 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
 
-        {!esAdmin && (
-          <nav aria-label="Secciones del portal" className="border-t border-line">
-            <div className="mx-auto flex max-w-[1200px] gap-1 overflow-x-auto px-2 sm:px-4">
-              {visibles.map((e) => {
-                const activo = e.href === "/" ? pathname === "/" : pathname?.startsWith(e.href);
-                const Icono = e.icono;
-                return (
-                  <Link
-                    key={e.href}
-                    href={e.href}
-                    aria-current={activo ? "page" : undefined}
-                    className={`relative flex shrink-0 items-center gap-2 px-3 py-3 text-[14px] font-semibold transition ${
-                      activo ? "text-ink" : "text-muted hover:text-ink"
-                    }`}
-                  >
-                    <Icono size={16} aria-hidden />
-                    {e.etiqueta}
-                    {activo && (
-                      <span aria-hidden className="absolute inset-x-2 bottom-0 h-[3px] rounded-t-full bg-accent" />
-                    )}
-                  </Link>
-                );
-              })}
-              <Link
-                href="/admin"
-                className="ml-auto flex shrink-0 items-center gap-2 px-3 py-3 text-[13px] font-semibold text-muted transition hover:text-ink"
-              >
-                <Users size={15} aria-hidden />
-                Vista interna
-              </Link>
-            </div>
-          </nav>
-        )}
+        <nav aria-label="Secciones del portal" className="border-t border-line">
+          <div className="mx-auto flex max-w-[1200px] gap-1 overflow-x-auto px-2 sm:px-4">
+            {visibles.map((e) => {
+              const activo = e.href === "/" ? pathname === "/" : pathname?.startsWith(e.href);
+              const Icono = e.icono;
+              return (
+                <Link
+                  key={e.href}
+                  href={e.href}
+                  aria-current={activo ? "page" : undefined}
+                  className={`relative flex shrink-0 items-center gap-2 px-3 py-3 text-[14px] font-semibold transition ${
+                    activo ? "text-ink" : "text-muted hover:text-ink"
+                  }`}
+                >
+                  <Icono size={16} aria-hidden />
+                  {e.etiqueta}
+                  {activo && (
+                    <span aria-hidden className="absolute inset-x-2 bottom-0 h-[3px] rounded-t-full bg-accent" />
+                  )}
+                </Link>
+              );
+            })}
+            <Link
+              href="/admin"
+              className="ml-auto flex shrink-0 items-center gap-2 px-3 py-3 text-[13px] font-semibold text-muted transition hover:text-ink"
+            >
+              <Users size={15} aria-hidden />
+              Vista interna
+            </Link>
+          </div>
+        </nav>
       </header>
 
       <main className="mx-auto max-w-[1200px] px-4 pb-24 pt-8 sm:px-6">{children}</main>
