@@ -6,23 +6,32 @@ import { useEffect, useRef, useState } from "react";
  * Revela el texto palabra por palabra según el avance del scroll:
  * el gesto característico del referente. Las palabras pasan de apagadas
  * a plena luz a medida que la sección cruza la pantalla.
+ *
+ * Dentro de una escena fijada (sticky) el texto no se mueve, así que su
+ * posición no sirve de medida: quien lo contiene pasa el `avance` y el
+ * componente deja de escuchar el scroll.
  */
 export function TextoRevelado({
   texto,
   className = "",
   acento,
+  avance: avanceExterno,
 }: {
   texto: string;
   className?: string;
   /** Palabras finales que se tiñen con el azul de marca. */
   acento?: string;
+  /** Avance de 0 a 1 controlado desde fuera; si falta, se mide por la posición. */
+  avance?: number;
 }) {
   const ref = useRef<HTMLParagraphElement>(null);
-  const [avance, setAvance] = useState(0);
+  const [avanceMedido, setAvance] = useState(0);
+  const controlado = avanceExterno !== undefined;
+  const avance = controlado ? avanceExterno : avanceMedido;
 
   useEffect(() => {
     const el = ref.current;
-    if (!el) return;
+    if (!el || controlado) return;
 
     const alScroll = () => {
       const r = el.getBoundingClientRect();
@@ -39,7 +48,7 @@ export function TextoRevelado({
       window.removeEventListener("scroll", alScroll);
       window.removeEventListener("resize", alScroll);
     };
-  }, []);
+  }, [controlado]);
 
   const palabras = texto.split(" ");
   const acentoDesde = acento ? palabras.length - acento.split(" ").length : -1;

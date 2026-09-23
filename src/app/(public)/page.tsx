@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight, Mail, MapPin } from "lucide-react";
 import { CampoRed } from "@/components/landing/CampoRed";
-import { TextoRevelado } from "@/components/landing/TextoRevelado";
+import { CapituloIA } from "@/components/landing/CapituloIA";
 import { Escala } from "@/components/landing/Escala";
 import { VideoTextura } from "@/components/landing/VideoTextura";
 import { Mosaico, type Pieza } from "@/components/landing/Mosaico";
@@ -201,40 +201,8 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ── Manifiesto, con el panel de inteligencia artificial ────── */}
-      <section className="relative px-6 py-[18vh]">
-        <div className="mx-auto grid max-w-[1240px] items-center gap-14 lg:grid-cols-[1fr_300px]">
-          <TextoRevelado
-            texto="Fedesoft reúne a las empresas que escriben el código con el que Colombia trabaja, estudia, se atiende y se mueve — y que hoy empieza a mover al mundo."
-            acento="empieza a mover al mundo."
-            className="max-w-[24ch] font-display text-[clamp(30px,5.4vw,64px)] font-light leading-[1.14] tracking-[-0.015em]"
-          />
-          <div className="relative mx-auto aspect-[9/16] w-full max-w-[300px] overflow-hidden rounded-2xl border border-white/10">
-            <VideoTextura
-              src="/recursos/video/ia-volumen.mp4"
-              poster="/recursos/video/ia-volumen-poster.jpg"
-              className="opacity-80"
-            />
-            <div aria-hidden className="absolute inset-0 bg-[var(--brand-azure)] opacity-[0.2] mix-blend-overlay" />
-            <div
-              aria-hidden
-              className="absolute inset-0"
-              style={{
-                background:
-                  "linear-gradient(180deg, rgba(7,20,41,0.2) 0%, rgba(7,20,41,0.1) 45%, rgba(7,20,41,0.92) 100%)",
-              }}
-            />
-            <div className="absolute inset-x-0 bottom-0 p-5">
-              <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--brand-azure)]">
-                Inteligencia artificial
-              </p>
-              <p className="mt-2 text-[13.5px] font-light leading-relaxed text-white/60">
-                La capacidad que está redefiniendo lo que la industria colombiana puede exportar.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* ── Manifiesto: capítulo inmersivo con el metraje de inteligencia artificial ── */}
+      <CapituloIA />
 
       {/* ── La escala de ambición: la imagen como protagonista ─────── */}
       <section className="relative flex min-h-[92vh] items-center overflow-hidden px-6 py-[12vh]">
