@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import type { CSSProperties } from "react";
 import { TextoRevelado } from "@/components/landing/TextoRevelado";
 import { VideoTextura } from "@/components/landing/VideoTextura";
+import { limitar, useEscenaFija } from "@/components/landing/useEscenaFija";
 
 const TEXTO =
   "Fedesoft reúne a las empresas que escriben el código con el que Colombia trabaja, estudia, se atiende y se mueve — y que hoy empieza a mover al mundo.";
@@ -15,8 +16,6 @@ const TEXTO_HASTA = 0.7;
 /** Ancho de la columna de metraje: el clip es 9:16 y ocupa el alto completo de la escena. */
 const COLUMNA = "lg:w-[56.25dvh] lg:right-[max(4vw,calc((100vw-1240px)/2-2vw))]";
 
-const limitar = (v: number) => Math.min(1, Math.max(0, v));
-
 /**
  * Manifiesto como capítulo inmersivo. La escena se fija mientras el lector
  * recorre la sección y el scroll hace de línea de tiempo: el metraje se
@@ -24,49 +23,11 @@ const limitar = (v: number) => Math.min(1, Math.max(0, v));
  * rótulo. El clip trae fondo negro y se funde con `screen`, así que no hay
  * caja: las partículas flotan directamente sobre el lienzo navy.
  *
- * La línea de tiempo vive en la variable CSS `--p` (0 a 1), escrita sin
- * pasar por React; solo el avance del texto se guarda en estado, cuantizado.
- * Con `prefers-reduced-motion` la escena no se fija y se muestra completa.
+ * La línea de tiempo (`--p`, reducción de movimiento) la pone `useEscenaFija`.
  */
 export function CapituloIA() {
-  const seccion = useRef<HTMLElement>(null);
-  const escena = useRef<HTMLDivElement>(null);
-  const [avanceTexto, setAvanceTexto] = useState(0);
-
-  useEffect(() => {
-    const el = seccion.current;
-    const lienzo = escena.current;
-    if (!el || !lienzo) return;
-
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      lienzo.style.setProperty("--p", "1");
-      setAvanceTexto(1);
-      return;
-    }
-
-    let raf = 0;
-    const medir = () => {
-      raf = 0;
-      const r = el.getBoundingClientRect();
-      const recorrido = r.height - window.innerHeight;
-      const p = recorrido > 0 ? limitar(-r.top / recorrido) : 1;
-      lienzo.style.setProperty("--p", p.toFixed(4));
-      const t = limitar((p - TEXTO_DESDE) / (TEXTO_HASTA - TEXTO_DESDE));
-      setAvanceTexto(Math.round(t * 100) / 100);
-    };
-    const alScroll = () => {
-      if (!raf) raf = requestAnimationFrame(medir);
-    };
-
-    medir();
-    window.addEventListener("scroll", alScroll, { passive: true });
-    window.addEventListener("resize", alScroll);
-    return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener("scroll", alScroll);
-      window.removeEventListener("resize", alScroll);
-    };
-  }, []);
+  const { seccion, escena, avance } = useEscenaFija();
+  const avanceTexto = limitar((avance - TEXTO_DESDE) / (TEXTO_HASTA - TEXTO_DESDE));
 
   return (
     <section ref={seccion} aria-label="Manifiesto" className="relative h-[240vh] motion-reduce:h-auto">

@@ -3,9 +3,9 @@ import Link from "next/link";
 import { ArrowRight, ArrowUpRight, Mail, MapPin } from "lucide-react";
 import { CampoRed } from "@/components/landing/CampoRed";
 import { CapituloIA } from "@/components/landing/CapituloIA";
-import { Escala } from "@/components/landing/Escala";
+import { CapituloEscala } from "@/components/landing/CapituloEscala";
 import { VideoTextura } from "@/components/landing/VideoTextura";
-import { Mosaico, type Pieza } from "@/components/landing/Mosaico";
+import { CapituloFederacion, type Pieza } from "@/components/landing/CapituloFederacion";
 import { Firma } from "@/components/Logo";
 import { MenuPrincipal } from "@/components/landing/MenuPrincipal";
 
@@ -204,41 +204,8 @@ export default function Landing() {
       {/* ── Manifiesto: capítulo inmersivo con el metraje de inteligencia artificial ── */}
       <CapituloIA />
 
-      {/* ── La escala de ambición: la imagen como protagonista ─────── */}
-      <section className="relative flex min-h-[92vh] items-center overflow-hidden px-6 py-[12vh]">
-        <VideoTextura
-          src="/recursos/video/rostro-datos.mp4"
-          poster="/recursos/video/rostro-datos-poster.jpg"
-          className="opacity-90"
-        />
-        <div aria-hidden className="absolute inset-0 bg-[var(--brand-azure)] opacity-[0.22] mix-blend-overlay" />
-        {/* El velo entra por la izquierda, donde vive el texto, y deja respirar la imagen a la derecha */}
-        <div
-          aria-hidden
-          className="absolute inset-0"
-          style={{
-            background:
-              "linear-gradient(90deg, var(--navy-abismo) 0%, rgba(7,20,41,0.92) 32%, rgba(7,20,41,0.45) 62%, rgba(7,20,41,0.1) 100%)",
-          }}
-        />
-        <div
-          aria-hidden
-          className="absolute inset-0"
-          style={{
-            background:
-              "linear-gradient(180deg, var(--navy-abismo) 0%, rgba(7,20,41,0) 18%, rgba(7,20,41,0) 82%, var(--navy-abismo) 100%)",
-          }}
-        />
-        <div className="relative mx-auto w-full max-w-[1240px]">
-          <p className="font-mono text-[12px] uppercase tracking-[0.2em] text-white/45">La escala de la industria</p>
-          <h2 className="mt-5 max-w-[16ch] font-display text-[clamp(34px,5.4vw,66px)] font-light leading-[1.06] tracking-[-0.015em]">
-            Aspiramos a ser un país origen de software
-          </h2>
-          <div className="mt-12 max-w-[680px]">
-            <Escala />
-          </div>
-        </div>
-      </section>
+      {/* ── La escala de ambición: segundo capítulo inmersivo ───────── */}
+      <CapituloEscala />
 
       {/* ── Cifras del sector, en blanco, con los íconos en su trazo navy ── */}
       <section className="bg-white px-6 py-[14vh] text-[#0D2343]">
@@ -277,26 +244,8 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ── La pared de metraje: la federación en marcha ───────────── */}
-      <section className="relative px-6 py-[14vh]">
-        <div className="mx-auto max-w-[1240px]">
-          <p className="font-mono text-[12px] uppercase tracking-[0.2em] text-white/45">La federación en marcha</p>
-          <h2 className="mt-5 max-w-[22ch] font-display text-[clamp(28px,4.4vw,50px)] font-light leading-[1.1] tracking-[-0.015em]">
-            Frentes, verticales e iniciativas con nombre propio
-          </h2>
-          <div className="mt-12">
-            <Mosaico piezas={PIEZAS} />
-          </div>
-          <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-2.5">
-            <span className="font-mono text-[11.5px] uppercase tracking-[0.18em] text-white/30">Y además</span>
-            {OTROS_PROGRAMAS.map((p) => (
-              <span key={p} className="text-[14px] font-light text-white/45">
-                {p}
-              </span>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* ── La federación en marcha: travelling horizontal ─────────── */}
+      <CapituloFederacion piezas={PIEZAS} otros={OTROS_PROGRAMAS} />
 
       {/* ── Servicios gremiales, con las tarjetas del sitio ────────── */}
       <section id="servicios" className="bg-[#f5f8fc] px-6 py-[14vh] text-[#0D2343]">
