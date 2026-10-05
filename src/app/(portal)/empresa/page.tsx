@@ -1,14 +1,23 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
-import { Check, Info, Mail, Phone, UserPlus } from "lucide-react";
+import { Check, Info, Mail, Phone, UserCog } from "lucide-react";
 import { useDemo } from "@/lib/demo";
+import { useIdentidad } from "@/lib/identidad";
 import { fecha } from "@/lib/format";
 import { Boton, Card, Chip, Eyebrow, PageHeader } from "@/components/ui/primitivos";
 
 export default function Empresa() {
   const { escenario } = useDemo();
+  const { vinculos, porCorreo } = useIdentidad();
   const { empresa, rol } = escenario;
+  /* El acceso de cada contacto sale del estado de identidad, no de la ficha:
+     si el gerente lo desactiva en Contactos y accesos, aquí se ve. */
+  const tieneAcceso = (correo: string) => {
+    const u = porCorreo(correo);
+    return vinculos.some((v) => v.usuarioId === u?.id && v.empresa === empresa.nit && v.estado === "activo");
+  };
   const puedeEditar = rol === "gerente";
   const [guardado, setGuardado] = useState(false);
 
@@ -64,9 +73,12 @@ export default function Empresa() {
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-5 py-4">
               <h2 className="font-display text-[18px] font-bold">Contactos autorizados</h2>
               {puedeEditar && (
-                <Boton variante="secundario" tamano="sm">
-                  <UserPlus size={14} aria-hidden /> Invitar contacto
-                </Boton>
+                <Link
+                  href="/empresa/contactos"
+                  className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-4 py-2 text-[13.5px] font-semibold transition hover:border-accent"
+                >
+                  <UserCog size={14} aria-hidden /> Gestionar accesos
+                </Link>
               )}
             </div>
             <div className="divide-y divide-line">
@@ -86,7 +98,7 @@ export default function Empresa() {
                   <Chip tono={c.rol === "gerente" ? "info" : c.rol === "talento" ? "exito" : "neutro"}>
                     {c.rol === "gerente" ? "Gerente" : c.rol === "talento" ? "Talento humano" : "Contacto"}
                   </Chip>
-                  {!c.conAcceso && <Chip tono="neutro">Sin acceso</Chip>}
+                  {!tieneAcceso(c.correo) && <Chip tono="neutro">Sin acceso</Chip>}
                 </div>
               ))}
             </div>

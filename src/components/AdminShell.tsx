@@ -1,10 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { ArrowLeft, Building2, Inbox, Moon, Receipt, Sun } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { ArrowLeft, Building2, Inbox, Loader2, LogOut, Moon, Receipt, Sun, UserCog } from "lucide-react";
 import { Firma, Logo } from "./Logo";
 import { useTema } from "@/lib/demo";
+import { iniciales, useIdentidad } from "@/lib/identidad";
+import { nombreRolInterno } from "@/lib/mock/usuarios";
 import { Chip } from "./ui/primitivos";
 import { SOLICITUDES } from "@/lib/mock/admin";
 
@@ -18,14 +21,36 @@ const NAV = [
   { href: "/admin", etiqueta: "Afiliados", icono: Building2, exacto: true },
   { href: "/admin/solicitudes", etiqueta: "Solicitudes", icono: Inbox },
   { href: "/admin/cartera", etiqueta: "Cartera", icono: Receipt },
+  { href: "/admin/usuarios", etiqueta: "Usuarios", icono: UserCog },
 ];
-
-/** Operadora de la consola. En la plataforma real viene de la sesión interna. */
-const OPERADORA = { nombre: "Lorena Mejía", rol: "Operaciones", iniciales: "LM" };
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const { tema, alternar } = useTema();
   const pathname = usePathname();
+  const router = useRouter();
+  const { sesionConsola, porId, cerrarConsola, recordarDestinoConsola } = useIdentidad();
+  /* La identidad de quien opera sale de la sesión con segundo factor. */
+  const operador = sesionConsola ? porId(sesionConsola) : undefined;
+
+  useEffect(() => {
+    if (!operador) {
+      recordarDestinoConsola(pathname ?? "/admin");
+      router.replace("/admin/entrar");
+    }
+  }, [operador, pathname, recordarDestinoConsola, router]);
+
+  if (!operador) {
+    return (
+      <div className="grid min-h-dvh place-items-center bg-bg text-[14px] text-muted" role="status">
+        <span className="inline-flex items-center gap-2">
+          <Loader2 size={16} className="animate-spin" aria-hidden /> Verificando la sesión de consola…
+        </span>
+      </div>
+    );
+  }
+
+  const rolesTexto = operador.rolesInternos.map(nombreRolInterno).join(" · ");
+  const esSuperAdmin = operador.rolesInternos.includes("super-admin");
 
   const pendientes = SOLICITUDES.filter((s) => s.estado === "nueva" || s.estado === "en-revision").length;
 
@@ -62,12 +87,24 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               </button>
               <div className="flex items-center gap-2.5 border-l border-white/20 pl-3">
                 <div className="grid h-8 w-8 place-items-center rounded-full bg-azure text-[12px] font-bold text-white">
-                  {OPERADORA.iniciales}
+                  {iniciales(operador.nombre, operador.correo)}
                 </div>
                 <div className="hidden leading-tight md:block">
-                  <p className="text-[13.5px] font-semibold">{OPERADORA.nombre}</p>
-                  <p className="text-[12px] text-azure-200">{OPERADORA.rol}</p>
+                  <p className="text-[13.5px] font-semibold">{operador.nombre}</p>
+                  <p className="text-[12px] text-azure-200">{rolesTexto}</p>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    cerrarConsola();
+                    router.push("/admin/entrar");
+                  }}
+                  className="rounded-lg p-2 text-azure-200 transition hover:bg-white/10 hover:text-white"
+                  aria-label="Cerrar sesión de consola"
+                  title="Cerrar sesión"
+                >
+                  <LogOut size={17} aria-hidden />
+                </button>
               </div>
             </div>
           </div>
@@ -101,7 +138,9 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               );
             })}
             <span className="ml-auto hidden items-center py-3 pr-2 sm:flex">
-              <Chip tono="neutro">Rol: Operaciones · permisos limitados</Chip>
+              <Chip tono="neutro">
+                Rol: {rolesTexto} · {esSuperAdmin ? "administra roles y usuarios internos" : "permisos limitados"}
+              </Chip>
             </span>
           </div>
         </nav>

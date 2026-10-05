@@ -2,23 +2,127 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { ArrowLeft, ArrowRight, KeyRound, ShieldCheck } from "lucide-react";
-import { ESCENARIOS, useDemo, type EscenarioId } from "@/lib/demo";
+import { useState, type FormEvent } from "react";
+import {
+  ArrowLeft, ArrowRight, Ban, Building2, KeyRound, Loader2, LockKeyhole, Mail, ShieldCheck, UserX,
+} from "lucide-react";
+import { ESCENARIOS, useDemo } from "@/lib/demo";
+import { useIdentidad } from "@/lib/identidad";
+import { EMPRESAS_POR_NIT, nombreRolEmpresa } from "@/lib/mock/usuarios";
+import { fecha, HOY } from "@/lib/format";
+import { Boton } from "@/components/ui/primitivos";
 
 /**
- * Puerta única del afiliado. En el prototipo, elegir una persona equivale a
- * autenticarse: es lo que hace visible la segmentación desde el acceso.
+ * Puerta única del afiliado (P-01).
+ *
+ * Reproduce el flujo real de ADR-008: el portal pide el correo, el proveedor
+ * de identidad valida la contraseña (el portal nunca la ve) y solo después el
+ * servidor decide si hay acceso, a qué empresa y con qué rol. Los rechazos se
+ * explican después de autenticarse, no antes: así un tercero no puede tantear
+ * qué correos existen.
  */
+
+type Paso =
+  | { id: "correo" }
+  | { id: "clave"; correo: string }
+  | { id: "invitaciones"; usuarioId: string }
+  | { id: "verificado"; usuarioId: string }
+  | { id: "rechazo"; motivo: "sin-acceso" | "bloqueada" | "interno" | "desactivado"; correo: string; empresa?: string };
+
+const DEMO = [
+  { correo: "camilo.restrepo@datalabsandina.co", etiqueta: "Gerente · MIPYME", detalle: "Camilo Restrepo" },
+  { correo: "diana.salazar@datalabsandina.co", etiqueta: "Líder de talento", detalle: "Diana Salazar" },
+  { correo: "marcela.betancur@sistemasvertice.com.co", etiqueta: "Gerente · empresa grande", detalle: "Marcela Betancur" },
+  { correo: "laura.gomez@datalabsandina.co", etiqueta: "Invitación pendiente", detalle: "Laura Gómez" },
+  { correo: "andres.mora@datalabsandina.co", etiqueta: "Acceso desactivado", detalle: "Andrés Mora" },
+  { correo: "mauricio.lara@sistemasvertice.com.co", etiqueta: "Cuenta bloqueada", detalle: "Mauricio Lara" },
+];
+
+const CORREO_VALIDO = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
 export default function Entrar() {
   const { cambiarEscenario } = useDemo();
+  const id = useIdentidad();
   const router = useRouter();
-  const [entrando, setEntrando] = useState<EscenarioId | null>(null);
+  const [paso, setPaso] = useState<Paso>({ id: "correo" });
+  const [correo, setCorreo] = useState("");
+  const [clave, setClave] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [cargando, setCargando] = useState(false);
 
-  const entrar = (id: EscenarioId) => {
-    setEntrando(id);
-    cambiarEscenario(id);
-    setTimeout(() => router.push("/portal"), 450);
+  const irAClave = (valor: string) => {
+    setError(null);
+    setClave("");
+    setPaso({ id: "clave", correo: valor });
+  };
+
+  const continuarCorreo = (e: FormEvent) => {
+    e.preventDefault();
+    const valor = correo.trim().toLowerCase();
+    if (!CORREO_VALIDO.test(valor)) {
+      setError("Escribe tu correo corporativo completo.");
+      return;
+    }
+    irAClave(valor);
+  };
+
+  const entrarAlPortal = (usuarioId: string) => {
+    const u = id.porId(usuarioId);
+    const escenario = ESCENARIOS.find(
+      (e) => e.empresa.contactos.find((c) => c.id === e.contactoId)?.correo === u?.correo,
+    );
+    id.iniciarPortal(usuarioId);
+    if (!escenario) {
+      setPaso({ id: "verificado", usuarioId });
+      return;
+    }
+    cambiarEscenario(escenario.id);
+    router.push("/portal");
+  };
+
+  /** Lo que decide el servidor después de que el proveedor autentica. */
+  const decidir = (correoValido: string) => {
+    const u = id.porCorreo(correoValido);
+    if (!u) return setPaso({ id: "rechazo", motivo: "sin-acceso", correo: correoValido });
+    if (u.estado === "bloqueado") return setPaso({ id: "rechazo", motivo: "bloqueada", correo: correoValido });
+
+    const propios = id.vinculos.filter((v) => v.usuarioId === u.id);
+    const activos = propios.filter((v) => v.estado === "activo");
+    const pendientes = propios.filter((v) => v.estado === "invitado" && (v.invitacionVence ?? HOY) >= HOY);
+
+    if (activos.length === 0 && pendientes.length === 0) {
+      if (u.rolesInternos.length > 0) return setPaso({ id: "rechazo", motivo: "interno", correo: correoValido });
+      const desactivado = propios.find((v) => v.estado === "desactivado");
+      return setPaso({
+        id: "rechazo",
+        motivo: desactivado ? "desactivado" : "sin-acceso",
+        correo: correoValido,
+        empresa: desactivado ? EMPRESAS_POR_NIT[desactivado.empresa] : undefined,
+      });
+    }
+    if (pendientes.length > 0) return setPaso({ id: "invitaciones", usuarioId: u.id });
+    entrarAlPortal(u.id);
+  };
+
+  const enviarClave = (e: FormEvent) => {
+    e.preventDefault();
+    if (paso.id !== "clave") return;
+    if (clave.length === 0) {
+      setError("Escribe tu contraseña.");
+      return;
+    }
+    setError(null);
+    setCargando(true);
+    setTimeout(() => {
+      setCargando(false);
+      decidir(paso.correo);
+    }, 650);
+  };
+
+  const reiniciar = () => {
+    setPaso({ id: "correo" });
+    setError(null);
+    setClave("");
   };
 
   return (
@@ -42,14 +146,12 @@ export default function Entrar() {
             rol desde que entras.
           </p>
         </div>
-        <p className="relative text-[12.5px] text-white/35">
-          Prototipo de demostración · datos simulados
-        </p>
+        <p className="relative text-[12.5px] text-white/35">Prototipo de demostración · datos simulados</p>
       </aside>
 
       {/* Columna de acceso */}
       <main className="flex items-center bg-surface px-6 py-14 sm:px-12">
-        <div className="mx-auto w-full max-w-[460px]">
+        <div className="mx-auto w-full max-w-[460px]" aria-live="polite">
           <Link
             href="/"
             className="mb-8 inline-flex items-center gap-1.5 text-[13.5px] font-semibold text-muted transition hover:text-ink lg:hidden"
@@ -57,58 +159,288 @@ export default function Entrar() {
             <ArrowLeft size={14} aria-hidden /> Volver
           </Link>
 
-          <h2 className="font-display text-[30px] font-light leading-tight">Ingresa al portal</h2>
-          <p className="mt-2 text-[15px] leading-relaxed text-muted">
-            Una empresa afiliada tiene varios contactos, y cada uno ve lo que le corresponde. Elige con quién quieres
-            entrar.
-          </p>
+          {paso.id === "correo" && (
+            <>
+              <h2 className="font-display text-[30px] font-light leading-tight">Ingresa al portal</h2>
+              <p className="mt-2 text-[15px] leading-relaxed text-muted">
+                Con tu correo corporativo. Cada contacto de una empresa afiliada ve lo que le corresponde según su rol.
+              </p>
 
-          <div className="mt-8 grid gap-2.5">
-            {ESCENARIOS.map((e) => {
-              const contacto = e.empresa.contactos.find((c) => c.id === e.contactoId);
-              const cargando = entrando === e.id;
-              return (
-                <button
-                  key={e.id}
-                  onClick={() => entrar(e.id)}
-                  disabled={entrando !== null}
-                  className="group flex items-center gap-4 rounded-xl border border-line bg-surface p-4 text-left transition hover:border-accent disabled:opacity-60"
-                >
-                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[var(--navy-700)] text-[13px] font-bold text-white">
-                    {contacto?.nombre.split(" ").map((p) => p[0]).slice(0, 2).join("")}
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-[15px] font-semibold">{contacto?.nombre}</span>
-                    <span className="block truncate text-[13.5px] text-muted">
-                      {contacto?.cargo} · {e.empresa.razonSocial}
-                    </span>
-                  </span>
-                  <ArrowRight
-                    size={17}
-                    className={`shrink-0 text-muted transition group-hover:translate-x-0.5 group-hover:text-accent ${cargando ? "animate-pulse" : ""}`}
-                    aria-hidden
+              <form onSubmit={continuarCorreo} className="mt-8 grid gap-3" noValidate>
+                <label htmlFor="correo" className="text-[13.5px] font-semibold">Correo corporativo</label>
+                <div className="relative">
+                  <Mail size={16} aria-hidden className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
+                  <input
+                    id="correo"
+                    type="email"
+                    autoComplete="username"
+                    inputMode="email"
+                    value={correo}
+                    onChange={(e) => setCorreo(e.target.value)}
+                    aria-invalid={error ? true : undefined}
+                    aria-describedby={error ? "correo-error" : undefined}
+                    placeholder="nombre@tuempresa.co"
+                    className="w-full rounded-xl border border-line bg-surface py-3 pl-10 pr-3 text-[15px]"
                   />
-                </button>
-              );
-            })}
-          </div>
+                </div>
+                {error && <p id="correo-error" role="alert" className="text-[13.5px] text-danger">{error}</p>}
+                <Boton type="submit" className="mt-1 w-full">
+                  Continuar <ArrowRight size={16} aria-hidden />
+                </Boton>
+              </form>
 
-          <div className="mt-8 grid gap-3 border-t border-line pt-6 text-[13.5px] text-muted">
-            <p className="flex items-start gap-2">
-              <ShieldCheck size={15} className="mt-0.5 shrink-0 text-accent" aria-hidden />
-              En el portal real el acceso es con tu correo corporativo y segundo factor. Los permisos los decide el
-              servidor, no la pantalla.
-            </p>
-            <p className="flex items-start gap-2">
-              <KeyRound size={15} className="mt-0.5 shrink-0 text-muted" aria-hidden />
-              ¿Tu empresa aún no está afiliada?{" "}
-              <Link href="/afiliarme" className="font-semibold text-link hover:underline">
-                Solicita la afiliación
-              </Link>
-            </p>
-          </div>
+              <div className="mt-8">
+                <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-muted">Cuentas de demostración</p>
+                <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                  {DEMO.map((d) => (
+                    <button
+                      key={d.correo}
+                      type="button"
+                      onClick={() => {
+                        setCorreo(d.correo);
+                        irAClave(d.correo);
+                      }}
+                      className="rounded-lg border border-line px-3 py-2.5 text-left transition hover:border-accent"
+                    >
+                      <span className="block text-[13.5px] font-semibold">{d.etiqueta}</span>
+                      <span className="block truncate text-[12.5px] text-muted">{d.detalle}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <Pie />
+            </>
+          )}
+
+          {paso.id === "clave" && (
+            <>
+              <button
+                type="button"
+                onClick={reiniciar}
+                className="mb-6 inline-flex items-center gap-1.5 text-[13.5px] font-semibold text-muted transition hover:text-ink"
+              >
+                <ArrowLeft size={14} aria-hidden /> Usar otro correo
+              </button>
+              {/* Pantalla del proveedor de identidad: el portal no ve la contraseña. */}
+              <div className="overflow-hidden rounded-2xl border border-line">
+                <div className="flex items-center gap-2.5 border-b border-line bg-surface-2 px-5 py-3.5">
+                  <KeyRound size={16} className="text-accent" aria-hidden />
+                  <p className="text-[13px] font-semibold">Cuenta Fedesoft · proveedor de identidad</p>
+                </div>
+                <form onSubmit={enviarClave} className="grid gap-3 p-5" noValidate>
+                  <p className="text-[14px] text-muted">
+                    Entrando como <span className="font-semibold text-ink">{paso.correo}</span>
+                  </p>
+                  <label htmlFor="clave" className="text-[13.5px] font-semibold">Contraseña</label>
+                  <div className="relative">
+                    <LockKeyhole size={16} aria-hidden className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
+                    <input
+                      id="clave"
+                      type="password"
+                      autoComplete="current-password"
+                      autoFocus
+                      value={clave}
+                      onChange={(e) => setClave(e.target.value)}
+                      aria-invalid={error ? true : undefined}
+                      aria-describedby="clave-ayuda"
+                      className="w-full rounded-xl border border-line bg-surface py-3 pl-10 pr-3 text-[15px]"
+                    />
+                  </div>
+                  <p id="clave-ayuda" className="text-[12.5px] text-muted">En la demostración sirve cualquier contraseña.</p>
+                  {error && <p role="alert" className="text-[13.5px] text-danger">{error}</p>}
+                  <Boton type="submit" disabled={cargando} className="mt-1 w-full">
+                    {cargando ? <><Loader2 size={16} className="animate-spin" aria-hidden /> Verificando…</> : "Entrar"}
+                  </Boton>
+                  <Link href="/entrar/recuperar" className="justify-self-center text-[13.5px] font-semibold text-link hover:underline">
+                    ¿Olvidaste tu contraseña?
+                  </Link>
+                </form>
+              </div>
+              <p className="mt-4 flex items-start gap-2 text-[13px] text-muted">
+                <ShieldCheck size={15} className="mt-0.5 shrink-0 text-accent" aria-hidden />
+                La contraseña y el segundo factor los valida el proveedor de identidad. El portal nunca los ve ni los
+                guarda: solo recibe quién eres.
+              </p>
+            </>
+          )}
+
+          {paso.id === "invitaciones" && (
+            <Invitaciones
+              usuarioId={paso.usuarioId}
+              onContinuar={() => {
+                const activos = id.vinculos.filter((v) => v.usuarioId === paso.usuarioId && v.estado === "activo");
+                if (activos.length === 0) {
+                  setPaso({ id: "rechazo", motivo: "sin-acceso", correo: id.porId(paso.usuarioId)?.correo ?? "" });
+                } else entrarAlPortal(paso.usuarioId);
+              }}
+            />
+          )}
+
+          {paso.id === "verificado" && <Verificado usuarioId={paso.usuarioId} />}
+
+          {paso.id === "rechazo" && <Rechazo paso={paso} onReintentar={reiniciar} />}
         </div>
       </main>
+    </div>
+  );
+}
+
+function Invitaciones({ usuarioId, onContinuar }: { usuarioId: string; onContinuar: () => void }) {
+  const id = useIdentidad();
+  const pendientes = id.vinculos.filter(
+    (v) => v.usuarioId === usuarioId && v.estado === "invitado" && (v.invitacionVence ?? HOY) >= HOY,
+  );
+
+  return (
+    <>
+      <h2 className="font-display text-[28px] font-light leading-tight">
+        {pendientes.length > 0 ? "Tienes una invitación" : "Listo"}
+      </h2>
+      <p className="mt-2 text-[15px] leading-relaxed text-muted">
+        {pendientes.length > 0
+          ? "Entrar no la acepta por ti: decide si quieres unirte. Hasta que aceptes, la empresa no registra tus datos."
+          : "Respondiste todas tus invitaciones."}
+      </p>
+      <div className="mt-6 grid gap-3">
+        {pendientes.map((v) => (
+          <div key={v.empresa} className="rounded-xl border border-line p-4">
+            <div className="flex items-start gap-3">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-bg text-muted">
+                <Building2 size={18} aria-hidden />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="font-semibold">{EMPRESAS_POR_NIT[v.empresa] ?? v.empresa}</p>
+                <p className="text-[13.5px] text-muted">
+                  Como {nombreRolEmpresa(v.rol)}
+                  {v.invitadoPor ? ` · te invitó ${v.invitadoPor}` : ""}
+                  {v.invitacionVence ? ` · vence el ${fecha(v.invitacionVence)}` : ""}
+                </p>
+              </div>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Boton tamano="sm" onClick={() => id.aceptarInvitacion(usuarioId, v.empresa)}>Aceptar</Boton>
+              <Boton tamano="sm" variante="secundario" onClick={() => id.rechazarInvitacion(usuarioId, v.empresa)}>
+                Rechazar
+              </Boton>
+            </div>
+          </div>
+        ))}
+      </div>
+      {pendientes.length === 0 && (
+        <Boton className="mt-6 w-full" onClick={onContinuar}>
+          Continuar <ArrowRight size={16} aria-hidden />
+        </Boton>
+      )}
+    </>
+  );
+}
+
+function Verificado({ usuarioId }: { usuarioId: string }) {
+  const id = useIdentidad();
+  const { cambiarEscenario } = useDemo();
+  const router = useRouter();
+  const u = id.porId(usuarioId);
+  const empresas = id.vinculos
+    .filter((v) => v.usuarioId === usuarioId && v.estado === "activo")
+    .map((v) => `${EMPRESAS_POR_NIT[v.empresa] ?? v.empresa} (${nombreRolEmpresa(v.rol)})`);
+
+  const verComoGerente = () => {
+    const camilo = id.porCorreo("camilo.restrepo@datalabsandina.co");
+    if (camilo) id.iniciarPortal(camilo.id);
+    cambiarEscenario("mipyme-al-dia");
+    router.push("/empresa/contactos");
+  };
+
+  return (
+    <>
+      <span className="grid h-11 w-11 place-items-center rounded-full bg-success-bg text-success">
+        <ShieldCheck size={20} aria-hidden />
+      </span>
+      <h2 className="mt-4 font-display text-[28px] font-light leading-tight">Hola, {u?.nombre ?? u?.correo}</h2>
+      <p className="mt-2 text-[15px] leading-relaxed text-muted">
+        Tu acceso quedó activo en {empresas.join(", ") || "tu empresa"}. En el portal real entrarías ahora con los
+        permisos de tu rol.
+      </p>
+      <p className="mt-3 text-[14px] leading-relaxed text-muted">
+        La demostración recorre el portal completo con los perfiles de ejemplo. Mira cómo ve ahora el gerente tu acceso:
+      </p>
+      <Boton className="mt-6 w-full" onClick={verComoGerente}>
+        Ver los accesos como gerente <ArrowRight size={16} aria-hidden />
+      </Boton>
+    </>
+  );
+}
+
+function Rechazo({ paso, onReintentar }: { paso: Extract<Paso, { id: "rechazo" }>; onReintentar: () => void }) {
+  const contenido = {
+    "sin-acceso": {
+      icono: UserX,
+      titulo: "Tu cuenta no tiene acceso al portal",
+      texto:
+        "Al portal se entra por invitación: pídele al gerente registrado de tu empresa que te invite desde Contactos y accesos. Si tu empresa aún no está afiliada, puedes solicitarlo.",
+    },
+    desactivado: {
+      icono: UserX,
+      titulo: "Tu acceso fue desactivado",
+      texto: `El gerente de ${paso.empresa ?? "tu empresa"} desactivó tu acceso. Si es un error, pídele que lo reactive.`,
+    },
+    bloqueada: {
+      icono: Ban,
+      titulo: "Tu cuenta está bloqueada",
+      texto:
+        "Fedesoft bloqueó esta cuenta y cerró todas sus sesiones. Si crees que es un error, escribe a soporte@fedesoft.org.",
+    },
+    interno: {
+      icono: ShieldCheck,
+      titulo: "Tu cuenta es del equipo de Fedesoft",
+      texto: "Los usuarios internos entran por la consola, con segundo factor obligatorio.",
+    },
+  }[paso.motivo];
+  const Icono = contenido.icono;
+
+  return (
+    <>
+      <span className="grid h-11 w-11 place-items-center rounded-full bg-bg text-muted">
+        <Icono size={20} aria-hidden />
+      </span>
+      <h2 className="mt-4 font-display text-[28px] font-light leading-tight">{contenido.titulo}</h2>
+      <p className="mt-1 font-mono text-[13px] text-muted">{paso.correo}</p>
+      <p className="mt-3 text-[15px] leading-relaxed text-muted">{contenido.texto}</p>
+      <div className="mt-6 flex flex-wrap gap-2">
+        <Boton variante="secundario" onClick={onReintentar}>Usar otro correo</Boton>
+        {paso.motivo === "sin-acceso" && (
+          <Link href="/afiliarme" className="inline-flex items-center rounded-full px-5 py-2.5 text-[15px] font-semibold text-link hover:bg-info-bg">
+            Solicitar afiliación
+          </Link>
+        )}
+        {paso.motivo === "interno" && (
+          <Link href="/admin/entrar" className="inline-flex items-center rounded-full bg-[var(--navy-700)] px-5 py-2.5 text-[15px] font-semibold text-white hover:brightness-115">
+            Ir a la consola
+          </Link>
+        )}
+      </div>
+    </>
+  );
+}
+
+function Pie() {
+  return (
+    <div className="mt-8 grid gap-3 border-t border-line pt-6 text-[13.5px] text-muted">
+      <p className="flex items-start gap-2">
+        <KeyRound size={15} className="mt-0.5 shrink-0 text-muted" aria-hidden />
+        <span>
+          ¿Tu empresa aún no está afiliada?{" "}
+          <Link href="/afiliarme" className="font-semibold text-link hover:underline">Solicita la afiliación</Link>
+        </span>
+      </p>
+      <p className="flex items-start gap-2">
+        <ShieldCheck size={15} className="mt-0.5 shrink-0 text-accent" aria-hidden />
+        <span>
+          ¿Eres del equipo de Fedesoft?{" "}
+          <Link href="/admin/entrar" className="font-semibold text-link hover:underline">Entra a la consola</Link>
+        </span>
+      </p>
     </div>
   );
 }

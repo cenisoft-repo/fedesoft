@@ -1,14 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import {
-  Bell, Briefcase, Building2, GraduationCap, LayoutGrid, Moon, Network, Receipt, Sparkles,
-  Search, ShieldCheck, Star, Sun, Users, UsersRound,
+  Bell, Briefcase, Building2, ChevronDown, GraduationCap, LayoutGrid, LogOut, Moon, Network, Receipt, Sparkles,
+  Search, ShieldCheck, Star, Sun, UserCog, Users, UsersRound,
 } from "lucide-react";
 import { Firma, Logo } from "./Logo";
 import { DemoSwitcher } from "./DemoSwitcher";
 import { useDemo, useTema } from "@/lib/demo";
+import { useIdentidad } from "@/lib/identidad";
 import { Chip } from "./ui/primitivos";
 
 interface Entrada {
@@ -21,7 +23,7 @@ interface Entrada {
 }
 
 const NAV: Entrada[] = [
-  { href: "/", etiqueta: "Inicio", icono: LayoutGrid },
+  { href: "/portal", etiqueta: "Inicio", icono: LayoutGrid },
   { href: "/empresa", etiqueta: "Mi empresa", icono: Building2 },
   { href: "/facturacion", etiqueta: "Facturación", icono: Receipt, soloGerente: true },
   { href: "/formacion", etiqueta: "Formación", icono: GraduationCap },
@@ -55,12 +57,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-dvh">
       <header className="sticky top-0 z-30 border-b border-line bg-surface/90 backdrop-blur">
-        <div className="mx-auto flex max-w-[1200px] items-center gap-4 px-4 py-3 sm:px-6">
+        <div className="mx-auto flex max-w-[1200px] items-center gap-3 px-4 py-3 sm:gap-4 sm:px-6">
           <Link href="/" className="shrink-0 rounded">
             <Logo />
           </Link>
 
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex items-center gap-1 sm:gap-2">
             <div className="hidden items-center gap-2 sm:flex">
               <Chip tono={estadoChip.tono}>
                 <ShieldCheck size={13} aria-hidden /> {estadoChip.texto}
@@ -81,22 +83,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             >
               {tema === "oscuro" ? <Sun size={18} aria-hidden /> : <Moon size={18} aria-hidden />}
             </button>
-            <div className="hidden items-center gap-2.5 border-l border-line pl-3 md:flex">
-              <div className="grid h-8 w-8 place-items-center rounded-full bg-[var(--navy-700)] text-[12px] font-bold text-white">
-                {contacto?.nombre.split(" ").map((p) => p[0]).slice(0, 2).join("")}
-              </div>
-              <div className="leading-tight">
-                <p className="text-[13.5px] font-semibold">{contacto?.nombre}</p>
-                <p className="text-[12px] text-muted">{escenario.empresa.razonSocial}</p>
-              </div>
-            </div>
+            <MenuUsuario
+              nombre={contacto?.nombre ?? ""}
+              empresa={escenario.empresa.razonSocial}
+              esGerente={escenario.rol === "gerente"}
+            />
           </div>
         </div>
 
         <nav aria-label="Secciones del portal" className="border-t border-line">
           <div className="mx-auto flex max-w-[1200px] gap-1 overflow-x-auto px-2 sm:px-4">
             {visibles.map((e) => {
-              const activo = e.href === "/" ? pathname === "/" : pathname?.startsWith(e.href);
+              const activo = e.href === "/portal" ? pathname === "/portal" : pathname?.startsWith(e.href);
               const Icono = e.icono;
               return (
                 <Link
@@ -138,6 +136,86 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </footer>
 
       <DemoSwitcher />
+    </div>
+  );
+}
+
+/**
+ * Menú de usuario (P-01, navegación secundaria): accesos de la empresa para el
+ * gerente y cierre de sesión. Se cierra con Escape o al hacer clic fuera.
+ */
+function MenuUsuario({ nombre, empresa, esGerente }: { nombre: string; empresa: string; esGerente: boolean }) {
+  const [abierto, setAbierto] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+  const { cerrarPortal } = useIdentidad();
+
+  useEffect(() => {
+    if (!abierto) return;
+    const fuera = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setAbierto(false);
+    };
+    const tecla = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setAbierto(false);
+    };
+    document.addEventListener("mousedown", fuera);
+    document.addEventListener("keydown", tecla);
+    return () => {
+      document.removeEventListener("mousedown", fuera);
+      document.removeEventListener("keydown", tecla);
+    };
+  }, [abierto]);
+
+  const siglas = nombre.split(" ").map((p) => p[0]).slice(0, 2).join("");
+
+  return (
+    <div ref={ref} className="relative md:border-l md:border-line md:pl-3">
+      <button
+        type="button"
+        onClick={() => setAbierto((v) => !v)}
+        aria-expanded={abierto}
+        aria-haspopup="true"
+        aria-label={`Menú de ${nombre}`}
+        className="flex items-center gap-2.5 rounded-lg p-1 transition hover:bg-bg md:pr-2"
+      >
+        <span className="grid h-8 w-8 place-items-center rounded-full bg-[var(--navy-700)] text-[12px] font-bold text-white">
+          {siglas}
+        </span>
+        <span className="hidden text-left leading-tight md:block">
+          <span className="block text-[13.5px] font-semibold">{nombre}</span>
+          <span className="block text-[12px] text-muted">{empresa}</span>
+        </span>
+        <ChevronDown size={15} className="hidden text-muted md:block" aria-hidden />
+      </button>
+      {abierto && (
+        <div className="absolute right-0 top-full z-40 mt-2 w-64 overflow-hidden rounded-xl border border-line bg-surface shadow-[var(--shadow-pop)]">
+          <div className="border-b border-line px-4 py-3 md:hidden">
+            <p className="text-[13.5px] font-semibold">{nombre}</p>
+            <p className="text-[12px] text-muted">{empresa}</p>
+          </div>
+          <div className="grid p-1.5">
+            {esGerente && (
+              <Link
+                href="/empresa/contactos"
+                onClick={() => setAbierto(false)}
+                className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-[14px] font-semibold hover:bg-bg"
+              >
+                <UserCog size={16} className="text-muted" aria-hidden /> Contactos y accesos
+              </Link>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                cerrarPortal();
+                router.push("/entrar");
+              }}
+              className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-[14px] font-semibold hover:bg-bg"
+            >
+              <LogOut size={16} className="text-muted" aria-hidden /> Cerrar sesión
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
