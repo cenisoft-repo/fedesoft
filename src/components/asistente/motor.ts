@@ -447,10 +447,36 @@ function noEntiendo(ctx: Contexto): Respuesta {
   };
 }
 
+function ingreso(ctx: Contexto): Respuesta {
+  if (ctx.superficie === "portal") {
+    return {
+      tema: "ingreso",
+      bloques: [
+        texto("Ya estás dentro del portal. Tu contraseña y tu segundo factor los administra el proveedor de identidad de Fedesoft, no este portal."),
+        texto("Si alguien de tu empresa no puede entrar, el gerente puede revisar su acceso en Contactos y accesos."),
+      ],
+      acciones: puede(ctx, "contactos") ? [{ etiqueta: "Revisar accesos", href: "/empresa/contactos" }] : undefined,
+    };
+  }
+  return {
+    tema: "ingreso",
+    bloques: [
+      texto("Entras con tu correo corporativo. La contraseña la administra el proveedor de identidad de Fedesoft: desde ahí la recuperas."),
+      texto("Si tu cuenta está bloqueada o tu empresa desactivó tu acceso, la pantalla de ingreso te dice a quién acudir."),
+    ],
+    acciones: [
+      { etiqueta: "Recuperar mi contraseña", href: "/entrar/recuperar" },
+      { etiqueta: "Ir al ingreso", href: "/entrar" },
+    ],
+    sugerencias: ["Hablar con una persona"],
+  };
+}
+
 /** Elige la respuesta para lo que escribió la persona. */
 export function responder(entrada: string, ctx: Contexto): Respuesta {
   const t = normalizar(entrada);
   if (!t) return bienvenida(ctx);
+  const corto = t.split(" ").length <= 4;
 
   /* Las opciones numeradas del menú, como en el asistente actual. */
   const opcion = /^[1-5]$/.test(t) ? Number(t) : null;
@@ -460,25 +486,32 @@ export function responder(entrada: string, ctx: Contexto): Respuesta {
   if (opcion === 4) return softic();
   if (opcion === 5) return ingenio();
 
-  if (tiene(t, /\bgracias\b/, /\bmuchas gracias\b/)) {
+  /* Cortesías solo cuando son todo el mensaje: "gracias, ¿cómo pago?" es una pregunta de pago. */
+  if (tiene(t, /^(muchas |mil )?gracias( sofi| por (todo|tu ayuda|la ayuda))?$/, /^muy amable$/)) {
     return { tema: "gracias", bloques: [texto("¡Con gusto! Aquí estaré si necesitas algo más.")], sugerencias: ctx.superficie === "portal" ? sugerenciasPortal(ctx).slice(0, 3) : MENU.slice(0, 3) };
   }
-  if (tiene(t, /\b(adios|chao|hasta luego)\b/)) return { tema: "despedida", bloques: [texto("¡Hasta pronto! Que tengas un excelente día.")] };
-  if (tiene(t, /\b(persona|humano|asesor|agente|whatsapp|llamar|contacto|contactar|hablar con)\b/)) return humano(ctx);
+  if (corto && tiene(t, /^(adios|chao|hasta luego|nos vemos)\b/)) return { tema: "despedida", bloques: [texto("¡Hasta pronto! Que tengas un excelente día.")] };
+
+  /* Primero los temas con nombre propio, después los genéricos. */
   if (tiene(t, /\bsoftic\b/, /\bcongreso\b/)) return softic();
-  if (tiene(t, /\bingenio\b/, /\bpremio/)) return ingenio();
-  if (tiene(t, /\bconcurso\b/, /\bprogramacion\b/, /\bmaraton\b/)) return concurso();
+  if (tiene(t, /\bingenio\b/, /\bpremios?\b/)) return ingenio();
+  if (tiene(t, /\bconcurso\b/, /\bmaraton\b/)) return concurso();
+  if (tiene(t, /\b(contrasena|clave|olvide|recuperar|no puedo (entrar|ingresar)|no me deja (entrar|ingresar)|segundo factor)\b/)) return ingreso(ctx);
   if (tiene(t, /\bcertificad/, /\bsello\b/, /\bconstancia\b/)) return certificado(ctx);
-  if (tiene(t, /\b(pag|cuota|factur|estado de cuenta|deuda|cartera)/)) return pago(ctx);
-  if (tiene(t, /\b(acceso|accesos|usuario|usuarios|invitar|invitacion|permis)/)) return accesos(ctx);
+  if (tiene(t, /\b(pag(o|os|ar|ue|a|ado|ada)|cuota|cuotas|factura|facturas|facturacion|estado de cuenta|deuda|debo|cartera)\b/)) return pago(ctx);
+  /* "soy afiliado" antes que "afiliar": el afiliado pide ayuda, el visitante quiere afiliarse. */
+  if (tiene(t, /\b(soy afiliad[oa]|somos afiliad[oa]s|ya estoy afiliad[oa]|como afiliad[oa])\b/)) return ayudaAfiliado(ctx);
+  if (tiene(t, /\bafilia/, /\bunirme\b/, /\bhacerme socio\b/, /\bser socio\b/)) return afiliarse(ctx);
   if (tiene(t, /\b(gestora|gestor|kam|cuenta estrategica)\b/)) return cuentaEstrategica(ctx);
-  if (tiene(t, /\b(formacion|curso|cursos|capacitacion|traininglab|tic talk|inscrib|inscripcion|equipo)\b/)) return formacion(ctx);
-  if (tiene(t, /\b(datos|actualizar|empresa|ficha|perfil)\b/)) return datosEmpresa(ctx);
-  if (tiene(t, /\b(soy afiliado|afiliado y necesito|necesito ayuda|mi empresa)\b/)) return ayudaAfiliado(ctx);
-  if (tiene(t, /\bafilia/, /\bunirme\b/, /\bhacerme socio\b/)) return afiliarse(ctx);
-  if (tiene(t, /\b(servicio|servicios|beneficio|beneficios|gremial|internacionaliz|soft route|soft landing|talento ti|verticales?)\b/)) return servicios(ctx);
+  if (tiene(t, /\b(formacion|curso|cursos|capacitacion|traininglab|tic talks?|inscrib\w*|inscripcion\w*|taller\w*)\b/)) return formacion(ctx);
+  if (tiene(t, /\b(acceso|accesos|usuario|usuarios|invitar|invitacion|permiso|permisos|agregar (un |una )?(contacto|persona|usuario))\b/)) return accesos(ctx);
+  if (tiene(t, /\b(datos de (la|mi) empresa|actualizar (los |mis )?datos|mis datos|ficha|perfil de (la|mi) empresa)\b/)) return datosEmpresa(ctx);
+  if (tiene(t, /\b(servicio|servicios|beneficio|beneficios|gremial\w*|internacionaliz\w*|soft route|soft landing|talento ti|verticales?)\b/)) return servicios(ctx);
   if (tiene(t, /\b(evento|eventos)\b/)) return eventos();
-  if (tiene(t, /\b(que haces|que puedes|que sabes|ayuda|quien eres)\b/)) return capacidades(ctx);
+  /* Pedir una persona, solo cuando se pide explícitamente: "hablar con mi gerente" no es esto. */
+  if (tiene(t, /\bhablar con (una |un )?(persona|asesor|asesora|humano|agente|alguien)\b/, /\basesor(a)?\b/, /\bwhatsapp\b/, /\bagente humano\b/)) return humano(ctx);
+  if (tiene(t, /\b(que haces|que puedes|que sabes|quien eres|en que me ayudas)\b/) || t === "ayuda") return capacidades(ctx);
+  if (tiene(t, /\b(necesito ayuda|ayudame|tengo una duda)\b/)) return ayudaAfiliado(ctx);
   if (tiene(t, /^(hola|buen[oa]s?|hey|saludos|que mas|buen dia)\b/)) return bienvenida(ctx);
   return noEntiendo(ctx);
 }

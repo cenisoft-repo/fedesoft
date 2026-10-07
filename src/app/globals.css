@@ -225,25 +225,11 @@ h1, h2, h3, h4 {
   background-size: 160px 160px;
 }
 
-/* ── Sofi, la asistente: animaciones de la mascota ─────────────────────
+/* ── Sofi, la asistente: animaciones del robot ──────────────────────────
    Con prefers-reduced-motion, la regla global de arriba las deja quietas. */
 @keyframes sofi-flota {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-4px); }
-}
-@keyframes sofi-parpadeo {
-  0%, 92%, 100% { transform: scaleY(1); }
-  95% { transform: scaleY(0.08); }
-}
-@keyframes sofi-habla {
-  0%, 100% { transform: scaleX(1); }
-  25% { transform: scaleX(0.45); }
-  50% { transform: scaleX(1.25); }
-  75% { transform: scaleX(0.7); }
-}
-@keyframes sofi-antena {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.45; transform: scale(0.8); }
 }
 @keyframes sofi-saluda {
   0%, 100% { transform: rotate(0deg); }
@@ -266,10 +252,13 @@ h1, h2, h3, h4 {
   to { opacity: 1; transform: none; }
 }
 .sofi-flota { animation: sofi-flota 4.2s ease-in-out infinite; }
-.sofi-parpadeo { transform-box: fill-box; transform-origin: center; animation: sofi-parpadeo 5.2s infinite; }
-.sofi-habla { transform-box: fill-box; transform-origin: center; animation: sofi-habla 0.42s ease-in-out infinite; }
-.sofi-antena { transform-box: fill-box; transform-origin: center; animation: sofi-antena 1.6s ease-in-out infinite; }
-.sofi-antena-rapida { transform-box: fill-box; transform-origin: center; animation: sofi-antena 0.55s ease-in-out infinite; }
+@keyframes sofi-gira { to { transform: rotate(360deg); } }
+@keyframes sofi-pulso {
+  0%, 100% { opacity: 0.35; transform: scale(0.96); }
+  50% { opacity: 0.9; transform: scale(1.06); }
+}
+.sofi-gira { animation: sofi-gira 1.1s linear infinite; }
+.sofi-pulso { animation: sofi-pulso 1.2s ease-in-out infinite; }
 .sofi-saluda { transform-box: fill-box; transform-origin: 50% 90%; animation: sofi-saluda 0.9s ease-in-out; }
 .sofi-zeta { animation: sofi-zeta 2.4s ease-out infinite; }
 .sofi-escribe { animation: sofi-escribe 1.1s ease-in-out infinite; }

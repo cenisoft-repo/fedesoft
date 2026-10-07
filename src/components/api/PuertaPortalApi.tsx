@@ -24,7 +24,7 @@ export function PuertaPortalApi({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    if (actual.estado === "anonimo") router.replace("/entrar");
+    if (actual.estado === "anonimo") router.replace(`/entrar?destino=${encodeURIComponent(window.location.pathname)}`);
   }, [actual.estado, router]);
 
   const activa = actual.estado === "lista" ? actual.vista.activeOrganization : null;

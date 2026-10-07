@@ -16,7 +16,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { HOY } from "./format";
-import { useDemo } from "./demo";
+import { ESCENARIOS, useDemo } from "./demo";
 import { nivelConsola } from "./acceso";
 import {
   USUARIOS_INICIALES,
@@ -132,19 +132,34 @@ export function IdentidadProvider({ children }: { children: ReactNode }) {
   const [sesionLista, setSesionLista] = useState(false);
   const [salidaVoluntaria, setSalidaVoluntaria] = useState(false);
 
-  /* La sesión del portal vive en la pestaña, como la cookie de sesión del
-     sistema real: recargar no te saca; cerrar la pestaña o salir, sí. */
+  /* Sesión de DEMOSTRACIÓN guardada en la pestaña para que recargar no saque
+     a nadie. No es el modelo real (ADR-008: cookie HttpOnly de servidor); aquí
+     solo se recuerda a quién se eligió. Al restaurarla se revalida con las
+     reglas del login: persona activa, con acceso vigente a una empresa y que
+     sea la persona del escenario guardado. Lo demás se descarta. */
   useEffect(() => {
     try {
       const guardada = window.sessionStorage.getItem(CLAVE_SESION);
-      if (guardada && USUARIOS_INICIALES.some((u) => u.id === guardada && u.estado !== "bloqueado")) {
+      const escenarioGuardado = ESCENARIOS.find((e) => e.id === window.sessionStorage.getItem("fedesoft-escenario")) ?? ESCENARIOS[0];
+      const u = USUARIOS_INICIALES.find((x) => x.id === guardada);
+      const conAcceso = VINCULOS_INICIALES.some((v) => v.usuarioId === guardada && v.estado === "activo");
+      if (u && u.estado === "activo" && conAcceso && guardada === `u-${escenarioGuardado.contactoId}`) {
         setSesionPortal(guardada);
+      } else if (guardada) {
+        window.sessionStorage.removeItem(CLAVE_SESION);
       }
     } catch {
       /* Sin almacenamiento: la sesión dura lo que dure la página. */
     }
     setSesionLista(true);
   }, []);
+
+  /* La sesión sigue a la persona del escenario: al cambiarlo desde el control
+     de demostración, el portal y el login hablan de la misma persona. */
+  const personaEscenario = `u-${escenario.contactoId}`;
+  useEffect(() => {
+    if (sesionLista && sesionPortal && sesionPortal !== personaEscenario) setSesionPortal(personaEscenario);
+  }, [sesionLista, sesionPortal, personaEscenario]);
 
   useEffect(() => {
     if (!sesionLista) return;

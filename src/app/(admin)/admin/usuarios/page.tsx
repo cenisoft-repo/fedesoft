@@ -39,6 +39,9 @@ function UsuariosSimulado() {
   const id = useIdentidad();
   const operador = id.sesionConsola ? id.porId(id.sesionConsola) : undefined;
   const esSuperAdmin = operador?.rolesInternos.includes("super-admin") ?? false;
+  /* Como el API (ADR-009): ver cuentas de afiliados y el detalle de sus sesiones
+     (IP, dispositivo) es de Super Admin y Auditor; Dirección ve solo internos. */
+  const veTodo = esSuperAdmin || (operador?.rolesInternos.includes("auditor") ?? false);
 
   const [q, setQ] = useState("");
   const [filtro, setFiltro] = useState<Filtro>("todos");
@@ -49,6 +52,7 @@ function UsuariosSimulado() {
   const lista = useMemo(() => {
     const t = q.trim().toLowerCase();
     return id.usuarios
+      .filter((u) => veTodo || u.rolesInternos.length > 0)
       .filter((u) => !t || u.correo.includes(t) || (u.nombre ?? "").toLowerCase().includes(t))
       .filter((u) => {
         if (filtro === "internos") return u.rolesInternos.length > 0;
@@ -57,9 +61,9 @@ function UsuariosSimulado() {
         return true;
       })
       .sort((a, b) => (a.nombre ?? a.correo).localeCompare(b.nombre ?? b.correo, "es"));
-  }, [id.usuarios, id.vinculos, q, filtro]);
+  }, [id.usuarios, id.vinculos, q, filtro, veTodo]);
 
-  const elegido = seleccion ? id.porId(seleccion) : undefined;
+  const elegido = seleccion ? lista.find((u) => u.id === seleccion) ?? (veTodo ? id.porId(seleccion) : undefined) : undefined;
   const ejecutar = (r: Resultado) => {
     setAviso(r);
     if (r.ok) setDialogo(null);
@@ -105,7 +109,7 @@ function UsuariosSimulado() {
               />
             </div>
             <div role="group" aria-label="Filtrar usuarios" className="flex flex-wrap gap-1.5">
-              {FILTROS.map((f) => (
+              {FILTROS.filter((f) => veTodo || f.id === "todos" || f.id === "internos").map((f) => (
                 <button
                   key={f.id}
                   type="button"
@@ -166,6 +170,7 @@ function UsuariosSimulado() {
             key={elegido.id}
             u={elegido}
             esSuperAdmin={esSuperAdmin}
+            veSesiones={veTodo}
             esYo={elegido.id === operador?.id}
             onResultado={ejecutar}
             onBloquear={() => { setAviso(null); setDialogo({ tipo: elegido.estado === "bloqueado" ? "desbloquear" : "bloquear", usuario: elegido }); }}
@@ -218,10 +223,12 @@ function EstadoUsuario({ u }: { u: Usuario }) {
 }
 
 function Ficha({
-  u, esSuperAdmin, esYo, onResultado, onBloquear,
+  u, esSuperAdmin, veSesiones, esYo, onResultado, onBloquear,
 }: {
   u: Usuario;
   esSuperAdmin: boolean;
+  /** IP y lugar de cada sesión: solo Super Admin y Auditor. */
+  veSesiones: boolean;
   esYo: boolean;
   onResultado: (r: Resultado) => Resultado;
   onBloquear: () => void;
@@ -349,7 +356,8 @@ function Ficha({
                   <span className="font-semibold">{s.dispositivo}</span>
                   <Chip tono={s.superficie === "consola" ? "info" : "neutro"}>{s.superficie === "consola" ? "Consola" : "Portal"}</Chip>
                   <span className="text-muted sm:ml-auto">
-                    {s.lugar} · <span className="num font-mono">{s.ip}</span> · <span className="num">{s.ultimoUso}</span>
+                    {veSesiones ? <>{s.lugar} · <span className="num font-mono">{s.ip}</span> · </> : null}
+                    <span className="num">{s.ultimoUso}</span>
                   </span>
                 </li>
               ))}

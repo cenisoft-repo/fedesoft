@@ -52,6 +52,20 @@ const PORTAL: MatrizPortal = {
   "cuenta-estrategica": { gerente: "gestiona", talento: "gestiona", contacto: null },
 };
 
+/** Prefijos de las rutas del portal: el login solo acepta estos como destino de regreso. */
+export const RUTAS_PORTAL = [
+  "/portal", "/empresa", "/facturacion", "/formacion", "/comunidades", "/verticales", "/directorio",
+  "/visibilidad", "/oportunidades", "/cuenta-estrategica",
+] as const;
+
+export const esRutaPortal = (ruta: string) => RUTAS_PORTAL.some((p) => ruta === p || ruta.startsWith(`${p}/`));
+
+/** Destino de regreso tras el login: solo rutas propias del portal, sin consultas ni dobles barras. */
+export function destinoSeguro(valor: string | null | undefined): string {
+  const d = valor ?? "";
+  return /^\/[a-z0-9-]+(\/[a-z0-9-]+)*$/.test(d) && esRutaPortal(d) ? d : "/portal";
+}
+
 /** Lo que el rol alcanza en la sección, sin mirar el segmento. */
 export function nivelPortal(rol: RolEmpresa, seccion: SeccionPortal): Nivel | null {
   return PORTAL[seccion][rol];

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { destinoSeguro } from "@/lib/acceso";
 import { Logo } from "@/components/Logo";
 import { MarcaAcceso } from "@/components/acceso/MarcaAcceso";
 import { useRouter } from "next/navigation";
@@ -49,14 +50,10 @@ const DEMO_CASOS = [
   { correo: "mauricio.lara@sistemasvertice.com.co", etiqueta: "Cuenta bloqueada", detalle: "Mauricio Lara" },
 ];
 
-/* Secciones del portal a las que se puede volver tras entrar. Nada de la URL
-   se sigue tal cual: un destino fuera de esta lista vuelve al inicio. */
-const DESTINO_VALIDO = /^\/(portal|empresa|facturacion|formacion|comunidades|verticales|directorio|visibilidad|oportunidades|cuenta-estrategica)(\/[a-z0-9-]+)*$/;
-
+/* El destino de regreso se valida contra las rutas del portal (acceso.ts): nada de la URL se sigue tal cual. */
 function destinoPortal(): string {
   try {
-    const d = new URLSearchParams(window.location.search).get("destino") ?? "";
-    return DESTINO_VALIDO.test(d) ? d : "/portal";
+    return destinoSeguro(new URLSearchParams(window.location.search).get("destino"));
   } catch {
     return "/portal";
   }
@@ -188,7 +185,7 @@ function EntrarSimulado() {
                   </div>
                 </div>
               )}
-              <h2 className="font-display text-[30px] font-light leading-tight">Ingresa al portal</h2>
+              <h1 className="font-display text-[30px] font-light leading-tight">Ingresa al portal</h1>
               <p className="mt-2 text-[15px] leading-relaxed text-muted">
                 Con tu correo corporativo. Cada contacto de una empresa afiliada ve lo que le corresponde según su rol.
               </p>
@@ -328,9 +325,9 @@ function Invitaciones({ usuarioId, onContinuar }: { usuarioId: string; onContinu
 
   return (
     <>
-      <h2 className="font-display text-[28px] font-light leading-tight">
+      <h1 className="font-display text-[28px] font-light leading-tight">
         {pendientes.length > 0 ? "Tienes una invitación" : "Listo"}
-      </h2>
+      </h1>
       <p className="mt-2 text-[15px] leading-relaxed text-muted">
         {pendientes.length > 0
           ? "Entrar no la acepta por ti: decide si quieres unirte. Hasta que aceptes, la empresa no registra tus datos."
@@ -391,7 +388,7 @@ function Verificado({ usuarioId }: { usuarioId: string }) {
       <span className="grid h-11 w-11 place-items-center rounded-full bg-success-bg text-success">
         <ShieldCheck size={20} aria-hidden />
       </span>
-      <h2 className="mt-4 font-display text-[28px] font-light leading-tight">Hola, {u?.nombre ?? u?.correo}</h2>
+      <h1 className="mt-4 font-display text-[28px] font-light leading-tight">Hola, {u?.nombre ?? u?.correo}</h1>
       <p className="mt-2 text-[15px] leading-relaxed text-muted">
         Tu acceso quedó activo en {empresas.join(", ") || "tu empresa"}. En el portal real entrarías ahora con los
         permisos de tu rol.
@@ -438,7 +435,7 @@ function Rechazo({ paso, onReintentar }: { paso: Extract<Paso, { id: "rechazo" }
       <span className="grid h-11 w-11 place-items-center rounded-full bg-bg text-muted">
         <Icono size={20} aria-hidden />
       </span>
-      <h2 className="mt-4 font-display text-[28px] font-light leading-tight">{contenido.titulo}</h2>
+      <h1 className="mt-4 font-display text-[28px] font-light leading-tight">{contenido.titulo}</h1>
       <p className="mt-1 font-mono text-[13px] text-muted">{paso.correo}</p>
       <p className="mt-3 text-[15px] leading-relaxed text-muted">{contenido.texto}</p>
       <div className="mt-6 flex flex-wrap gap-2">

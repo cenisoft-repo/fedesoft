@@ -5,6 +5,8 @@ import { MarcaAcceso } from "@/components/acceso/MarcaAcceso";
 import { ArrowRight, KeyRound, ShieldCheck } from "lucide-react";
 import { urlLogin } from "@/lib/api/cliente";
 import { useSesionApi } from "@/lib/api/sesion";
+import { destinoSeguro } from "@/lib/acceso";
+import { useEffect, useState } from "react";
 
 /**
  * Acceso con el API real: el portal no pide ni ve la contraseña. El botón
@@ -14,6 +16,11 @@ import { useSesionApi } from "@/lib/api/sesion";
 export function EntrarApi() {
   const { actual } = useSesionApi("portal");
   const conSesion = actual.estado === "lista";
+  /* El destino se lee en el cliente y se valida: el API recibe solo una ruta propia del portal. */
+  const [destino, setDestino] = useState("/portal");
+  useEffect(() => {
+    setDestino(destinoSeguro(new URLSearchParams(window.location.search).get("destino")));
+  }, []);
 
   return (
     <div className="grid min-h-dvh lg:grid-cols-[1fr_1.1fr]">
@@ -21,21 +28,21 @@ export function EntrarApi() {
 
       <main className="flex items-center bg-surface px-6 py-14 sm:px-12">
         <div className="mx-auto w-full max-w-[460px]">
-          <h2 className="font-display text-[30px] font-light leading-tight">Ingresa al portal</h2>
+          <h1 className="font-display text-[30px] font-light leading-tight">Ingresa al portal</h1>
           <p className="mt-2 text-[15px] leading-relaxed text-muted">
             Con tu Cuenta Fedesoft. Te llevaremos al proveedor de identidad y volverás aquí con tu sesión.
           </p>
 
           {conSesion ? (
             <Link
-              href="/portal"
+              href={destino}
               className="mt-8 flex w-full items-center justify-center gap-2 rounded-full bg-[var(--navy-700)] px-5 py-3 text-[15px] font-semibold text-white hover:brightness-115"
             >
               Continuar como {actual.vista.user.name ?? actual.vista.user.email} <ArrowRight size={16} aria-hidden />
             </Link>
           ) : (
             <a
-              href={urlLogin("portal", "/portal")}
+              href={urlLogin("portal", destino)}
               className="mt-8 flex w-full items-center justify-center gap-2 rounded-full bg-[var(--navy-700)] px-5 py-3 text-[15px] font-semibold text-white hover:brightness-115"
             >
               <KeyRound size={16} aria-hidden /> Ingresar con Cuenta Fedesoft
