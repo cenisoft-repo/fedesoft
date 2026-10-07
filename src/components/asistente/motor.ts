@@ -21,9 +21,21 @@ export interface Contexto {
   empresa?: Empresa;
 }
 
+export interface Tarjeta {
+  titulo: string;
+  detalle: string;
+  /** Dato corto destacado: fecha, cupos, monto. */
+  meta?: string;
+  href?: string;
+}
+
 export type Bloque =
   | { tipo: "texto"; texto: string }
-  | { tipo: "lista"; items: string[]; ordenada?: boolean };
+  | { tipo: "lista"; items: string[]; ordenada?: boolean }
+  /** Fichas navegables: próximas sesiones, por ejemplo. */
+  | { tipo: "tarjetas"; items: Tarjeta[] }
+  /** Una cifra que importa, en grande: lo que hay por pagar. */
+  | { tipo: "dato"; etiqueta: string; valor: string; detalle?: string; alerta?: boolean };
 
 export interface Accion {
   etiqueta: string;
@@ -291,10 +303,12 @@ function pago(ctx: Contexto): Respuesta {
   }
   const total = pendientes.reduce((s, c) => s + c.monto, 0);
   const vence = pendientes[0].vence;
+  const vencido = pendientes.some((c) => c.estado === "vencido");
   return {
     tema: "pago",
     bloques: [
-      texto(`Tienes ${cop(total)} por pagar (${pendientes[0].concepto}), con vencimiento el ${fecha(vence)}.`),
+      texto(vencido ? "Tu cuota está vencida; puedes ponerte al día en línea ahora mismo." : "Este es el saldo pendiente de tu empresa:"),
+      { tipo: "dato", etiqueta: vencido ? "Vencido" : "Por pagar", valor: cop(total), detalle: `${pendientes[0].concepto} · vence el ${fecha(vence)}`, alerta: vencido },
       texto("El pago se confirma de servidor a servidor con la pasarela y la factura electrónica con CUFE se emite sola."),
     ],
     acciones: [enlace(ctx, "Pagar ahora", "/facturacion/pagar"), enlace(ctx, "Ver estado de cuenta", "/facturacion")],
@@ -302,15 +316,26 @@ function pago(ctx: Contexto): Respuesta {
 }
 
 function formacion(ctx: Contexto): Respuesta {
-  const proxima = ACTIVIDADES.filter((a) => a.estado === "abierto" && a.fecha >= HOY && a.inscritos < a.cupos)
-    .sort((a, b) => a.fecha.localeCompare(b.fecha))[0];
-  const destacada = proxima ? texto(`La próxima con cupo: «${proxima.titulo}» (${proxima.programa}), el ${fecha(proxima.fecha)}.`) : null;
+  const proximas = ACTIVIDADES.filter((a) => a.estado === "abierto" && a.fecha >= HOY && a.inscritos < a.cupos)
+    .sort((a, b) => a.fecha.localeCompare(b.fecha))
+    .slice(0, 3);
+  const destacada: Bloque | null = proximas.length
+    ? {
+        tipo: "tarjetas",
+        items: proximas.map((a) => ({
+          titulo: a.titulo,
+          detalle: `${a.programa} · ${a.modalidad}`,
+          meta: `${fecha(a.fecha)} · ${a.cupos - a.inscritos} cupos`,
+          href: enlace(ctx, a.titulo, "/formacion").href,
+        })),
+      }
+    : null;
   if (ctx.superficie !== "portal") {
     return {
       tema: "formacion",
       bloques: [
         texto("La oferta de formación de Fedesoft incluye TrainingLAB, TIC Talks y Series C+I. Buena parte es exclusiva para empresas afiliadas."),
-        ...(destacada ? [destacada] : []),
+        ...(destacada ? [texto("Las próximas sesiones con cupo:"), destacada] : []),
       ],
       acciones: [enlace(ctx, "Ver el catálogo", "/formacion")],
       sugerencias: ["Quiero afiliarme a Fedesoft"],
@@ -325,7 +350,7 @@ function formacion(ctx: Contexto): Respuesta {
           ? "Desde Formación inscribes a tu equipo con un clic y ves quién participó en qué."
           : "Desde Formación te inscribes a las sesiones. La inscripción del equipo la hacen el gerente o el líder de talento.",
       ),
-      ...(destacada ? [destacada] : []),
+      ...(destacada ? [texto("Las próximas con cupo:"), destacada] : []),
     ],
     acciones: [{ etiqueta: equipo ? "Inscribir a mi equipo" : "Ver el catálogo", href: "/formacion" }],
   };
@@ -514,4 +539,58 @@ export function responder(entrada: string, ctx: Contexto): Respuesta {
   if (tiene(t, /\b(necesito ayuda|ayudame|tengo una duda)\b/)) return ayudaAfiliado(ctx);
   if (tiene(t, /^(hola|buen[oa]s?|hey|saludos|que mas|buen dia)\b/)) return bienvenida(ctx);
   return noEntiendo(ctx);
+}
+
+/* ── Interacción: autocompletar y avisos ──────────────────────────── */
+
+/**
+ * Preguntas que Sofi sabe responder, para autocompletar mientras se escribe.
+ * En el portal salen de la matriz de acceso: nadie ve atajos que su rol no alcanza.
+ */
+export function preguntasFrecuentes(ctx: Contexto): string[] {
+  const base =
+    ctx.superficie === "portal"
+      ? [...sugerenciasPortal(ctx), "Datos de la empresa", "Formación para mi equipo", "Servicios gremiales"]
+      : [...MENU, "Formación para mi equipo", "Servicios gremiales", "Eventos de Fedesoft", "Ver mi estado de cuenta"];
+  return [...new Set([...base, "Eventos de Fedesoft", "Olvidé mi contraseña", "Hablar con una persona", "¿Qué puedes hacer?"])];
+}
+
+/** Las preguntas que encajan con lo escrito: cada palabra debe empezar alguna palabra de la pregunta. */
+export function autocompletar(entrada: string, ctx: Contexto, max = 4): string[] {
+  const palabras = normalizar(entrada).split(" ").filter(Boolean);
+  if (palabras.length === 0 || normalizar(entrada).length < 2) return [];
+  return preguntasFrecuentes(ctx)
+    .filter((p) => {
+      const destino = normalizar(p).split(" ");
+      return palabras.every((w) => destino.some((d) => d.startsWith(w)));
+    })
+    .slice(0, max);
+}
+
+export interface Aviso {
+  /** Lo que dice la burbuja del lanzador. */
+  texto: string;
+  /** La pregunta que se envía al aceptar. */
+  pregunta: string;
+  /** Identifica el aviso para no repetirlo en la misma pestaña. */
+  clave: string;
+}
+
+/**
+ * Un aviso oportuno según dónde está la persona: Sofi se ofrece antes de que
+ * pregunten. En el portal respeta la matriz: solo habla de pagos a quien los ve.
+ */
+export function avisoContextual(ruta: string, ctx: Contexto): Aviso | null {
+  if (ctx.superficie === "portal" && ctx.empresa) {
+    const vencido = puede(ctx, "facturacion") && ctx.empresa.cargos.some((c) => c.estado === "vencido");
+    if (vencido) return { texto: "Tienes una cuota vencida. ¿Te ayudo a ponerte al día?", pregunta: "Pagar la cuota", clave: `vencido-${ctx.empresa.nit}` };
+    if (ruta.startsWith("/formacion")) return { texto: "¿Buscas una sesión? Te muestro las próximas con cupo.", pregunta: "Cursos con cupo", clave: "formacion" };
+    if (ruta.startsWith("/empresa/contactos") && puede(ctx, "contactos")) return { texto: "¿Vas a invitar a alguien? Te explico cómo.", pregunta: "Gestionar accesos", clave: "contactos" };
+    if (ruta === "/portal") return { texto: `¡Hola${ctx.nombre ? `, ${primerNombre(ctx.nombre)}` : ""}! ¿Te ayudo con algo del portal?`, pregunta: "¿Qué puedes hacer?", clave: "inicio" };
+    return null;
+  }
+  if (ruta.startsWith("/entrar")) return { texto: "¿Problemas para entrar? Te ayudo.", pregunta: "No puedo entrar", clave: "entrar" };
+  if (ruta.startsWith("/afiliarme")) return { texto: "¿Dudas sobre la afiliación? Pregúntame.", pregunta: "Quiero afiliarme a Fedesoft", clave: "afiliarme" };
+  if (ruta === "/") return { texto: "¡Hola! Soy Sofi. ¿En qué te ayudo hoy?", pregunta: "¿Qué puedes hacer?", clave: "landing" };
+  return null;
 }

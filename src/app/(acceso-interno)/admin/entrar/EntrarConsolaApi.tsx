@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, KeyRound, ShieldCheck, Smartphone } from "lucide-react";
 import { urlLogin } from "@/lib/api/cliente";
 import { Logo } from "@/components/Logo";
+import { BotonTema } from "@/components/BotonTema";
 
 /**
  * Acceso a la consola con el API real. El segundo factor lo pide el proveedor
@@ -33,6 +34,7 @@ export function EntrarConsolaApi() {
           >
             <ArrowLeft size={14} aria-hidden /> Portal del afiliado
           </Link>
+          <BotonTema className="rounded-full p-2 text-azure-200 transition hover:bg-white/10 hover:text-white" />
         </div>
       </header>
       <main className="grid place-items-center px-4 py-12">

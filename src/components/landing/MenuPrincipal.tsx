@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { ArrowRight, ChevronDown, Menu as Hamburguesa, X } from "lucide-react";
 import { Logo } from "@/components/Logo";
+import { BotonTema } from "@/components/BotonTema";
 import { SECCIONES, type Pieza, type Seccion } from "./menu-datos";
 
 /* ── Mosaico de una iniciativa o evento, con su logo oficial ───────── */
@@ -20,12 +21,12 @@ function Mosaico({ pieza }: { pieza: Pieza }) {
   );
 
   const base =
-    "block aspect-square overflow-hidden rounded-2xl border border-white/10 transition duration-300";
+    "block aspect-square overflow-hidden rounded-2xl border border-lienzo-linea transition duration-300";
 
   return pieza.href ? (
     <Link
       href={pieza.href}
-      className={`${base} hover:-translate-y-1 hover:border-[var(--azure-400)] hover:shadow-[0_18px_40px_-16px_var(--brand-azure)]`}
+      className={`${base} hover:-translate-y-1 hover:border-lienzo-acento-2 hover:shadow-[0_18px_40px_-16px_var(--brand-azure)]`}
     >
       {arte}
     </Link>
@@ -50,7 +51,7 @@ function Contenido({ seccion }: { seccion: Seccion }) {
         <div className="grid gap-8 sm:grid-cols-2">
           {seccion.columnas.map((c) => (
             <div key={c.titulo}>
-              <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--azure-400)]">
+              <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-lienzo-acento-2">
                 {c.titulo}
               </p>
               <ul className="mt-4 grid gap-1">
@@ -59,16 +60,16 @@ function Contenido({ seccion }: { seccion: Seccion }) {
                     <li key={e.nombre}>
                       <Link
                         href={e.href}
-                        className="flex items-center justify-between gap-3 rounded-full px-4 py-2.5 text-[14.5px] text-white/80 transition hover:bg-white/10 hover:text-white"
+                        className="flex items-center justify-between gap-3 rounded-full px-4 py-2.5 text-[14.5px] text-lienzo-tinta-2 transition hover:bg-lienzo-relleno-2 hover:text-lienzo-tinta"
                       >
                         {e.nombre}
-                        <ArrowRight size={14} aria-hidden className="text-[var(--azure-400)]" />
+                        <ArrowRight size={14} aria-hidden className="text-lienzo-acento-2" />
                       </Link>
                     </li>
                   ) : (
                     <li
                       key={e.nombre}
-                      className="rounded-full px-4 py-2.5 text-[14.5px] text-white/45"
+                      className="rounded-full px-4 py-2.5 text-[14.5px] text-lienzo-tinta-5"
                     >
                       {e.nombre}
                     </li>
@@ -81,7 +82,7 @@ function Contenido({ seccion }: { seccion: Seccion }) {
       )}
 
       {seccion.pie && (
-        <p className="mt-6 border-t border-white/10 pt-4 text-[13px] font-light text-white/40">
+        <p className="mt-6 border-t border-lienzo-linea pt-4 text-[13px] font-light text-lienzo-tinta-5">
           {seccion.pie}
         </p>
       )}
@@ -91,8 +92,8 @@ function Contenido({ seccion }: { seccion: Seccion }) {
 
 /**
  * Barra flotante de vidrio con sus paneles, en el lenguaje del material de
- * referencia: superficie navy translúcida, filo tenue, halo azure y retícula
- * apenas insinuada. Los paneles traen los logos oficiales de cada evento e
+ * referencia: superficie translúcida (navy en la vista oscura, blanca en la clara),
+ * filo tenue, halo azure y retícula apenas insinuada. Los paneles traen los logos oficiales de cada evento e
  * iniciativa, tal como los publica el sitio de la federación.
  */
 export function MenuPrincipal() {
@@ -133,9 +134,9 @@ export function MenuPrincipal() {
     <header className="fixed inset-x-0 top-0 z-40 px-4 pt-4 sm:px-6 sm:pt-5">
       <div ref={contenedor} className="mx-auto max-w-[1240px]" onPointerLeave={() => setAbierta(null)}>
         {/* ── La píldora ───────────────────────────────────────────── */}
-        <div className="vidrio-menu flex items-center gap-2 rounded-full border border-white/10 px-3 py-2 sm:px-4">
+        <div className="vidrio-menu flex items-center gap-2 rounded-full border border-lienzo-linea px-3 py-2 sm:px-4">
           <Link href="/" className="shrink-0 rounded-full px-1.5" aria-label="Fedesoft, inicio">
-            <Logo tema="oscuro" compacto alto={20} />
+            <Logo tema="lienzo" compacto alto={20} />
           </Link>
 
           <nav aria-label="Secciones de la federación" className="ml-3 hidden items-center gap-0.5 lg:flex">
@@ -156,7 +157,9 @@ export function MenuPrincipal() {
                     setAbierta(conHover ? s.id : activa ? null : s.id);
                   }}
                   className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[13.5px] font-semibold transition ${
-                    activa ? "bg-white/12 text-white" : "text-white/65 hover:bg-white/8 hover:text-white"
+                    activa
+                      ? "bg-lienzo-relleno-3 text-lienzo-tinta"
+                      : "text-lienzo-tinta-3 hover:bg-lienzo-relleno-2 hover:text-lienzo-tinta"
                   }`}
                 >
                   {s.etiqueta}
@@ -170,19 +173,28 @@ export function MenuPrincipal() {
             })}
           </nav>
 
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex items-center gap-1 sm:gap-2">
+            {/* Vista clara u oscura: el lienzo es oscuro mientras la persona no elija */}
+            <BotonTema
+              predeterminado="oscuro"
+              className="rounded-full p-2 text-lienzo-tinta-3 transition hover:bg-lienzo-relleno-2 hover:text-lienzo-tinta"
+            />
             <Link
               href="/entrar"
-              className="inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-[13.5px] font-semibold text-[var(--navy-abismo)] transition hover:bg-white/90"
+              className="inline-flex items-center gap-1.5 rounded-full bg-lienzo-boton px-3.5 py-2 text-[13.5px] font-semibold text-lienzo-boton-tinta transition hover:bg-lienzo-boton-hover sm:px-4"
             >
-              Ingresar al portal <ArrowRight size={14} aria-hidden />
+              {/* En pantallas angostas la etiqueta se acorta a la vista; el nombre accesible sigue completo */}
+              <span>
+                Ingresar<span className="sr-only sm:not-sr-only"> al portal</span>
+              </span>
+              <ArrowRight size={14} aria-hidden />
             </Link>
             <button
               type="button"
               onClick={() => setMovil((v) => !v)}
               aria-expanded={movil}
               aria-label={movil ? "Cerrar menú" : "Abrir menú"}
-              className="rounded-full p-2 text-white/70 transition hover:bg-white/10 hover:text-white lg:hidden"
+              className="rounded-full p-2 text-lienzo-tinta-3 transition hover:bg-lienzo-relleno-2 hover:text-lienzo-tinta lg:hidden"
             >
               {movil ? <X size={18} aria-hidden /> : <Hamburguesa size={18} aria-hidden />}
             </button>
@@ -193,7 +205,7 @@ export function MenuPrincipal() {
         {seccionActiva && (
           <div
             id={`panel-${seccionActiva.id}`}
-            className="vidrio-menu relative mt-2 hidden overflow-hidden rounded-3xl border border-white/10 p-7 lg:block"
+            className="vidrio-menu relative mt-2 hidden overflow-hidden rounded-3xl border border-lienzo-linea p-7 lg:block"
             style={{ animation: "menu-entra 260ms cubic-bezier(0.22, 1, 0.36, 1)" }}
           >
             <div aria-hidden className="reticula pointer-events-none absolute inset-0 opacity-70" />
@@ -207,15 +219,15 @@ export function MenuPrincipal() {
       {/* ── Panel móvil ────────────────────────────────────────────── */}
       {movil && (
         <div
-          className="fixed inset-0 top-[76px] z-30 overflow-y-auto bg-[rgba(7,20,41,0.94)] px-4 pb-10 backdrop-blur-xl lg:hidden"
+          className="fixed inset-0 top-[76px] z-30 overflow-y-auto bg-lienzo-velo-menu px-4 pb-10 backdrop-blur-xl lg:hidden"
           style={{ animation: "menu-entra 240ms ease-out" }}
         >
-          <div className="vidrio-menu relative overflow-hidden rounded-3xl border border-white/10 p-5">
+          <div className="vidrio-menu relative overflow-hidden rounded-3xl border border-lienzo-linea p-5">
             <div aria-hidden className="reticula pointer-events-none absolute inset-0 opacity-70" />
             <div className="relative grid gap-7">
               {SECCIONES.map((s) => (
                 <section key={s.id}>
-                  <h2 className="font-mono text-[11px] uppercase tracking-[0.2em] text-white/45">
+                  <h2 className="font-mono text-[11px] uppercase tracking-[0.2em] text-lienzo-tinta-5">
                     {s.etiqueta}
                   </h2>
                   <div className="mt-4">

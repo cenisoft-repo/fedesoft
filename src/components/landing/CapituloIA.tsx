@@ -4,6 +4,7 @@ import type { CSSProperties } from "react";
 import { TextoRevelado } from "@/components/landing/TextoRevelado";
 import { VideoTextura } from "@/components/landing/VideoTextura";
 import { limitar, useEscenaFija } from "@/components/landing/useEscenaFija";
+import { velo } from "@/components/landing/velo";
 
 const TEXTO =
   "Fedesoft reúne a las empresas que escriben el código con el que Colombia trabaja, estudia, se atiende y se mueve — y que hoy empieza a mover al mundo.";
@@ -21,7 +22,9 @@ const COLUMNA = "lg:w-[56.25dvh] lg:right-[max(4vw,calc((100vw-1240px)/2-2vw))]"
  * recorre la sección y el scroll hace de línea de tiempo: el metraje se
  * acerca, el texto se enciende palabra por palabra y al final aparece el
  * rótulo. El clip trae fondo negro y se funde con `screen`, así que no hay
- * caja: las partículas flotan directamente sobre el lienzo navy.
+ * caja: las partículas flotan directamente sobre el lienzo navy. En la vista
+ * clara el clip se invierte y se multiplica: el rostro queda como tinta navy
+ * sobre el papel, con el mismo recorrido de scroll.
  *
  * La línea de tiempo (`--p`, reducción de movimiento) la pone `useEscenaFija`.
  */
@@ -33,7 +36,7 @@ export function CapituloIA() {
     <section ref={seccion} aria-label="Manifiesto" className="relative h-[240vh] motion-reduce:h-auto">
       <div
         ref={escena}
-        className="sticky top-0 flex h-dvh items-start overflow-hidden bg-navy-abismo px-6 pt-[14vh] lg:items-center lg:pt-0"
+        className="sticky top-0 flex h-dvh items-start overflow-hidden bg-lienzo px-6 pt-[14vh] lg:items-center lg:pt-0"
         style={{ "--p": 0 } as CSSProperties}
       >
         {/* Halo azul detrás del rostro: crece con el acercamiento */}
@@ -41,17 +44,17 @@ export function CapituloIA() {
           aria-hidden
           className={`pointer-events-none absolute bottom-[8%] left-1/2 aspect-square w-[80vw] -translate-x-1/2 rounded-full blur-[110px] lg:left-auto lg:translate-x-0 ${COLUMNA}`}
           style={{
-            background: "radial-gradient(circle, #008BED 0%, transparent 68%)",
-            opacity: "calc(0.12 + var(--p) * 0.4)",
+            background: "radial-gradient(circle, var(--lienzo-acento) 0%, transparent 68%)",
+            opacity: "calc((0.12 + var(--p) * 0.4) * var(--lienzo-k-halo))",
           }}
         />
 
         {/* Metraje sin marco: se funde con screen sobre el fondo de la escena y se disuelve en
             los bordes. El blend va en la capa exterior: cualquier transformación crea un grupo
-            aislado y el screen dejaría de ver el navy. */}
+            aislado y el screen (o el multiply, en claro) dejaría de ver el fondo. */}
         <div
           aria-hidden
-          className={`pointer-events-none absolute inset-y-0 left-1/2 aspect-[9/16] -translate-x-1/2 opacity-60 mix-blend-screen lg:left-auto lg:translate-x-0 lg:opacity-100 ${COLUMNA}`}
+          className={`pointer-events-none absolute inset-y-0 left-1/2 aspect-[9/16] -translate-x-1/2 opacity-60 mix-blend-screen claro:mix-blend-multiply lg:left-auto lg:translate-x-0 lg:opacity-100 ${COLUMNA}`}
         >
           <div
             className="absolute inset-0"
@@ -61,7 +64,8 @@ export function CapituloIA() {
                 "translate3d(0, calc((0.5 - var(--p)) * 5vh), 0) scale(calc(0.94 + var(--p) * 0.16))",
               transformOrigin: "50% 62%",
               // El negro del clip no es puro: el contraste lo hunde para que el screen no deje marco
-              filter: "contrast(1.2)",
+              // (en claro se invierte primero: el blanco del papel no deja marco con multiply)
+              filter: "var(--lienzo-ia-filtro)",
               maskImage: "radial-gradient(ellipse 54% 62% at 50% 56%, #000 42%, transparent 98%)",
               WebkitMaskImage: "radial-gradient(ellipse 54% 62% at 50% 56%, #000 42%, transparent 98%)",
               willChange: "transform, opacity",
@@ -69,7 +73,7 @@ export function CapituloIA() {
           >
             <VideoTextura src="/recursos/video/ia-volumen.mp4" poster="/recursos/video/ia-volumen-poster.jpg" />
             {/* Tinte de marca: lo blanco del clip vira a azul claro, lo negro sigue negro */}
-            <div className="absolute inset-0 bg-[var(--brand-azure)] opacity-50 mix-blend-multiply" />
+            <div className="absolute inset-0 bg-[var(--brand-azure)] opacity-50 mix-blend-multiply claro:opacity-30" />
           </div>
         </div>
 
@@ -78,8 +82,7 @@ export function CapituloIA() {
           aria-hidden
           className="pointer-events-none absolute inset-0 lg:hidden"
           style={{
-            background:
-              "linear-gradient(180deg, var(--navy-abismo) 0%, rgba(7,20,41,0.82) 34%, rgba(7,20,41,0) 62%, rgba(7,20,41,0) 72%, rgba(7,20,41,0.9) 100%)",
+            background: `linear-gradient(180deg, var(--lienzo-fondo) 0%, ${velo(0.82)} 34%, ${velo(0)} 62%, ${velo(0)} 72%, ${velo(0.9)} 100%)`,
           }}
         />
 
@@ -87,15 +90,15 @@ export function CapituloIA() {
         <div
           aria-hidden
           className="pointer-events-none absolute inset-x-0 bottom-0 h-[24vh]"
-          style={{ background: "linear-gradient(180deg, rgba(7,20,41,0) 0%, var(--navy-abismo) 100%)" }}
+          style={{ background: `linear-gradient(180deg, ${velo(0)} 0%, var(--lienzo-fondo) 100%)` }}
         />
 
         <div className="relative z-10 mx-auto w-full max-w-[1240px]">
           <div className="flex gap-6 lg:w-[54%] lg:gap-8">
             {/* La barra, vertical: marca el avance del capítulo */}
-            <div aria-hidden className="relative w-[3px] shrink-0 self-stretch bg-white/10">
+            <div aria-hidden className="relative w-[3px] shrink-0 self-stretch bg-lienzo-linea">
               <div
-                className="absolute inset-0 origin-top bg-[var(--brand-azure)]"
+                className="absolute inset-0 origin-top bg-lienzo-acento"
                 style={{ transform: "scaleY(var(--p))" }}
               />
             </div>
@@ -116,11 +119,11 @@ export function CapituloIA() {
             transform: "translateY(calc((1 - clamp(0, calc((var(--p) - 0.7) * 6), 1)) * 14px))",
           }}
         >
-          <div className="mx-auto max-w-[34ch] border-t border-white/15 pt-4 lg:px-6">
-            <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--brand-azure)]">
+          <div className="mx-auto max-w-[34ch] border-t border-lienzo-linea-2 pt-4 lg:px-6">
+            <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-lienzo-acento-texto">
               Inteligencia artificial
             </p>
-            <p className="mt-2 text-[14px] font-light leading-relaxed text-white/70">
+            <p className="mt-2 text-[14px] font-light leading-relaxed text-lienzo-tinta-3">
               La capacidad que está redefiniendo lo que la industria colombiana puede exportar.
             </p>
           </div>

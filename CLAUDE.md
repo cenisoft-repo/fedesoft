@@ -66,10 +66,12 @@ src/lib/api/          Cliente y sesión del API real (solo en modo API)
 - **Al portal se entra siempre por el login.** `AppShell` redirige a `/entrar` sin sesión simulada, y el destino de regreso se valida contra las rutas del portal. Ningún enlace de ingreso apunta directo a `/portal`.
 - **Sofi** (`src/components/asistente/`) acompaña la landing, el acceso y el portal, no la consola.
   - Su contenido sale del asistente oficial de Fedesoft; no se inventan fechas ni datos.
-  - En el portal toda sugerencia o atajo respeta la matriz de acceso.
+  - En el portal toda sugerencia, atajo, autocompletado o aviso respeta la matriz de acceso.
 - **Todos los estados**: carga, vacío, error y sin permiso. Un estado vacío nunca es una tarjeta que dice que no hay nada: desaparece o propone la acción siguiente.
 - **Accesibilidad WCAG 2.1 AA**: contraste verificado, foco visible, navegación por teclado, etiquetas en formularios.
 - **Tema claro y oscuro**, ambos cuidados. Los colores se definen en `:root` y se redefinen por token, nunca sueltos dentro de un bloque de tema.
+  - La persona elige con `BotonTema` (`src/lib/tema.tsx`); la elección vale para todo el sitio.
+  - Sin elección, el portal y la consola siguen al equipo; la landing y los accesos usan su lienzo oscuro (tokens `--lienzo-*` en `src/app/lienzo.css`).
 - Sin bibliotecas de componentes. Los primitivos se construyen a medida para que el resultado se vea a Fedesoft y no a una plantilla.
 
 ## Dominio único (regla de Cenisoft)

@@ -5,7 +5,8 @@ import { useEffect, useRef } from "react";
 /**
  * Campo generativo de nodos conectados: la industria como red de empresas.
  * Reemplaza a la fotografía mientras no haya material propio, y se comporta
- * como fondo cinematográfico con viñeta pesada.
+ * como fondo cinematográfico con viñeta pesada. Los colores salen de los tokens
+ * del lienzo (--lienzo-red-*) y se releen cuando cambia la vista clara/oscura.
  */
 export function CampoRed({ densidad = 1, className = "" }: { densidad?: number; className?: string }) {
   const ref = useRef<HTMLCanvasElement>(null);
@@ -20,6 +21,18 @@ export function CampoRed({ densidad = 1, className = "" }: { densidad?: number; 
     let w = 0;
     let h = 0;
     let raf = 0;
+
+    /* Colores del lienzo: se leen al montar y cada vez que cambia la vista. */
+    let colorNodo = "";
+    let colorEnlace = "";
+    let alfaEnlace = 0.22;
+    const leerColores = () => {
+      const estilo = getComputedStyle(document.documentElement);
+      colorNodo = estilo.getPropertyValue("--lienzo-red-nodo").trim() || "rgba(165, 201, 230, 0.6)";
+      colorEnlace = estilo.getPropertyValue("--lienzo-red-enlace").trim() || "46, 160, 249";
+      alfaEnlace = parseFloat(estilo.getPropertyValue("--lienzo-red-enlace-alfa")) || 0.22;
+    };
+    leerColores();
 
     type Nodo = { x: number; y: number; vx: number; vy: number; r: number };
     let nodos: Nodo[] = [];
@@ -60,8 +73,8 @@ export function CampoRed({ densidad = 1, className = "" }: { densidad?: number; 
           const b = nodos[j];
           const d = Math.hypot(a.x - b.x, a.y - b.y);
           if (d > alcance) continue;
-          const alfa = (1 - d / alcance) * 0.22;
-          ctx.strokeStyle = `rgba(46, 160, 249, ${alfa})`;
+          const alfa = (1 - d / alcance) * alfaEnlace;
+          ctx.strokeStyle = `rgba(${colorEnlace}, ${alfa})`;
           ctx.lineWidth = 0.6;
           ctx.beginPath();
           ctx.moveTo(a.x, a.y);
@@ -71,7 +84,7 @@ export function CampoRed({ densidad = 1, className = "" }: { densidad?: number; 
       }
 
       for (const n of nodos) {
-        ctx.fillStyle = "rgba(165, 201, 230, 0.6)";
+        ctx.fillStyle = colorNodo;
         ctx.beginPath();
         ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
         ctx.fill();
@@ -83,8 +96,17 @@ export function CampoRed({ densidad = 1, className = "" }: { densidad?: number; 
     redimensionar();
     dibujar();
     window.addEventListener("resize", redimensionar);
+
+    /* Cambio de vista: nuevos colores; con movimiento reducido no hay bucle, así que se repinta una vez. */
+    const observador = new MutationObserver(() => {
+      leerColores();
+      if (reducido) dibujar();
+    });
+    observador.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
     return () => {
       cancelAnimationFrame(raf);
+      observador.disconnect();
       window.removeEventListener("resize", redimensionar);
     };
   }, [densidad]);

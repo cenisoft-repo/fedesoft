@@ -24,19 +24,19 @@ export function Escala({ avance }: { avance: number }) {
           <li
             key={n.nivel}
             aria-current={esActual ? "step" : undefined}
-            className="relative grid grid-cols-[86px_1fr] items-baseline gap-4 border-t border-white/10 py-5 transition-opacity duration-500 sm:grid-cols-[120px_1fr] sm:gap-6"
+            className="relative grid grid-cols-[86px_1fr] items-baseline gap-4 border-t border-lienzo-linea py-5 transition-opacity duration-500 sm:grid-cols-[120px_1fr] sm:gap-6"
             style={{ opacity: encendido ? 1 : 0.28 }}
           >
             {/* La barra: recorre el borde del nivel mientras se asciende a él */}
             <span
               aria-hidden
-              className="absolute -top-px left-0 h-[2px] w-full origin-left bg-[var(--brand-azure)] transition-transform duration-300 ease-out"
+              className="absolute -top-px left-0 h-[2px] w-full origin-left bg-lienzo-acento transition-transform duration-300 ease-out"
               style={{ transform: `scaleX(${limitar(avance * total - i)})` }}
             />
-            <span className="font-mono text-[12.5px] uppercase tracking-[0.12em] text-white/50">{n.nivel}</span>
+            <span className="font-mono text-[12.5px] uppercase tracking-[0.12em] text-lienzo-tinta-4">{n.nivel}</span>
             <span
               className="text-[clamp(16px,2.2vw,22px)] leading-snug transition-colors duration-500"
-              style={{ color: esActual ? "#ffffff" : "rgba(255,255,255,0.62)" }}
+              style={{ color: esActual ? "var(--lienzo-tinta)" : "var(--lienzo-tinta-3)" }}
             >
               {n.texto}
             </span>

@@ -7,6 +7,7 @@ import { ArrowLeft, ArrowRight, Ban, KeyRound, Loader2, LockKeyhole, Mail, Shiel
 import { useIdentidad } from "@/lib/identidad";
 import { OPERADORES_DEMO, nombreRolInterno } from "@/lib/mock/usuarios";
 import { Logo } from "@/components/Logo";
+import { BotonTema } from "@/components/BotonTema";
 import { Boton } from "@/components/ui/primitivos";
 import { MODO_API } from "@/lib/api/cliente";
 import { EntrarConsolaApi } from "./EntrarConsolaApi";
@@ -134,6 +135,7 @@ function EntrarConsolaSimulada() {
           >
             <ArrowLeft size={14} aria-hidden /> Portal del afiliado
           </Link>
+          <BotonTema className="rounded-full p-2 text-azure-200 transition hover:bg-white/10 hover:text-white" />
         </div>
       </header>
 
