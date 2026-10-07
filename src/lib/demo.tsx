@@ -161,29 +161,3 @@ export function useDemo(): DemoState {
   if (!ctx) throw new Error("useDemo debe usarse dentro de DemoProvider");
   return ctx;
 }
-
-/** Tema claro/oscuro persistido en el navegador. */
-export function useTema() {
-  const [tema, setTema] = useState<"claro" | "oscuro" | null>(null);
-
-  useEffect(() => {
-    const guardado = typeof window !== "undefined" ? window.localStorage.getItem("fedesoft-tema") : null;
-    if (guardado === "claro" || guardado === "oscuro") {
-      setTema(guardado);
-      document.documentElement.setAttribute("data-theme", guardado === "oscuro" ? "dark" : "light");
-    }
-  }, []);
-
-  const alternar = () => {
-    const siguiente = tema === "oscuro" ? "claro" : "oscuro";
-    setTema(siguiente);
-    document.documentElement.setAttribute("data-theme", siguiente === "oscuro" ? "dark" : "light");
-    try {
-      window.localStorage.setItem("fedesoft-tema", siguiente);
-    } catch {
-      /* almacenamiento no disponible: el tema sigue aplicado en la sesión */
-    }
-  };
-
-  return { tema, alternar };
-}

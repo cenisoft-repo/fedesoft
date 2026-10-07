@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./lienzo.css";
 
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
@@ -126,7 +127,11 @@
   --font-mono: var(--font-jetbrains), ui-monospace, Menlo, monospace;
 }
 
-* { border-color: var(--line); }
+/* En la capa base: el color de borde por defecto no debe ganarle a las utilidades
+   (hover:border-accent, border-t-accent…), que viven en @layer utilities. */
+@layer base {
+  * { border-color: var(--line); }
+}
 
 body {
   background: var(--bg);
@@ -170,19 +175,20 @@ h1, h2, h3, h4 {
 [data-theme="dark"] .marca-claro { display: none; }
 [data-theme="dark"] .marca-oscuro { display: block; }
 
-/* Los íconos oficiales son línea navy; sobre el lienzo oscuro se calan en blanco. */
-.icono-calado { filter: brightness(0) invert(1); }
+/* Los íconos oficiales son línea navy; sobre el lienzo oscuro se calan en blanco
+   y sobre el claro quedan como son (tokens del lienzo, lienzo.css). */
+.icono-calado { filter: var(--lienzo-icono-filtro); }
 
-/* Vidrio y halo del menú: superficie navy translúcida, filo tenue y un
-   resplandor azure por debajo, con la retícula de fondo apenas insinuada. */
+/* Vidrio y halo del menú: superficie translúcida del lienzo (navy en la vista oscura,
+   blanca en la clara), filo tenue y un resplandor azure por debajo, con la retícula de
+   fondo apenas insinuada. */
 .vidrio-menu {
-  background: rgba(10, 26, 52, 0.82);
-  backdrop-filter: blur(20px) saturate(140%);
+  background: var(--lienzo-vidrio);
+  /* El prefijo va primero: con el orden inverso el minificador conserva solo el prefijado
+     y Chrome se queda sin desenfoque. */
   -webkit-backdrop-filter: blur(20px) saturate(140%);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.07),
-    0 24px 70px rgba(2, 8, 20, 0.7),
-    0 0 80px -30px var(--brand-azure);
+  backdrop-filter: blur(20px) saturate(140%);
+  box-shadow: var(--lienzo-vidrio-sombra);
 }
 
 @keyframes menu-entra {
@@ -192,8 +198,8 @@ h1, h2, h3, h4 {
 
 .reticula {
   background-image:
-    linear-gradient(to right, rgba(165, 201, 230, 0.06) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(165, 201, 230, 0.06) 1px, transparent 1px);
+    linear-gradient(to right, var(--lienzo-reticula) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--lienzo-reticula) 1px, transparent 1px);
   background-size: 46px 46px;
 }
 
@@ -202,6 +208,8 @@ h1, h2, h3, h4 {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
+    /* Una sola vuelta: una animación infinita a 0,01 ms parpadearía. */
+    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
 }
@@ -219,24 +227,69 @@ h1, h2, h3, h4 {
   }
 }
 
-/* Grano de película: ruido fijo, sin animación, para que el metraje de baja resolución lea como textura. */
+/* Grano de película: ruido fijo, sin animación, para que el metraje de baja resolución lea como textura.
+   Opacidad y mezcla son del lienzo: en claro oscurece apenas (multiply) en vez de aclarar (overlay). */
 .grano {
+  opacity: var(--lienzo-grano-opacidad);
+  mix-blend-mode: var(--lienzo-grano-mezcla);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   background-size: 160px 160px;
 }
 
-/* ── Sofi, la asistente: animaciones del robot ──────────────────────────
-   Con prefers-reduced-motion, la regla global de arriba las deja quietas. */
+/* ── Sofi, la asistente: animaciones del robot y del chat ─────────────
+   Con prefers-reduced-motion, la regla global de arriba las deja quietas:
+   cada animación empieza y termina en su estado de reposo. */
 @keyframes sofi-flota {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-4px); }
 }
-@keyframes sofi-saluda {
-  0%, 100% { transform: rotate(0deg); }
-  20% { transform: rotate(-9deg); }
-  40% { transform: rotate(7deg); }
-  60% { transform: rotate(-5deg); }
-  80% { transform: rotate(3deg); }
+/* Dormida respira despacio, más baja. */
+@keyframes sofi-respira {
+  0%, 100% { transform: translateY(1px) scale(1); }
+  50% { transform: translateY(2px) scale(0.985); }
+}
+/* Cuando la miran: brinca, se agacha al caer y saluda con la cabeza. */
+@keyframes sofi-salta {
+  0%, 100% { transform: translateY(0) rotate(0deg) scale(1); }
+  18% { transform: translateY(1px) scale(1.04, 0.95); }
+  40% { transform: translateY(-7px) rotate(-6deg) scale(0.98, 1.03); }
+  62% { transform: translateY(0) rotate(4deg) scale(1.03, 0.97); }
+  80% { transform: translateY(-2px) rotate(-2deg); }
+}
+/* Mientras piensa, teclea: un rebote corto y rápido. */
+@keyframes sofi-teclea {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(1.2px); }
+}
+/* Parpadeo: un párpado del color del visor baja y sube sobre cada ojo;
+   cada tanto, doble. En reposo, el párpado no se ve (scaleY 0). */
+@keyframes sofi-parpadea {
+  0%, 88%, 100% { transform: scaleY(0); }
+  90% { transform: scaleY(1); }
+  92% { transform: scaleY(0); }
+  95% { transform: scaleY(0); }
+  96.5% { transform: scaleY(1); }
+  98% { transform: scaleY(0); }
+}
+/* La boca se enciende al hablar, a ritmo irregular, como una voz. */
+@keyframes sofi-habla {
+  0%, 100% { opacity: 0; transform: scale(0.6, 0.4); }
+  12% { opacity: 0.95; transform: scale(1.1, 1.25); }
+  26% { opacity: 0.55; transform: scale(0.9, 0.7); }
+  40% { opacity: 1; transform: scale(1.15, 1.4); }
+  58% { opacity: 0.45; transform: scale(0.85, 0.6); }
+  74% { opacity: 0.9; transform: scale(1.05, 1.1); }
+}
+/* Los ojos brillan cuando la miran o celebra. */
+@keyframes sofi-brilla {
+  0%, 100% { opacity: 0; }
+  45% { opacity: 0.85; }
+}
+/* Chispas de celebración: salen del centro y se apagan. */
+@keyframes sofi-chispa {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.2) rotate(0deg); }
+  20% { opacity: 1; }
+  100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1) rotate(160deg); }
 }
 @keyframes sofi-zeta {
   0% { opacity: 0; transform: translate(0, 0) scale(0.7); }
@@ -251,18 +304,96 @@ h1, h2, h3, h4 {
   from { opacity: 0; transform: translateY(14px) scale(0.98); }
   to { opacity: 1; transform: none; }
 }
-.sofi-flota { animation: sofi-flota 4.2s ease-in-out infinite; }
 @keyframes sofi-gira { to { transform: rotate(360deg); } }
 @keyframes sofi-pulso {
   0%, 100% { opacity: 0.35; transform: scale(0.96); }
   50% { opacity: 0.9; transform: scale(1.06); }
 }
+@keyframes sofi-ping {
+  0% { opacity: 0.7; transform: scale(1); }
+  80%, 100% { opacity: 0; transform: scale(2.2); }
+}
+/* Chat: las burbujas llegan desde su lado; los chips y fichas, en cascada. */
+@keyframes sofi-burbuja-izq {
+  from { opacity: 0; transform: translateX(-10px) scale(0.97); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes sofi-burbuja-der {
+  from { opacity: 0; transform: translateX(10px) scale(0.97); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes sofi-chip {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes sofi-pop {
+  0% { transform: scale(0.8); opacity: 0; }
+  60% { transform: scale(1.06); opacity: 1; }
+  100% { transform: scale(1); }
+}
+@keyframes sofi-cursor {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.sofi-flota { animation: sofi-flota 4.2s ease-in-out infinite; }
+.sofi-respira { animation: sofi-respira 5.5s ease-in-out infinite; }
+.sofi-salta { transform-origin: 50% 90%; animation: sofi-salta 0.9s ease-in-out; }
+.sofi-teclea { animation: sofi-teclea 0.22s ease-in-out infinite; }
+.sofi-parpado {
+  border-radius: 45%;
+  background: #04060d;
+  transform: scaleY(0);
+  transform-origin: 50% 20%;
+  animation: sofi-parpadea 5.2s linear infinite;
+  transition: transform 0.5s ease;
+}
+/* Dormida: ojos cerrados, quietos. */
+.sofi-parpado-cerrado { animation: none; transform: scaleY(1); }
+.sofi-boca {
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(170, 236, 255, 0.95), rgba(46, 160, 249, 0.65) 55%, transparent);
+  mix-blend-mode: screen;
+  opacity: 0;
+  animation: sofi-habla 0.95s ease-in-out infinite;
+}
+.sofi-brillo {
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(150, 225, 255, 0.9), rgba(0, 139, 237, 0.35) 60%, transparent);
+  mix-blend-mode: screen;
+  opacity: 0;
+  animation: sofi-brilla 1.1s ease-in-out;
+}
+.sofi-chispa { opacity: 0; animation: sofi-chispa 0.9s cubic-bezier(0.2, 0.7, 0.3, 1) both; }
+.sofi-estrella { clip-path: polygon(50% 0%, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0% 50%, 39% 39%); }
 .sofi-gira { animation: sofi-gira 1.1s linear infinite; }
 .sofi-pulso { animation: sofi-pulso 1.2s ease-in-out infinite; }
-.sofi-saluda { transform-box: fill-box; transform-origin: 50% 90%; animation: sofi-saluda 0.9s ease-in-out; }
+.sofi-ping { animation: sofi-ping 1.6s cubic-bezier(0, 0, 0.2, 1) infinite; }
 .sofi-zeta { animation: sofi-zeta 2.4s ease-out infinite; }
 .sofi-escribe { animation: sofi-escribe 1.1s ease-in-out infinite; }
 .sofi-entra { animation: sofi-entra 0.28s ease-out; }
+.sofi-burbuja-izq { animation: sofi-burbuja-izq 0.32s cubic-bezier(0.2, 0.8, 0.3, 1); }
+.sofi-burbuja-der { animation: sofi-burbuja-der 0.28s cubic-bezier(0.2, 0.8, 0.3, 1); }
+.sofi-chip { animation: sofi-chip 0.34s ease-out both; }
+.sofi-pop { animation: sofi-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+/* Cursor de escritura en vivo: la barra del manual, en azure. */
+.sofi-cursor {
+  display: inline-block;
+  width: 3px;
+  height: 1.05em;
+  margin-left: 2px;
+  vertical-align: -0.15em;
+  border-radius: 1px;
+  background: var(--accent);
+  animation: sofi-cursor 0.8s steps(1) infinite;
+}
 
 /* El campo de Sofi delega el foco visible en su contenedor redondeado (anillo con focus-within). */
 .sofi-campo:focus-visible { outline: none; }
+
+/* El ícono del selector de vista entra girando. */
+@keyframes tema-entra {
+  from { opacity: 0; transform: rotate(-90deg) scale(0.6); }
+  to { opacity: 1; transform: none; }
+}
+.tema-entra { animation: tema-entra 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); }

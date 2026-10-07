@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { MarcaAcceso } from "@/components/acceso/MarcaAcceso";
+import { SelectorVista } from "@/components/acceso/SelectorVista";
+import { Acceso } from "@/components/acceso/Acceso";
 import { ArrowRight, KeyRound, ShieldCheck } from "lucide-react";
 import { urlLogin } from "@/lib/api/cliente";
 import { useSesionApi } from "@/lib/api/sesion";
@@ -23,10 +25,11 @@ export function EntrarApi() {
   }, []);
 
   return (
-    <div className="grid min-h-dvh lg:grid-cols-[1fr_1.1fr]">
+    <Acceso className="grid min-h-dvh lg:grid-cols-[1fr_1.1fr]">
       <MarcaAcceso pie="Modo API · identidad real, resto de datos simulados" />
 
-      <main className="flex items-center bg-surface px-6 py-14 sm:px-12">
+      <main className="relative flex items-center bg-surface px-6 py-14 sm:px-12">
+        <SelectorVista />
         <div className="mx-auto w-full max-w-[460px]">
           <h1 className="font-display text-[30px] font-light leading-tight">Ingresa al portal</h1>
           <p className="mt-2 text-[15px] leading-relaxed text-muted">
@@ -65,6 +68,6 @@ export function EntrarApi() {
           </div>
         </div>
       </main>
-    </div>
+    </Acceso>
   );
 }

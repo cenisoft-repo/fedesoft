@@ -1,13 +1,10 @@
 /**
- * La landing pinta su propio lienzo: el fondo del documento se iguala al navy
- * profundo para que ni el rebote del scroll ni un viewport alto dejen ver el
- * fondo claro del portal.
+ * Las páginas públicas no comparten lienzo: la landing, /afiliarme y /verificar
+ * pintan el suyo con <Lienzo> (oscuro por defecto, claro si la persona lo elige; ver
+ * lienzo.css), que además iguala el fondo y el esquema de color del documento para
+ * que ni el rebote del scroll ni las barras nativas delaten el otro tema. /entrar y
+ * /acceso pintan con los tokens del portal y siguen al equipo hasta que se elige.
  */
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <>
-      <style>{`html,body{background:#071429;color-scheme:dark}`}</style>
-      {children}
-    </>
-  );
+  return <>{children}</>;
 }

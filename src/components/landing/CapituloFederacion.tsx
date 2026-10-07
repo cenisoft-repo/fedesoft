@@ -34,6 +34,10 @@ const dos = (n: number) => String(n).padStart(2, "0");
  * no la pantalla entera, y la gradación hace el resto. Solo se reproducen el
  * fotograma en foco y sus vecinos. Con `prefers-reduced-motion` la pista se
  * vuelve un carrusel nativo con desplazamiento lateral y fotogramas fijos.
+ *
+ * Los fotogramas son ventanas oscuras en las dos vistas (el metraje y los logos
+ * blancos están hechos para navy): en la vista clara flotan sobre el papel con
+ * una sombra, y el texto de la escena que los rodea sí sigue la vista.
  */
 export function CapituloFederacion({ piezas, otros }: { piezas: Pieza[]; otros: string[] }) {
   const { seccion, escena, avance, quieto } = useEscenaFija();
@@ -49,7 +53,7 @@ export function CapituloFederacion({ piezas, otros }: { piezas: Pieza[]; otros: 
     >
       <div
         ref={escena}
-        className="pista sticky top-0 flex h-dvh flex-col justify-center overflow-hidden bg-navy-abismo pt-16 lg:pt-24"
+        className="pista sticky top-0 flex h-dvh flex-col justify-center overflow-hidden bg-lienzo pt-16 lg:pt-24"
         style={
           {
             "--p": 0,
@@ -61,7 +65,7 @@ export function CapituloFederacion({ piezas, otros }: { piezas: Pieza[]; otros: 
       >
         <div className="mx-auto flex w-full max-w-[1288px] items-end justify-between gap-8 px-6">
           <div>
-            <p className="font-mono text-[12px] uppercase tracking-[0.2em] text-white/45">La federación en marcha</p>
+            <p className="font-mono text-[12px] uppercase tracking-[0.2em] text-lienzo-tinta-5">La federación en marcha</p>
             <h2
               id="federacion-titulo"
               className="mt-4 max-w-[22ch] font-display text-[clamp(26px,3.4vw,44px)] font-light leading-[1.1] tracking-[-0.015em]"
@@ -71,13 +75,13 @@ export function CapituloFederacion({ piezas, otros }: { piezas: Pieza[]; otros: 
           </div>
           {!quieto && (
             <div aria-hidden className="hidden shrink-0 pb-1 sm:block">
-              <p className="num font-mono text-[13px] tracking-[0.14em] text-white/45">
-                <span className="text-white">{dos(enFoco + 1)}</span> / {dos(piezas.length)}
+              <p className="num font-mono text-[13px] tracking-[0.14em] text-lienzo-tinta-5">
+                <span className="text-lienzo-tinta">{dos(enFoco + 1)}</span> / {dos(piezas.length)}
               </p>
               {/* La barra: avance del travelling */}
-              <div className="mt-3 h-[3px] w-28 bg-white/10">
+              <div className="mt-3 h-[3px] w-28 bg-lienzo-linea">
                 <div
-                  className="h-full origin-left bg-[var(--brand-azure)]"
+                  className="h-full origin-left bg-lienzo-acento"
                   style={{ transform: "scaleX(calc(var(--x) / var(--n)))" }}
                 />
               </div>
@@ -98,7 +102,7 @@ export function CapituloFederacion({ piezas, otros }: { piezas: Pieza[]; otros: 
           {piezas.map((p, i) => (
             <li
               key={p.titulo}
-              className="relative aspect-[4/5] w-[var(--w)] shrink-0 snap-center overflow-hidden rounded-md bg-black sm:aspect-video"
+              className="relative aspect-[4/5] w-[var(--w)] shrink-0 snap-center overflow-hidden rounded-md bg-black text-white shadow-[var(--lienzo-ventana-sombra)] sm:aspect-video"
               style={
                 quieto
                   ? undefined
@@ -180,16 +184,16 @@ export function CapituloFederacion({ piezas, otros }: { piezas: Pieza[]; otros: 
         </ol>
 
         <div className="mx-auto mt-8 flex w-full max-w-[1288px] flex-wrap items-center gap-x-6 gap-y-2 px-6 lg:mt-10">
-          <span className="font-mono text-[11.5px] uppercase tracking-[0.18em] text-white/30">Y además</span>
+          <span className="font-mono text-[11.5px] uppercase tracking-[0.18em] text-lienzo-tinta-6">Y además</span>
           {otros.map((o) => (
-            <span key={o} className="text-[14px] font-light text-white/45">
+            <span key={o} className="text-[14px] font-light text-lienzo-tinta-5">
               {o}
             </span>
           ))}
         </div>
 
-        {/* Grano de película sobre toda la escena */}
-        <div aria-hidden className="grano pointer-events-none absolute inset-0 opacity-[0.07] mix-blend-overlay" />
+        {/* Grano de película sobre toda la escena (opacidad y mezcla, del lienzo) */}
+        <div aria-hidden className="grano pointer-events-none absolute inset-0" />
       </div>
     </section>
   );

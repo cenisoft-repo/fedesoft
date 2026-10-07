@@ -4,11 +4,11 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import {
-  ArrowLeft, Building2, ChartColumn, GraduationCap, Inbox, Loader2, LogOut, Megaphone, Moon, Network, Receipt,
-  ScrollText, Star, Sun, UserCog,
+  ArrowLeft, Building2, ChartColumn, GraduationCap, Inbox, Loader2, LogOut, Megaphone, Network, Receipt,
+  ScrollText, Star, UserCog,
 } from "lucide-react";
 import { Firma, Logo } from "./Logo";
-import { useTema } from "@/lib/demo";
+import { BotonTema } from "@/components/BotonTema";
 import { iniciales, useIdentidad } from "@/lib/identidad";
 import { nombreRolInterno } from "@/lib/mock/usuarios";
 import { SOLICITUDES } from "@/lib/mock/admin";
@@ -44,7 +44,6 @@ function moduloDeRuta(pathname: string): ModuloConsola {
 }
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
-  const { tema, alternar } = useTema();
   const pathname = usePathname();
   const router = useRouter();
   const { sesionConsola, porId, cerrarConsola, recordarDestinoConsola } = useIdentidad();
@@ -136,14 +135,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                 <span className="hidden sm:inline">Portal del afiliado</span>
                 <span className="sr-only sm:hidden">Volver al portal del afiliado</span>
               </Link>
-              <button
-                type="button"
-                onClick={alternar}
-                className="rounded-lg p-2 text-azure-200 transition hover:bg-white/10 hover:text-white"
-                aria-label={tema === "oscuro" ? "Cambiar a tema claro" : "Cambiar a tema oscuro"}
-              >
-                {tema === "oscuro" ? <Sun size={18} aria-hidden /> : <Moon size={18} aria-hidden />}
-              </button>
+              <BotonTema className="rounded-lg p-2 text-azure-200 transition hover:bg-white/10 hover:text-white" />
               <div className="flex items-center gap-2.5 border-l border-white/20 pl-3">
                 <div className="grid h-8 w-8 place-items-center rounded-full bg-[var(--navy-700)] text-[12px] font-bold text-white ring-1 ring-white/40">
                   {iniciales(operador.nombre, operador.correo)}

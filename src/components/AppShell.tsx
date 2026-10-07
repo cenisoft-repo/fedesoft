@@ -4,12 +4,13 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import {
-  Bell, Briefcase, Building2, ChevronDown, GraduationCap, LayoutGrid, Loader2, LogOut, Moon, Network, Receipt, Sparkles,
-  Search, ShieldCheck, Star, Sun, UserCog, UsersRound,
+  Bell, Briefcase, Building2, ChevronDown, GraduationCap, LayoutGrid, Loader2, LogOut, Network, Receipt, Sparkles,
+  Search, ShieldCheck, Star, UserCog, UsersRound,
 } from "lucide-react";
 import { Firma, Logo } from "./Logo";
 import { DemoSwitcher } from "./DemoSwitcher";
-import { useDemo, useTema } from "@/lib/demo";
+import { useDemo } from "@/lib/demo";
+import { BotonTema } from "@/components/BotonTema";
 import { useIdentidad } from "@/lib/identidad";
 import { MODO_API } from "@/lib/api/cliente";
 import { tienePermiso, useSesionApi } from "@/lib/api/sesion";
@@ -42,7 +43,6 @@ const NAV: Entrada[] = [
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { escenario } = useDemo();
-  const { tema, alternar } = useTema();
   const pathname = usePathname();
 
   const contacto = escenario.empresa.contactos.find((c) => c.id === escenario.contactoId);
@@ -115,14 +115,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             >
               <Bell size={18} aria-hidden />
             </button>
-            <button
-              type="button"
-              onClick={alternar}
-              className="rounded-lg p-2 text-muted transition hover:bg-bg hover:text-ink"
-              aria-label={tema === "oscuro" ? "Cambiar a tema claro" : "Cambiar a tema oscuro"}
-            >
-              {tema === "oscuro" ? <Sun size={18} aria-hidden /> : <Moon size={18} aria-hidden />}
-            </button>
+            <BotonTema />
             <MenuUsuario nombre={nombreVisible} empresa={empresaVisible} esGerente={administraAccesos} />
           </div>
         </div>

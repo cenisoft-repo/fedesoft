@@ -64,7 +64,7 @@ export function TextoRevelado({
             key={i}
             style={{
               opacity: encendida ? 1 : 0.22,
-              color: encendida && esAcento ? "var(--brand-azure)" : undefined,
+              color: encendida && esAcento ? "var(--lienzo-acento)" : undefined,
               transition: "opacity 420ms ease, color 420ms ease",
             }}
           >

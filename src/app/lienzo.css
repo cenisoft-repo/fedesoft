@@ -1,0 +1,261 @@
+/* ── Lienzo de la landing y del acceso ────────────────────────────────
+   Dos vistas de un mismo lienzo: la oscura es la firma cinematográfica y es
+   la predeterminada; la clara aparece solo cuando la persona la elige
+   (data-theme="light"). El lienzo NO sigue a prefers-color-scheme: quien llega
+   a la landing ve el navy aunque su equipo esté en claro.
+
+   Dos familias de páginas lo usan:
+   · Lienzo (`.lienzo`): la landing, /afiliarme y /verificar. Pintan con los tokens
+     `--lienzo-*` de este archivo.
+   · Acceso (`.acceso`): /entrar, /admin/entrar, /entrar/recuperar y /acceso/error.
+     Usan los tokens del portal, así que como el portal siguen al equipo hasta
+     que la persona elige; `.acceso` solo iguala el fondo del documento.
+   El portal y la consola tampoco usan los tokens del lienzo: siguen al equipo hasta que se elige.
+
+   Reglas del repo: los colores se definen en :root y se redefinen por token
+   (nunca sueltos en un bloque de tema), y todo texto cumple AA.
+
+   ── Contrastes medidos (WCAG 2.1, relación de luminancia) ──────────────
+   Vista OSCURA · fondo #071429
+     tinta       #ffffff            18,4:1
+     tinta-2     blanco 85 %        13,4:1
+     tinta-3     blanco 70 %         9,3:1
+     tinta-4     blanco 60 %         7,1:1
+     tinta-5     blanco 52 %         5,6:1   (5,3:1 sobre la tarjeta translúcida)
+     tinta-6     blanco 50 %         5,3:1   (numeración, rótulos, pie; 5,0:1 sobre la tarjeta)
+     acento-texto #008bed            5,2:1   · acento-2 #2ea0f9  6,6:1
+     acento-titular #008bed          5,2:1   (texto grande; sobre la zona más clara del halo baja a
+                                              2,7:1, igual que en el diseño original)
+     boton #071429 sobre #fff       18,4:1  · enlace #8cc4ff   10,0:1
+     exito #7bdba8                  11,0:1   · error #f28b8b     7,7:1
+   Vista CLARA · fondo #f5f8fc (sobre blanco puro cada texto gana ~0,5)
+     tinta       #0d2343            14,7:1
+     tinta-2     #1b3050            12,4:1
+     tinta-3     #34465f             9,0:1
+     tinta-4     #46566e             7,0:1
+     tinta-5     #4f5f76             6,1:1   (más oscuro que el gris azul del manual, #637287 4,6:1:
+                                              sobre metraje o grano el 4,6 cae por debajo de AA)
+     tinta-6     #4f5f76             6,1:1   (en claro no hay nivel decorativo: todo texto es AA)
+     acento-texto/-2/enlace #11428a  9,1:1   (el interactivo del manual)
+     boton: #ffffff sobre #11428a    9,7:1  (hover #0d3572: 11,9:1)
+     exito #157347 sobre #ddf5e8     5,1:1  · error #c62828 sobre #fbe3e3  4,6:1
+     campo-borde #8793a5 sobre #fff  3,1:1   (componente de interfaz, 1.4.11 ≥ 3:1)
+     acento #008bed sobre #f5f8fc    3,3:1   → nunca en cuerpo ni en botones con texto
+                                              blanco: solo barras, halos e indicadores.
+     acento-titular #0079d6 sobre F  4,2:1   → la palabra grande del titular (texto grande,
+                                              mínimo 3:1 aun sobre el metraje velado). */
+
+:root {
+  --lienzo-esquema: dark;
+
+  /* Superficies */
+  --lienzo-fondo: #071429;
+  --lienzo-vidrio: rgb(10 26 52 / 0.82);
+  --lienzo-velo-menu: rgb(7 20 41 / 0.94);
+  --lienzo-tarjeta: rgb(255 255 255 / 0.06);
+  --lienzo-tarjeta-sombra: 0 0 0 0 transparent;
+  --lienzo-campo: rgb(255 255 255 / 0.05);
+  --lienzo-campo-borde: rgb(255 255 255 / 0.2);
+  --lienzo-ventana-sombra: 0 0 0 0 transparent;
+
+  /* Tinta: del texto principal al más tenue */
+  --lienzo-tinta: #ffffff;
+  --lienzo-tinta-2: rgb(255 255 255 / 0.85);
+  --lienzo-tinta-3: rgb(255 255 255 / 0.7);
+  --lienzo-tinta-4: rgb(255 255 255 / 0.6);
+  --lienzo-tinta-5: rgb(255 255 255 / 0.52);
+  --lienzo-tinta-6: rgb(255 255 255 / 0.5);
+
+  /* Líneas y rellenos translúcidos */
+  --lienzo-linea: rgb(255 255 255 / 0.1);
+  --lienzo-linea-2: rgb(255 255 255 / 0.15);
+  --lienzo-linea-fuerte: rgb(255 255 255 / 0.25);
+  --lienzo-relleno: rgb(255 255 255 / 0.05);
+  --lienzo-relleno-2: rgb(255 255 255 / 0.1);
+  --lienzo-relleno-3: rgb(255 255 255 / 0.15);
+
+  /* Acentos: el azure decora; el texto pequeño usa su variante legible */
+  --lienzo-acento: #008bed;
+  --lienzo-acento-titular: #008bed;
+  --lienzo-acento-texto: #008bed;
+  --lienzo-acento-2: #2ea0f9;
+  --lienzo-enlace: #8cc4ff;
+
+  /* Botón primario */
+  --lienzo-boton: #ffffff;
+  --lienzo-boton-tinta: #071429;
+  --lienzo-boton-hover: rgb(255 255 255 / 0.9);
+
+  /* Estados */
+  --lienzo-exito: #7bdba8;
+  --lienzo-exito-fondo: rgb(21 115 71 / 0.22);
+  --lienzo-error: #f28b8b;
+  --lienzo-error-fondo: rgb(198 40 40 / 0.2);
+
+  /* Efectos del vidrio, la retícula, el grano y los íconos calados */
+  --lienzo-vidrio-sombra:
+    inset 0 1px 0 rgb(255 255 255 / 0.07), 0 24px 70px rgb(2 8 20 / 0.7), 0 0 80px -30px var(--brand-azure);
+  --lienzo-reticula: rgb(165 201 230 / 0.06);
+  --lienzo-grano-opacidad: 0.07;
+  --lienzo-grano-mezcla: overlay;
+  --lienzo-icono-filtro: brightness(0) invert(1);
+
+  /* Campo generativo (canvas): color de nodos, enlaces (r, g, b) y su opacidad máxima */
+  --lienzo-red-nodo: rgb(165 201 230 / 0.6);
+  --lienzo-red-enlace: 46, 160, 249;
+  --lienzo-red-enlace-alfa: 0.22;
+
+  /* Cuánto se deja ver el metraje y los halos: en claro, menos y más suave */
+  --lienzo-halo: #008bed;
+  --lienzo-k-video: 1;
+  --lienzo-k-halo: 1;
+
+  /* El rostro de partículas del manifiesto: negro con luz que se funde con screen en oscuro;
+     invertido y multiplicado en claro, queda como tinta navy sobre el papel. */
+  --lienzo-ia-filtro: contrast(1.2);
+}
+
+:root[data-theme="light"] {
+  --lienzo-esquema: light;
+
+  --lienzo-fondo: #f5f8fc;
+  --lienzo-vidrio: rgb(255 255 255 / 0.88);
+  --lienzo-velo-menu: rgb(245 248 252 / 0.94);
+  --lienzo-tarjeta: rgb(255 255 255 / 0.82);
+  --lienzo-tarjeta-sombra: 0 1px 2px rgb(13 35 67 / 0.06), 0 28px 60px -34px rgb(13 35 67 / 0.3);
+  --lienzo-campo: #ffffff;
+  --lienzo-campo-borde: #8793a5;
+  --lienzo-ventana-sombra: 0 32px 60px -34px rgb(13 35 67 / 0.5), 0 2px 6px rgb(13 35 67 / 0.12);
+
+  --lienzo-tinta: #0d2343;
+  --lienzo-tinta-2: #1b3050;
+  --lienzo-tinta-3: #34465f;
+  --lienzo-tinta-4: #46566e;
+  --lienzo-tinta-5: #4f5f76;
+  --lienzo-tinta-6: #4f5f76;
+
+  --lienzo-linea: rgb(13 35 67 / 0.1);
+  --lienzo-linea-2: rgb(13 35 67 / 0.16);
+  --lienzo-linea-fuerte: rgb(13 35 67 / 0.3);
+  --lienzo-relleno: rgb(13 35 67 / 0.04);
+  --lienzo-relleno-2: rgb(13 35 67 / 0.07);
+  --lienzo-relleno-3: rgb(13 35 67 / 0.1);
+
+  --lienzo-acento: #008bed;
+  --lienzo-acento-titular: #0079d6;
+  --lienzo-acento-texto: #11428a;
+  --lienzo-acento-2: #11428a;
+  --lienzo-enlace: #11428a;
+
+  --lienzo-boton: #11428a;
+  --lienzo-boton-tinta: #ffffff;
+  --lienzo-boton-hover: #0d3572;
+
+  --lienzo-exito: #157347;
+  --lienzo-exito-fondo: #ddf5e8;
+  --lienzo-error: #c62828;
+  --lienzo-error-fondo: #fbe3e3;
+
+  --lienzo-vidrio-sombra:
+    inset 0 1px 0 rgb(255 255 255 / 0.9), 0 20px 50px -22px rgb(13 35 67 / 0.3), 0 0 70px -36px var(--brand-azure);
+  --lienzo-reticula: rgb(13 35 67 / 0.05);
+  --lienzo-grano-opacidad: 0.05;
+  --lienzo-grano-mezcla: multiply;
+  --lienzo-icono-filtro: none;
+
+  --lienzo-red-nodo: rgb(17 66 138 / 0.4);
+  --lienzo-red-enlace: 17, 66, 138;
+  --lienzo-red-enlace-alfa: 0.2;
+
+  --lienzo-halo: #cbe6fd;
+  --lienzo-k-video: 0.55;
+  --lienzo-k-halo: 0.5;
+  --lienzo-ia-filtro: invert(1) hue-rotate(180deg) contrast(1.15);
+}
+
+/* Tailwind: bg-lienzo, text-lienzo-tinta-3, border-lienzo-linea… */
+@theme inline {
+  --color-lienzo: var(--lienzo-fondo);
+  --color-lienzo-vidrio: var(--lienzo-vidrio);
+  --color-lienzo-velo-menu: var(--lienzo-velo-menu);
+  --color-lienzo-tarjeta: var(--lienzo-tarjeta);
+  --color-lienzo-campo: var(--lienzo-campo);
+  --color-lienzo-campo-borde: var(--lienzo-campo-borde);
+
+  --color-lienzo-tinta: var(--lienzo-tinta);
+  --color-lienzo-tinta-2: var(--lienzo-tinta-2);
+  --color-lienzo-tinta-3: var(--lienzo-tinta-3);
+  --color-lienzo-tinta-4: var(--lienzo-tinta-4);
+  --color-lienzo-tinta-5: var(--lienzo-tinta-5);
+  --color-lienzo-tinta-6: var(--lienzo-tinta-6);
+
+  --color-lienzo-linea: var(--lienzo-linea);
+  --color-lienzo-linea-2: var(--lienzo-linea-2);
+  --color-lienzo-linea-fuerte: var(--lienzo-linea-fuerte);
+  --color-lienzo-relleno: var(--lienzo-relleno);
+  --color-lienzo-relleno-2: var(--lienzo-relleno-2);
+  --color-lienzo-relleno-3: var(--lienzo-relleno-3);
+
+  --color-lienzo-acento: var(--lienzo-acento);
+  --color-lienzo-acento-titular: var(--lienzo-acento-titular);
+  --color-lienzo-acento-texto: var(--lienzo-acento-texto);
+  --color-lienzo-acento-2: var(--lienzo-acento-2);
+  --color-lienzo-enlace: var(--lienzo-enlace);
+
+  --color-lienzo-boton: var(--lienzo-boton);
+  --color-lienzo-boton-tinta: var(--lienzo-boton-tinta);
+  --color-lienzo-boton-hover: var(--lienzo-boton-hover);
+
+  --color-lienzo-exito: var(--lienzo-exito);
+  --color-lienzo-exito-fondo: var(--lienzo-exito-fondo);
+  --color-lienzo-error: var(--lienzo-error);
+  --color-lienzo-error-fondo: var(--lienzo-error-fondo);
+}
+
+/* Variante para lo que cambia en composición, no solo en color (metraje, halos, mezclas):
+   <div class="opacity-30 claro:opacity-20 claro:invert">. Con la vista oscura no hace nada. */
+@custom-variant claro (&:where([data-theme="light"], [data-theme="light"] *));
+
+/* Raíz de toda página del lienzo. El documento entero toma su fondo y su esquema de color
+   —para que ni el rebote del scroll ni las barras nativas delaten el otro tema—. */
+.lienzo {
+  background: var(--lienzo-fondo);
+  color: var(--lienzo-tinta);
+  color-scheme: var(--lienzo-esquema);
+}
+:root:has(.lienzo),
+body:has(.lienzo) {
+  background: var(--lienzo-fondo);
+  color-scheme: var(--lienzo-esquema);
+}
+
+/* Raíz de las pantallas de acceso: con los tokens del portal (siguen al equipo hasta que la
+   persona elige) y el fondo del documento igualado, para que el rebote del scroll no delate otro. */
+.acceso {
+  background: var(--bg);
+  color: var(--ink);
+}
+:root:has(.acceso),
+body:has(.acceso) {
+  background: var(--bg);
+}
+
+/* Artes del manual por vista: el wordmark y la firma tienen versión para fondo claro y para
+   fondo oscuro. Se intercambian con el atributo que el script del <head> pone antes de pintar,
+   así que no hay destello al hidratar. */
+.lienzo-arte-claro { display: none; }
+:root[data-theme="light"] .lienzo-arte-claro { display: block; }
+:root[data-theme="light"] .lienzo-arte-oscuro { display: none; }
+
+/* Cambio de vista suave: mientras dura el cambio (lo marca TransicionVista) los colores
+   de superficies, texto y bordes se funden en vez de saltar. Solo colores: filtros y
+   mezclas (el metraje) cambian de golpe, y son texturas de baja opacidad. */
+:root.vista-cambia :is(.lienzo, .lienzo *, .acceso, .acceso *) {
+  transition:
+    background-color 0.4s ease,
+    color 0.4s ease,
+    border-color 0.4s ease,
+    fill 0.4s ease,
+    stroke 0.4s ease,
+    box-shadow 0.4s ease !important;
+}

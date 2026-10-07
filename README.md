@@ -61,7 +61,19 @@ El control flotante de la **esquina inferior izquierda** cambia toda la aplicaci
 | **Talento humano · empresa grande** | Rol y segmento juntos: ve la cuenta estratégica, no la facturación |
 | **Contacto · empresa grande** | Aunque la empresa sea grande, el contacto no entra a la cuenta estratégica |
 
-También hay conmutador de tema claro/oscuro en el encabezado.
+## Vista clara u oscura
+
+Cada persona elige la experiencia que prefiere con el botón sol/luna.
+
+- **Dónde está:** en el menú de la landing, en los accesos, en el encabezado del portal y de la consola, y dentro de Sofi.
+- **Alcance:** la elección vale para todo el sitio y se recuerda en el navegador.
+  - Un script en el `<head>` la aplica antes de pintar, así que no hay destello del tema equivocado.
+  - Si cambia en una pestaña, las demás la siguen.
+- **Sin elección:**
+  - el portal, la consola y las pantallas de acceso siguen al equipo (`prefers-color-scheme`);
+  - la landing, `/afiliarme` y `/verificar` conservan su lienzo oscuro cinematográfico, y Sofi se pone oscura con ellos.
+- **Vista clara de la landing:** papel `#f5f8fc`, metraje multiplicado como tinta navy, halos suaves y contrastes AA medidos (tabla en `src/app/lienzo.css`).
+- **Código:** `src/lib/tema.tsx` (preferencia), `src/components/BotonTema.tsx` (botón) y `src/app/lienzo.css` (tokens del lienzo de la landing).
 
 ## Sofi, la asistente virtual
 
@@ -69,16 +81,29 @@ Sofi es la asistente de Fedesoft y vive en la esquina inferior derecha. Es el ro
 
 | Pose | Cuándo aparece |
 |---|---|
-| Saluda | En reposo y en el saludo inicial |
+| Saluda | En reposo y en los avisos |
 | Escribe en su portátil | Mientras piensa la respuesta |
-| Presenta un tablero | Al responder |
+| Presenta un tablero | Mientras responde |
 | Celebra | Cuando una respuesta te sirvió |
 
-- **Animación:**
+- **Animación** (la cara se anima sobre el arte oficial: los LED de ojos y boca están medidos en cada pose):
+  - parpadea, a veces dos veces seguidas;
+  - enciende la boca mientras habla;
+  - cierra los ojos y respira despacio cuando se duerme;
+  - rebota al cambiar de pose y al despertar;
+  - salta y le brillan los ojos cuando la miras;
+  - celebra con chispas de la paleta del manual;
   - flota y se inclina en 3D hacia el puntero;
   - un anillo de luz gira mientras piensa y late mientras habla;
-  - se duerme tras un rato sin actividad.
-- **Movimiento reducido:** con `prefers-reduced-motion` todo queda quieto.
+  - de vez en cuando saluda para recordar que está ahí.
+- **Chat dinámico:**
+  - **avisos según dónde estás**, una vez por sitio y pestaña. Por ejemplo, la cuota vencida al gerente que paga, las sesiones con cupo en Formación o la ayuda para entrar en el login. Al tocarlo, abre la conversación con esa pregunta;
+  - **escribe en vivo** con un cursor (en ~1 s, sin importar el largo); acciones y sugerencias aparecen al terminar;
+  - **bienvenida con temas visuales** (ícono por tema), filtrados por rol en el portal;
+  - **autocompletar** las preguntas que sabe responder, con flechas, Enter y Escape (patrón combobox);
+  - **fichas** navegables de las próximas sesiones con cupo y una **cifra destacada** para lo que hay por pagar;
+  - cambia de vista clara/oscura desde su encabezado.
+- **Movimiento reducido:** con `prefers-reduced-motion` todo queda quieto y las respuestas llegan completas.
 - **Contenido:** el del asistente actual de Fedesoft: afiliación, Softic 2026, Premios Ingenio 2026, Concurso Nacional de Programación, servicios gremiales, ayuda para ingresar y canales humanos por área. Acepta las opciones numeradas del menú (1 a 5).
 - **Dentro del portal responde con contexto.** Sabe tu nombre, empresa y rol, y pregunta a `src/lib/acceso.ts` antes de ofrecer un atajo, así que nunca te manda a una sección que tu rol no alcanza:
   - al gerente le muestra el monto pendiente y el botón de pagar;
@@ -88,7 +113,8 @@ Sofi es la asistente de Fedesoft y vive en la esquina inferior derecha. Es el ro
 - **Sin servicios detrás:** las intenciones se reconocen por palabras clave (`src/components/asistente/motor.ts`), probadas contra frases ambiguas, y lo declara en su pie.
 - **Accesibilidad:**
   - es un diálogo con etiqueta;
-  - un anunciador lee solo la respuesta nueva;
+  - un anunciador lee solo la respuesta nueva, completa, aunque en pantalla se esté escribiendo;
+  - el autocompletar es un combobox con `aria-activedescendant`; el primer Escape cierra la lista y el segundo, a Sofi;
   - Escape cierra cuando el foco está en Sofi y devuelve el foco al lanzador;
   - después de usar una sugerencia, el foco vuelve al campo;
   - los botones táctiles miden al menos 40 px;

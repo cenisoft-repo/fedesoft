@@ -4,6 +4,8 @@ import Link from "next/link";
 import { destinoSeguro } from "@/lib/acceso";
 import { Logo } from "@/components/Logo";
 import { MarcaAcceso } from "@/components/acceso/MarcaAcceso";
+import { SelectorVista } from "@/components/acceso/SelectorVista";
+import { Acceso } from "@/components/acceso/Acceso";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import {
@@ -153,11 +155,12 @@ function EntrarSimulado() {
   };
 
   return (
-    <div className="grid min-h-dvh lg:grid-cols-[1fr_1.1fr]">
+    <Acceso className="grid min-h-dvh lg:grid-cols-[1fr_1.1fr]">
       <MarcaAcceso pie="Prototipo de demostración · datos simulados" />
 
       {/* Columna de acceso */}
-      <main className="flex items-center bg-surface px-6 py-14 sm:px-12">
+      <main className="relative flex items-center bg-surface px-6 py-14 sm:px-12">
+        <SelectorVista />
         <div className="mx-auto w-full max-w-[460px]" aria-live="polite">
           <div className="mb-8 flex items-center justify-between gap-4 lg:hidden">
             <Link href="/" aria-label="Fedesoft · ir al inicio" className="rounded">
@@ -313,7 +316,7 @@ function EntrarSimulado() {
           {paso.id === "rechazo" && <Rechazo paso={paso} onReintentar={reiniciar} />}
         </div>
       </main>
-    </div>
+    </Acceso>
   );
 }
 

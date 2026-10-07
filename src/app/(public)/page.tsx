@@ -7,6 +7,8 @@ import { CapituloEscala } from "@/components/landing/CapituloEscala";
 import { VideoTextura } from "@/components/landing/VideoTextura";
 import { CapituloFederacion, type Pieza } from "@/components/landing/CapituloFederacion";
 import { Firma } from "@/components/Logo";
+import { Lienzo } from "@/components/landing/Lienzo";
+import { velo } from "@/components/landing/velo";
 import { MenuPrincipal } from "@/components/landing/MenuPrincipal";
 
 /** Cifras publicadas por Fedesoft, con los íconos del sitio institucional. */
@@ -128,9 +130,16 @@ const RESUELVE = [
   "Oportunidades filtradas por perfil",
 ];
 
+/**
+ * La landing es el lienzo: oscuro por defecto (la firma cinematográfica) y claro solo
+ * cuando la persona elige la vista clara. Los capítulos con metraje cambian de
+ * composición —no solo de color—: en claro el video se invierte y se multiplica sobre
+ * el papel, los velos son del color del lienzo y los halos azure bajan de intensidad.
+ * Las secciones de cifras, servicios y afiliadas son papel en las dos vistas.
+ */
 export default function Landing() {
   return (
-    <div className="min-h-dvh bg-navy-abismo text-white">
+    <Lienzo>
       <MenuPrincipal />
 
       {/* ── Portada: metraje bajo el campo generativo ──────────────── */}
@@ -138,63 +147,82 @@ export default function Landing() {
         <VideoTextura
           src="/recursos/video/teclado-red.mp4"
           poster="/recursos/video/teclado-red-poster.jpg"
-          className="opacity-30"
+          className="opacity-30 claro:opacity-[0.18] claro:mix-blend-multiply claro:invert"
         />
-        <div aria-hidden className="absolute inset-0 bg-[var(--brand-azure)] opacity-[0.16] mix-blend-overlay" />
+        <div
+          aria-hidden
+          className="absolute inset-0 bg-[var(--brand-azure)] opacity-[0.16] mix-blend-overlay claro:opacity-[0.05] claro:mix-blend-multiply"
+        />
         <div aria-hidden className="absolute inset-0 opacity-60">
           <CampoRed densidad={1.1} />
         </div>
-        {/* Viñeta pesada que funde el fondo al navy */}
+        {/* Viñeta pesada que funde el fondo al color del lienzo. En claro el velo es más cerrado
+            detrás del titular: el metraje queda en los bordes y el texto lee sobre papel. */}
         <div
           aria-hidden
-          className="absolute inset-0"
+          className="absolute inset-0 claro:hidden"
           style={{
-            background:
-              "radial-gradient(ellipse 80% 60% at 50% 45%, rgba(7,20,41,0.25) 0%, rgba(7,20,41,0.72) 55%, var(--navy-abismo) 100%)",
+            background: `radial-gradient(ellipse 80% 60% at 50% 45%, ${velo(0.25)} 0%, ${velo(0.72)} 55%, var(--lienzo-fondo) 100%)`,
           }}
         />
         <div
           aria-hidden
-          className="absolute left-1/2 top-[38%] h-[520px] w-[520px] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-40 blur-[120px]"
-          style={{ background: "radial-gradient(circle, #008BED 0%, transparent 70%)" }}
+          className="absolute inset-0 hidden claro:block"
+          style={{
+            background: `radial-gradient(ellipse 80% 60% at 50% 45%, ${velo(0.6)} 0%, ${velo(0.82)} 55%, var(--lienzo-fondo) 100%)`,
+          }}
+        />
+        {/* Halo: azure en la vista oscura; en la clara, un claro luminoso azulado que no resta contraste al titular */}
+        <div
+          aria-hidden
+          className="absolute left-1/2 top-[38%] h-[520px] w-[520px] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-40 blur-[120px] claro:opacity-80"
+          style={{ background: "radial-gradient(circle, var(--lienzo-halo) 0%, transparent 70%)" }}
         />
 
         <div className="relative mx-auto w-full max-w-[1240px]">
-          <p className="font-mono text-[12px] uppercase tracking-[0.2em] text-white/45">
+          <p className="font-mono text-[12px] uppercase tracking-[0.2em] text-lienzo-tinta-5">
             Federación Colombiana de la Industria de Software y TI
           </p>
           <h1 className="mt-6 max-w-[16ch] font-display text-[clamp(44px,8.2vw,104px)] font-light leading-[0.98] tracking-[-0.02em]">
-            Colombia, país origen de <span className="text-[var(--brand-azure)]">software</span>
+            Colombia, país origen de <span className="text-lienzo-acento-titular">software</span>
           </h1>
-          <p className="mt-7 max-w-[54ch] text-[clamp(16px,2vw,21px)] font-light leading-relaxed text-white/70">
+          <p className="mt-7 max-w-[54ch] text-[clamp(16px,2vw,21px)] font-light leading-relaxed text-lienzo-tinta-3">
             Treinta años representando a las empresas que construyen el software que mueve al país.
             Hoy son más de quinientas.
           </p>
           <div className="mt-10 flex flex-wrap gap-3">
             <Link
               href="/entrar"
-              className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-[15px] font-semibold text-[var(--navy-abismo)] transition hover:bg-white/90"
+              className="inline-flex items-center gap-2 rounded-full bg-lienzo-boton px-6 py-3 text-[15px] font-semibold text-lienzo-boton-tinta transition hover:bg-lienzo-boton-hover"
             >
               Ingresar al portal <ArrowRight size={16} aria-hidden />
             </Link>
             <Link
               href="#afiliacion"
-              className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/5 px-6 py-3 text-[15px] font-semibold backdrop-blur transition hover:bg-white/15"
+              className="inline-flex items-center gap-2 rounded-full border border-lienzo-linea-fuerte bg-lienzo-relleno px-6 py-3 text-[15px] font-semibold backdrop-blur transition hover:bg-lienzo-relleno-3"
             >
               Afíliate <ArrowRight size={16} aria-hidden />
             </Link>
           </div>
 
-          <div className="mt-16 flex flex-wrap items-center gap-x-6 gap-y-4 border-t border-white/10 pt-7">
+          <div className="mt-16 flex flex-wrap items-center gap-x-6 gap-y-4 border-t border-lienzo-linea pt-7">
+            {/* Dos artes del manual; la vista decide cuál se ve (lienzo.css), sin destello al hidratar */}
             <Image
               src="/recursos/logos/cenisoft-fondo-oscuro.webp"
               alt="Cenisoft"
               width={121}
               height={27}
-              className="opacity-80"
+              className="lienzo-arte-oscuro opacity-80"
             />
-            <span aria-hidden className="hidden h-5 w-px bg-white/15 sm:block" />
-            <p className="max-w-[46ch] text-[13.5px] font-light leading-relaxed text-white/45">
+            <Image
+              src="/recursos/logos/cenisoft-fondo-claro.webp"
+              alt="Cenisoft"
+              width={121}
+              height={27}
+              className="lienzo-arte-claro"
+            />
+            <span aria-hidden className="hidden h-5 w-px bg-lienzo-linea-2 sm:block" />
+            <p className="max-w-[46ch] text-[13.5px] font-light leading-relaxed text-lienzo-tinta-5">
               Centro de innovación y productividad de la federación, reconocido por MinCiencias.
             </p>
           </div>
@@ -323,35 +351,36 @@ export default function Landing() {
         <VideoTextura
           src="/recursos/video/hud-portatil.mp4"
           poster="/recursos/video/hud-portatil-poster.jpg"
-          className="opacity-60"
+          className="opacity-60 claro:opacity-[0.3] claro:mix-blend-multiply"
         />
-        <div aria-hidden className="absolute inset-0 bg-[var(--brand-azure)] opacity-[0.16] mix-blend-overlay" />
+        <div
+          aria-hidden
+          className="absolute inset-0 bg-[var(--brand-azure)] opacity-[0.16] mix-blend-overlay claro:opacity-[0.05] claro:mix-blend-multiply"
+        />
         <div
           aria-hidden
           className="absolute inset-0"
           style={{
-            background:
-              "linear-gradient(90deg, var(--navy-abismo) 0%, rgba(7,20,41,0.94) 40%, rgba(7,20,41,0.55) 75%, rgba(7,20,41,0.2) 100%)",
+            background: `linear-gradient(90deg, var(--lienzo-fondo) 0%, ${velo(0.94)} 40%, ${velo(0.55)} 75%, ${velo(0.2)} 100%)`,
           }}
         />
         <div
           aria-hidden
           className="absolute inset-0"
           style={{
-            background:
-              "linear-gradient(180deg, var(--navy-abismo) 0%, rgba(7,20,41,0) 20%, rgba(7,20,41,0) 80%, var(--navy-abismo) 100%)",
+            background: `linear-gradient(180deg, var(--lienzo-fondo) 0%, ${velo(0)} 20%, ${velo(0)} 80%, var(--lienzo-fondo) 100%)`,
           }}
         />
         <div className="relative mx-auto max-w-[1240px]">
-          <p className="font-mono text-[12px] uppercase tracking-[0.2em] text-white/45">El portal del afiliado</p>
+          <p className="font-mono text-[12px] uppercase tracking-[0.2em] text-lienzo-tinta-5">El portal del afiliado</p>
           <h2 className="mt-5 max-w-[18ch] font-display text-[clamp(30px,5vw,58px)] font-light leading-[1.08] tracking-[-0.015em]">
-            Lo que hoy cuesta, <span className="text-white/45">resuelto.</span>
+            Lo que hoy cuesta, <span className="text-lienzo-tinta-5">resuelto.</span>
           </h2>
           <ol className="mt-12 grid max-w-[820px] gap-x-12 gap-y-1 sm:grid-cols-2">
             {RESUELVE.map((r, i) => (
-              <li key={r} className="flex items-baseline gap-4 border-b border-white/10 py-3.5">
-                <span className="num font-mono text-[12px] text-white/35">{String(i + 1).padStart(2, "0")}</span>
-                <span className="text-[15.5px] font-light text-white/85">{r}</span>
+              <li key={r} className="flex items-baseline gap-4 border-b border-lienzo-linea py-3.5">
+                <span className="num font-mono text-[12px] text-lienzo-tinta-6">{String(i + 1).padStart(2, "0")}</span>
+                <span className="text-[15.5px] font-light text-lienzo-tinta-2">{r}</span>
               </li>
             ))}
           </ol>
@@ -363,30 +392,31 @@ export default function Landing() {
         <VideoTextura
           src="/recursos/video/equipo-oficina.mp4"
           poster="/recursos/video/equipo-oficina-poster.jpg"
-          className="opacity-30"
+          className="opacity-30 claro:opacity-[0.25] claro:mix-blend-multiply"
         />
-        <div aria-hidden className="absolute inset-0 bg-[var(--brand-azure)] opacity-[0.12] mix-blend-overlay" />
+        <div
+          aria-hidden
+          className="absolute inset-0 bg-[var(--brand-azure)] opacity-[0.12] mix-blend-overlay claro:opacity-[0.05] claro:mix-blend-multiply"
+        />
         <div
           aria-hidden
           className="absolute inset-0"
           style={{
-            background:
-              "linear-gradient(90deg, var(--navy-abismo) 0%, rgba(7,20,41,0.9) 46%, rgba(7,20,41,0.6) 100%)",
+            background: `linear-gradient(90deg, var(--lienzo-fondo) 0%, ${velo(0.9)} 46%, ${velo(0.6)} 100%)`,
           }}
         />
         <div
           aria-hidden
           className="absolute inset-0"
           style={{
-            background:
-              "linear-gradient(180deg, var(--navy-abismo) 0%, rgba(7,20,41,0) 26%, rgba(7,20,41,0) 74%, var(--navy-abismo) 100%)",
+            background: `linear-gradient(180deg, var(--lienzo-fondo) 0%, ${velo(0)} 26%, ${velo(0)} 74%, var(--lienzo-fondo) 100%)`,
           }}
         />
         <div className="relative mx-auto max-w-[1240px]">
           <h2 className="max-w-[20ch] font-display text-[clamp(32px,5.6vw,68px)] font-light leading-[1.06] tracking-[-0.02em]">
             Todo lo tuyo con la federación, en un solo lugar
           </h2>
-          <p className="mt-7 max-w-[56ch] text-[clamp(16px,1.9vw,20px)] font-light leading-relaxed text-white/70">
+          <p className="mt-7 max-w-[56ch] text-[clamp(16px,1.9vw,20px)] font-light leading-relaxed text-lienzo-tinta-3">
             Tu afiliación, tu estado de cuenta con factura electrónica, tu certificado al instante, la formación de tu
             equipo y las oportunidades que te aplican. Sin formularios y sin esperas.
           </p>
@@ -399,7 +429,7 @@ export default function Landing() {
             </Link>
             <a
               href="mailto:info@fedesoft.org"
-              className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/5 px-7 py-3.5 text-[15.5px] font-semibold backdrop-blur transition hover:bg-white/15"
+              className="inline-flex items-center gap-2 rounded-full border border-lienzo-linea-fuerte bg-lienzo-relleno px-7 py-3.5 text-[15.5px] font-semibold backdrop-blur transition hover:bg-lienzo-relleno-3"
             >
               Hablar con la federación
             </a>
@@ -407,24 +437,24 @@ export default function Landing() {
         </div>
       </section>
 
-      <footer className="border-t border-white/10 px-6 py-12">
+      <footer className="border-t border-lienzo-linea px-6 py-12">
         <div className="mx-auto flex max-w-[1240px] flex-wrap items-end justify-between gap-x-10 gap-y-8">
           <div className="grid gap-5">
-            <Firma tema="oscuro" alto={26} />
-            <div className="grid gap-1.5 text-[13.5px] font-light text-white/45">
+            <Firma tema="lienzo" alto={26} />
+            <div className="grid gap-1.5 text-[13.5px] font-light text-lienzo-tinta-5">
               <span className="inline-flex items-center gap-2">
-                <MapPin size={14} aria-hidden className="text-white/30" />
+                <MapPin size={14} aria-hidden className="text-lienzo-tinta-6" />
                 Edificio IQ · Cra. 11a #97a-19, oficina 304 · Bogotá D.C.
               </span>
-              <a href="mailto:info@fedesoft.org" className="inline-flex w-fit items-center gap-2 transition hover:text-white">
-                <Mail size={14} aria-hidden className="text-white/30" />
+              <a href="mailto:info@fedesoft.org" className="inline-flex w-fit items-center gap-2 transition hover:text-lienzo-tinta">
+                <Mail size={14} aria-hidden className="text-lienzo-tinta-6" />
                 info@fedesoft.org
               </a>
             </div>
           </div>
-          <span className="text-[13px] text-white/35">Prototipo de demostración · datos simulados</span>
+          <span className="text-[13px] text-lienzo-tinta-6">Prototipo de demostración · datos simulados</span>
         </div>
       </footer>
-    </div>
+    </Lienzo>
   );
 }

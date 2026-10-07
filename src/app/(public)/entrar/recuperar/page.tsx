@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { ArrowLeft, Loader2, Mail, MailCheck } from "lucide-react";
 import { Boton } from "@/components/ui/primitivos";
+import { SelectorVista } from "@/components/acceso/SelectorVista";
+import { Acceso } from "@/components/acceso/Acceso";
 
 /**
  * Recuperar acceso (P-02, RF-IDE-007).
@@ -29,7 +31,8 @@ export default function Recuperar() {
   };
 
   return (
-    <main className="grid min-h-dvh place-items-center bg-surface px-6 py-14">
+    <Acceso as="main" className="relative grid min-h-dvh place-items-center bg-surface px-6 py-14">
+      <SelectorVista />
       <div className="w-full max-w-[440px]" aria-live="polite">
         <Link
           href="/entrar"
@@ -89,6 +92,6 @@ export default function Recuperar() {
           </>
         )}
       </div>
-    </main>
+    </Acceso>
   );
 }
