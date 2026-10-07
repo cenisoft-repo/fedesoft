@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useNivelPortal } from "@/lib/useAcceso";
 import { Check, Clock, MapPin, Users, Video } from "lucide-react";
 import { useDemo } from "@/lib/demo";
 import { ACTIVIDADES, HISTORIAL_EQUIPO } from "@/lib/mock/catalogo";
@@ -10,11 +11,12 @@ import { Boton, Card, Chip, PageHeader, Vacio } from "@/components/ui/primitivos
 type Pestana = "catalogo" | "mias" | "equipo";
 
 export default function Formacion() {
-  const { escenario, inscripciones, alternarInscripcion } = useDemo();
+  const { inscripciones, alternarInscripcion } = useDemo();
   const [pestana, setPestana] = useState<Pestana>("catalogo");
   const [soloAbiertas, setSoloAbiertas] = useState(true);
 
-  const puedeVerEquipo = escenario.rol === "gerente" || escenario.rol === "talento";
+  /* Gerente y talento gestionan al equipo; el contacto ve solo lo suyo. */
+  const puedeVerEquipo = useNivelPortal("formacion") === "gestiona";
   const lista = ACTIVIDADES.filter((a) => (soloAbiertas ? a.estado === "abierto" : true));
   const mias = ACTIVIDADES.filter((a) => inscripciones.includes(a.id));
 

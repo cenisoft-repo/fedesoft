@@ -1,16 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Download, FileText, Lock } from "lucide-react";
+import { SinPermisoPortal } from "@/components/SinPermisoRol";
+import { useNivelPortal } from "@/lib/useAcceso";
+import { ArrowRight, Download, FileText } from "lucide-react";
 import { useDemo } from "@/lib/demo";
 import { cop, diasHasta, fecha, truncar } from "@/lib/format";
 import { Boton, Card, Chip, Cifra, PageHeader, Seccion, Vacio } from "@/components/ui/primitivos";
 
-export default function Facturacion() {
+function FacturacionContenido() {
   const { escenario } = useDemo();
-  const { empresa, rol } = escenario;
-
-  if (rol !== "gerente") return <SinPermiso />;
+  const { empresa } = escenario;
 
   const pendientes = empresa.cargos.filter((c) => c.estado !== "pagado");
   const total = pendientes.reduce((s, c) => s + c.monto, 0);
@@ -125,22 +125,9 @@ export default function Facturacion() {
   );
 }
 
-function SinPermiso() {
-  return (
-    <Card className="mx-auto max-w-[520px]">
-      <div className="grid justify-items-center gap-3 px-6 py-14 text-center">
-        <div className="grid h-12 w-12 place-items-center rounded-full bg-bg text-muted">
-          <Lock size={22} aria-hidden />
-        </div>
-        <h1 className="font-display text-[20px] font-bold">Esta sección es del rol de gerencia</h1>
-        <p className="max-w-[44ch] text-[15px] text-muted">
-          Tu perfil de líder de talento humano no tiene acceso a facturación. Si necesitas consultar el estado de
-          cuenta, pídeselo al gerente registrado de tu empresa.
-        </p>
-        <Link href="/portal" className="mt-1">
-          <Boton variante="secundario">Volver al inicio</Boton>
-        </Link>
-      </div>
-    </Card>
-  );
+/* La matriz de acceso decide antes de pintar: sin permiso, pantalla explícita. */
+export default function Facturacion() {
+  const nivel = useNivelPortal("facturacion");
+  if (!nivel) return <SinPermisoPortal seccion="facturacion" />;
+  return <FacturacionContenido />;
 }

@@ -17,6 +17,7 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
 import { HOY } from "./format";
 import { useDemo } from "./demo";
+import { nivelConsola } from "./acceso";
 import {
   USUARIOS_INICIALES,
   VINCULOS_INICIALES,
@@ -166,6 +167,9 @@ export function IdentidadProvider({ children }: { children: ReactNode }) {
     /* Actor de la consola: quien inició sesión con segundo factor. */
     const operador = sesionConsola ? usuarios.find((u) => u.id === sesionConsola) : undefined;
     const esSuperAdmin = operador?.rolesInternos.includes("super-admin") ?? false;
+    /* Bloquear y cerrar sesiones es gestionar usuarios: Dirección y Auditoría solo consultan. */
+    const gestionaUsuarios = operador ? nivelConsola(operador.rolesInternos, "usuarios") === "gestiona" : false;
+    const soloConsulta: Resultado = { ok: false, mensaje: "Tu rol consulta usuarios; bloquear o cerrar sesiones le corresponde a un Super Admin." };
 
     const vinculoDe = (usuarioId: string, nit = empresa) =>
       vinculos.find((v) => v.usuarioId === usuarioId && v.empresa === nit);
@@ -337,6 +341,7 @@ export function IdentidadProvider({ children }: { children: ReactNode }) {
 
       bloquear: (usuarioId, motivo) => {
         if (!operador) return { ok: false, mensaje: "Sin sesión de consola." };
+        if (!gestionaUsuarios) return soloConsulta;
         if (motivo.trim().length < 5) return { ok: false, mensaje: "Escribe el motivo (al menos 5 caracteres)." };
         if (usuarioId === operador.id) return { ok: false, mensaje: "No puedes bloquear tu propia cuenta." };
         const u = usuarios.find((x) => x.id === usuarioId);
@@ -351,6 +356,7 @@ export function IdentidadProvider({ children }: { children: ReactNode }) {
       },
       desbloquear: (usuarioId, motivo) => {
         if (!operador) return { ok: false, mensaje: "Sin sesión de consola." };
+        if (!gestionaUsuarios) return soloConsulta;
         if (motivo.trim().length < 5) return { ok: false, mensaje: "Escribe el motivo (al menos 5 caracteres)." };
         const u = usuarios.find((x) => x.id === usuarioId);
         if (u?.estado !== "bloqueado") return { ok: false, mensaje: "La cuenta no está bloqueada." };
@@ -363,6 +369,7 @@ export function IdentidadProvider({ children }: { children: ReactNode }) {
       },
       cerrarSesiones: (usuarioId) => {
         if (!operador) return { ok: false, mensaje: "Sin sesión de consola." };
+        if (!gestionaUsuarios) return soloConsulta;
         const n = cerrar(usuarioId);
         registrar(operador.nombre ?? operador.correo, `Cerró todas las sesiones de ${nombreDe(usuarioId)}`, null);
         if (usuarioId === sesionConsola) setSesionConsola(null);

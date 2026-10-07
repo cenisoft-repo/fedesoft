@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { MonitorPlay, X } from "lucide-react";
 import { ESCENARIOS, useDemo } from "@/lib/demo";
@@ -28,7 +29,7 @@ export function DemoSwitcher() {
               <X size={16} aria-hidden />
             </button>
           </div>
-          <div className="grid gap-1 p-2">
+          <div className="grid max-h-[min(60vh,520px)] gap-1 overflow-y-auto p-2">
             {ESCENARIOS.map((e) => {
               const activo = e.id === escenario.id;
               return (
@@ -48,9 +49,13 @@ export function DemoSwitcher() {
               );
             })}
           </div>
-          <p className="border-t border-line px-4 py-2.5 text-[12px] text-muted">
-            Prototipo visual sin sistema detrás. Todos los datos son simulados.
-          </p>
+          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line px-4 py-2.5 text-[12px] text-muted">
+            <span>Prototipo sin sistema detrás. Datos simulados.</span>
+            {/* La consola es del equipo interno: el afiliado no la ve en su menú. */}
+            <Link href="/admin" className="font-semibold text-link hover:underline">
+              Abrir la consola interna
+            </Link>
+          </div>
         </div>
       )}
 

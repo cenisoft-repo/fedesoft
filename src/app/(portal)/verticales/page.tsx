@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useNivelPortal } from "@/lib/useAcceso";
 import { CalendarDays, FileText, MapPin, Target, Users } from "lucide-react";
 import { useDemo } from "@/lib/demo";
 import { VERTICALES } from "@/lib/mock/catalogo";
@@ -13,6 +14,8 @@ export default function Verticales() {
   const [activa, setActiva] = useState(VERTICALES.find((v) => mias.includes(v.nombre))?.nombre ?? VERTICALES[0].nombre);
   const vertical = VERTICALES.find((v) => v.nombre === activa)!;
   const participo = mias.includes(vertical.nombre);
+  /* El contacto consulta; vincularse y confirmar asistencia son de gerente y talento. */
+  const puedeActuar = useNivelPortal("verticales") === "gestiona";
 
   return (
     <div className="grid gap-10">
@@ -54,8 +57,10 @@ export default function Verticales() {
               </div>
               {participo ? (
                 <Chip tono="exito">Participas</Chip>
-              ) : (
+              ) : puedeActuar ? (
                 <Boton variante="secundario" tamano="sm">Solicitar vinculación</Boton>
+              ) : (
+                <Chip tono="neutro">Solo consulta</Chip>
               )}
             </div>
 
@@ -116,7 +121,7 @@ export default function Verticales() {
             <p className="mt-2 flex items-center gap-1.5 text-[14px] text-muted">
               <MapPin size={14} aria-hidden /> {vertical.lugar}
             </p>
-            {participo && (
+            {participo && puedeActuar && (
               <Boton className="mt-6 w-full">
                 <CalendarDays size={16} aria-hidden /> Confirmar asistencia
               </Boton>

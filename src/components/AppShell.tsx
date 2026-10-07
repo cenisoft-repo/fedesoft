@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import {
   Bell, Briefcase, Building2, ChevronDown, GraduationCap, LayoutGrid, LogOut, Moon, Network, Receipt, Sparkles,
-  Search, ShieldCheck, Star, Sun, UserCog, Users, UsersRound,
+  Search, ShieldCheck, Star, Sun, UserCog, UsersRound,
 } from "lucide-react";
 import { Firma, Logo } from "./Logo";
 import { DemoSwitcher } from "./DemoSwitcher";
@@ -15,27 +15,29 @@ import { MODO_API } from "@/lib/api/cliente";
 import { tienePermiso, useSesionApi } from "@/lib/api/sesion";
 import { PuertaPortalApi } from "./api/PuertaPortalApi";
 import { Chip } from "./ui/primitivos";
+import { nivelPortal, type SeccionPortal } from "@/lib/acceso";
+import { useRolPortal } from "@/lib/useAcceso";
 
 interface Entrada {
   href: string;
   etiqueta: string;
   icono: typeof LayoutGrid;
-  /** Si falta, la entrada es visible para todos los roles. */
-  soloGerente?: boolean;
+  /** Qué roles la ven: lo decide la matriz de acceso (src/lib/acceso.ts). */
+  seccion: SeccionPortal;
   soloGrande?: boolean;
 }
 
 const NAV: Entrada[] = [
-  { href: "/portal", etiqueta: "Inicio", icono: LayoutGrid },
-  { href: "/empresa", etiqueta: "Mi empresa", icono: Building2 },
-  { href: "/facturacion", etiqueta: "Facturación", icono: Receipt, soloGerente: true },
-  { href: "/formacion", etiqueta: "Formación", icono: GraduationCap },
-  { href: "/comunidades", etiqueta: "Comunidades", icono: UsersRound },
-  { href: "/verticales", etiqueta: "Verticales", icono: Network },
-  { href: "/directorio", etiqueta: "Directorio", icono: Search },
-  { href: "/visibilidad", etiqueta: "Visibilidad", icono: Sparkles },
-  { href: "/oportunidades", etiqueta: "Oportunidades", icono: Briefcase, soloGerente: true },
-  { href: "/cuenta-estrategica", etiqueta: "Cuenta estratégica", icono: Star, soloGrande: true },
+  { href: "/portal", etiqueta: "Inicio", icono: LayoutGrid, seccion: "inicio" },
+  { href: "/empresa", etiqueta: "Mi empresa", icono: Building2, seccion: "empresa" },
+  { href: "/facturacion", etiqueta: "Facturación", icono: Receipt, seccion: "facturacion" },
+  { href: "/formacion", etiqueta: "Formación", icono: GraduationCap, seccion: "formacion" },
+  { href: "/comunidades", etiqueta: "Comunidades", icono: UsersRound, seccion: "comunidades" },
+  { href: "/verticales", etiqueta: "Verticales", icono: Network, seccion: "verticales" },
+  { href: "/directorio", etiqueta: "Directorio", icono: Search, seccion: "directorio" },
+  { href: "/visibilidad", etiqueta: "Visibilidad", icono: Sparkles, seccion: "visibilidad" },
+  { href: "/oportunidades", etiqueta: "Oportunidades", icono: Briefcase, seccion: "oportunidades" },
+  { href: "/cuenta-estrategica", etiqueta: "Cuenta estratégica", icono: Star, seccion: "cuenta-estrategica", soloGrande: true },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -51,12 +53,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const empresaVisible = MODO_API
     ? (vista?.activeOrganization?.legalName ?? (vista ? "Sin empresa elegida" : ""))
     : escenario.empresa.razonSocial;
+  const rol = useRolPortal();
   const administraAccesos = MODO_API
     ? tienePermiso(vista?.permissions ?? [], "user:read")
-    : escenario.rol === "gerente";
+    : nivelPortal(rol, "contactos") === "gestiona";
 
   const visibles = NAV.filter((e) => {
-    if (e.soloGerente && escenario.rol !== "gerente") return false;
+    if (nivelPortal(rol, e.seccion) === null) return false;
     if (e.soloGrande && escenario.empresa.segmento !== "grande") return false;
     return true;
   });
@@ -125,13 +128,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 </Link>
               );
             })}
-            <Link
-              href="/admin"
-              className="ml-auto flex shrink-0 items-center gap-2 px-3 py-3 text-[13px] font-semibold text-muted transition hover:text-ink"
-            >
-              <Users size={15} aria-hidden />
-              Vista interna
-            </Link>
           </div>
         </nav>
       </header>

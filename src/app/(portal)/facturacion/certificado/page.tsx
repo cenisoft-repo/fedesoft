@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { SinPermisoPortal } from "@/components/SinPermisoRol";
+import { useNivelPortal } from "@/lib/useAcceso";
 import { ArrowRight, Award, Download, Lock, QrCode, ShieldCheck } from "lucide-react";
 import { useDemo } from "@/lib/demo";
 import { cop, fecha } from "@/lib/format";
@@ -8,23 +10,10 @@ import { Boton, Card, Chip, Eyebrow, PageHeader } from "@/components/ui/primitiv
 
 const FOLIO = "FS-2026-00184";
 
-export default function Certificado() {
+function CertificadoContenido() {
   const { escenario } = useDemo();
-  const { empresa, rol } = escenario;
+  const { empresa } = escenario;
   const alDia = empresa.estado === "al-dia";
-
-  if (rol !== "gerente") {
-    return (
-      <Card className="mx-auto max-w-[520px]">
-        <div className="grid justify-items-center gap-3 px-6 py-14 text-center">
-          <Lock size={22} className="text-muted" aria-hidden />
-          <h1 className="font-display text-[20px] font-bold">Sección del rol de gerencia</h1>
-          <p className="text-[15px] text-muted">El certificado lo descarga el gerente registrado de la empresa.</p>
-          <Link href="/portal"><Boton variante="secundario">Volver al inicio</Boton></Link>
-        </div>
-      </Card>
-    );
-  }
 
   const pendiente = empresa.cargos.find((c) => c.estado !== "pagado");
 
@@ -185,4 +174,11 @@ export default function Certificado() {
       )}
     </div>
   );
+}
+
+/* La matriz de acceso decide antes de pintar: sin permiso, pantalla explícita. */
+export default function Certificado() {
+  const nivel = useNivelPortal("facturacion");
+  if (!nivel) return <SinPermisoPortal seccion="facturacion" />;
+  return <CertificadoContenido />;
 }

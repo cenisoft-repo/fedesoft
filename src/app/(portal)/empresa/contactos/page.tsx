@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { useNivelPortal } from "@/lib/useAcceso";
+import { SinPermisoPortal } from "@/components/SinPermisoRol";
 import { useMemo, useState, type FormEvent } from "react";
-import { ArrowLeft, History, Lock, Mail, RotateCcw, Send, ShieldCheck, UserMinus, UserPlus, UserRoundCog } from "lucide-react";
+import { ArrowLeft, History, Mail, RotateCcw, Send, ShieldCheck, UserMinus, UserPlus, UserRoundCog } from "lucide-react";
 import { useDemo } from "@/lib/demo";
 import { DIAS_INVITACION, iniciales, useIdentidad, type Resultado } from "@/lib/identidad";
 import { ROLES_EMPRESA, nombreRolEmpresa, type RolEmpresa } from "@/lib/mock/usuarios";
@@ -42,6 +44,7 @@ export default function Contactos() {
 
 function ContactosSimulado() {
   const { escenario } = useDemo();
+  const nivel = useNivelPortal("contactos");
   const id = useIdentidad();
   const [accion, setAccion] = useState<Accion | null>(null);
   const [aviso, setAviso] = useState<Resultado | null>(null);
@@ -76,7 +79,7 @@ function ContactosSimulado() {
     return [...conVinculo, ...sinAcceso].sort((a, b) => orden[a.estado] - orden[b.estado]);
   }, [id, empresa]);
 
-  if (escenario.rol !== "gerente") return <SinPermiso />;
+  if (nivel !== "gestiona") return <SinPermisoPortal seccion="contactos" />;
 
   const ejecutar = (r: Resultado) => {
     setAviso(r);
@@ -460,25 +463,5 @@ function DialogoDesactivar({ fila, onCerrar, onConfirmar }: { fila: Fila; onCerr
     >
       {error ? <Aviso ok={false}>{error}</Aviso> : undefined}
     </Dialogo>
-  );
-}
-
-function SinPermiso() {
-  return (
-    <Card className="mx-auto max-w-[520px]">
-      <div className="grid justify-items-center gap-3 px-6 py-14 text-center">
-        <div className="grid h-12 w-12 place-items-center rounded-full bg-bg text-muted">
-          <Lock size={22} aria-hidden />
-        </div>
-        <h1 className="font-display text-[20px] font-bold">Los accesos los administra la gerencia</h1>
-        <p className="max-w-[44ch] text-[15px] text-muted">
-          Tu perfil de líder de talento humano no puede invitar personas ni cambiar roles. Si alguien de tu equipo
-          necesita entrar al portal, pídeselo al gerente registrado de tu empresa.
-        </p>
-        <Link href="/empresa" className="mt-1">
-          <Boton variante="secundario">Volver a Mi empresa</Boton>
-        </Link>
-      </div>
-    </Card>
   );
 }

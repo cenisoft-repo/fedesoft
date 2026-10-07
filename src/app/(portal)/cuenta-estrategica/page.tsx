@@ -1,13 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import { SinPermisoPortal } from "@/components/SinPermisoRol";
+import { useNivelPortal } from "@/lib/useAcceso";
 import { CalendarCheck, GraduationCap, Mail, Phone, Star, Target, TrendingUp } from "lucide-react";
 import { useDemo } from "@/lib/demo";
 import { OPORTUNIDADES, VERTICALES } from "@/lib/mock/catalogo";
 import { cop, fecha } from "@/lib/format";
 import { Boton, Card, Chip, Eyebrow, PageHeader } from "@/components/ui/primitivos";
 
-export default function CuentaEstrategica() {
+function CuentaEstrategicaContenido() {
   const { escenario } = useDemo();
   const { empresa } = escenario;
 
@@ -142,4 +144,11 @@ function Metrica({
       <p className="mt-1.5 text-[13px] text-muted">{detalle}</p>
     </Card>
   );
+}
+
+/* La matriz de acceso decide antes de pintar: sin permiso, pantalla explícita. */
+export default function CuentaEstrategica() {
+  const nivel = useNivelPortal("cuenta-estrategica");
+  if (!nivel) return <SinPermisoPortal seccion="cuenta-estrategica" />;
+  return <CuentaEstrategicaContenido />;
 }

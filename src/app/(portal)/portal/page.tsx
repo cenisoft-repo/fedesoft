@@ -3,8 +3,9 @@
 import Link from "next/link";
 import {
   AlertTriangle, ArrowRight, Award, BadgeCheck, Building2, CalendarDays,
-  Download, GraduationCap, Receipt, Sparkles, Star, TrendingUp,
+  GraduationCap, Receipt, Search, Sparkles, Star, TrendingUp, UsersRound,
 } from "lucide-react";
+import { useNivelPortal } from "@/lib/useAcceso";
 import { useDemo } from "@/lib/demo";
 import { ACTIVIDADES, OPORTUNIDADES, VERTICALES } from "@/lib/mock/catalogo";
 import { cop, diasHasta, fecha } from "@/lib/format";
@@ -13,6 +14,7 @@ import { Boton, Card, Chip, Eyebrow, Seccion } from "@/components/ui/primitivos"
 export default function Inicio() {
   const { escenario, inscripciones } = useDemo();
   const { empresa, rol } = escenario;
+  const veCuentaEstrategica = useNivelPortal("cuenta-estrategica") !== null;
   const contacto = empresa.contactos.find((c) => c.id === escenario.contactoId);
   const nombreCorto = contacto?.nombre.split(" ")[0] ?? "";
 
@@ -118,6 +120,13 @@ export default function Inicio() {
               <Acceso href="/formacion" icono={GraduationCap} titulo="Formación" detalle="TrainingLAB y TIC Talks" />
               <Acceso href="/empresa" icono={Building2} titulo="Mis datos" detalle="Empresa y contactos" />
             </>
+          ) : rol === "contacto" ? (
+            <>
+              <Acceso href="/formacion" icono={GraduationCap} titulo="Formación" detalle="Tus inscripciones" />
+              <Acceso href="/comunidades" icono={UsersRound} titulo="Comunidades" detalle="Las abiertas a tu perfil" />
+              <Acceso href="/directorio" icono={Search} titulo="Directorio" detalle="Empresas afiliadas" />
+              <Acceso href="/empresa" icono={Building2} titulo="Datos de la empresa" detalle="Consulta el perfil" />
+            </>
           ) : (
             <>
               <Acceso href="/formacion" icono={GraduationCap} titulo="Catálogo de formación" detalle="Inscribe a tu equipo" />
@@ -210,7 +219,7 @@ export default function Inicio() {
       </div>
 
       {/* Cuenta estratégica: solo para empresas grandes */}
-      {empresa.kam && (
+      {empresa.kam && veCuentaEstrategica && (
         <Card destacada className="p-5 sm:p-6">
           <div className="flex flex-wrap items-center justify-between gap-5">
             <div className="flex items-center gap-4">

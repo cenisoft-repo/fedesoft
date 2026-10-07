@@ -1,7 +1,8 @@
 "use client";
 
-import Link from "next/link";
-import { Briefcase, CalendarClock, Lock } from "lucide-react";
+import { SinPermisoPortal } from "@/components/SinPermisoRol";
+import { useNivelPortal } from "@/lib/useAcceso";
+import { Briefcase, CalendarClock } from "lucide-react";
 import { useDemo } from "@/lib/demo";
 import { OPORTUNIDADES } from "@/lib/mock/catalogo";
 import { fecha } from "@/lib/format";
@@ -14,22 +15,9 @@ const ESTADOS = {
   cerrada: { tono: "neutro" as const, texto: "Cerrada" },
 };
 
-export default function Oportunidades() {
+function OportunidadesContenido() {
   const { escenario } = useDemo();
-  const { empresa, rol } = escenario;
-
-  if (rol !== "gerente") {
-    return (
-      <Card className="mx-auto max-w-[520px]">
-        <div className="grid justify-items-center gap-3 px-6 py-14 text-center">
-          <Lock size={22} className="text-muted" aria-hidden />
-          <h1 className="font-display text-[20px] font-bold">Sección del rol de gerencia</h1>
-          <p className="text-[15px] text-muted">Las postulaciones a oportunidades las gestiona el gerente registrado.</p>
-          <Link href="/portal"><Boton variante="secundario">Volver al inicio</Boton></Link>
-        </div>
-      </Card>
-    );
-  }
+  const { empresa } = escenario;
 
   const aplican = OPORTUNIDADES.filter((o) => o.aplicaA.includes(empresa.segmento));
 
@@ -88,4 +76,11 @@ export default function Oportunidades() {
       )}
     </div>
   );
+}
+
+/* La matriz de acceso decide antes de pintar: sin permiso, pantalla explícita. */
+export default function Oportunidades() {
+  const nivel = useNivelPortal("oportunidades");
+  if (!nivel) return <SinPermisoPortal seccion="oportunidades" />;
+  return <OportunidadesContenido />;
 }

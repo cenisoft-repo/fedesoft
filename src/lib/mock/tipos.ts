@@ -1,5 +1,5 @@
 export type EstadoAfiliacion = "al-dia" | "pendiente" | "vencida";
-export type Rol = "gerente" | "talento";
+export type Rol = "gerente" | "talento" | "contacto";
 export type Segmento = "mipyme" | "grande";
 
 export interface Contacto {
@@ -8,7 +8,7 @@ export interface Contacto {
   cargo: string;
   correo: string;
   telefono: string;
-  rol: Rol | "contacto";
+  rol: Rol;
   conAcceso: boolean;
 }
 

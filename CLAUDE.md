@@ -43,6 +43,7 @@ src/app/(portal)/     Portal del afiliado; el inicio vive en /portal
 src/components/landing/  Campo generativo, revelado por scroll, escala
 src/components/ui/    Primitivos: Boton, Card, Chip, PageHeader, Vacio
 src/lib/demo.tsx      Contexto de escenarios de demostración
+src/lib/acceso.ts     Matriz de acceso por rol (portal y consola)
 src/lib/mock/         Datos simulados con contenido real de Fedesoft
 src/lib/identidad.tsx Identidad simulada (reglas de ADR-008, en memoria)
 src/lib/api/          Cliente y sesión del API real (solo en modo API)
@@ -52,7 +53,16 @@ src/lib/api/          Cliente y sesión del API real (solo en modo API)
 
 - **Nada de texto de relleno.** Se usa contenido real de Fedesoft: cursos de TrainingLAB y Series C+I con sus nombres exactos, las cuatro verticales, empresas del directorio, y formatos colombianos (NIT con dígito de verificación, pesos con punto de miles, CUFE, folio).
 - **La autorización no se finge escondiendo botones.** El líder de talento recibe una pantalla de "sin permiso" explícita en facturación y oportunidades.
-- **Cuatro escenarios de demostración** que recomponen la aplicación completa: gerente MIPYME al día, gerente con pago vencido, líder de talento, gerente de empresa grande con KAM. Cualquier pantalla nueva debe comportarse coherentemente en los cuatro.
+- **Siete escenarios de demostración** que recomponen la aplicación completa:
+  - gerente, talento humano y contacto, en una MIPYME y en una empresa grande con KAM;
+  - el gerente con pago vencido.
+
+  Cualquier pantalla nueva debe comportarse coherentemente en todos.
+- **Quién ve qué vive en `src/lib/acceso.ts`**, transcrito de las matrices del repo rector: 3 roles del portal y 9 roles internos de la consola.
+  - Una sección o módulo nuevo se declara ahí primero.
+  - La página pregunta su nivel con `useNivelPortal` o `useAccesoConsola`.
+  - Sin acceso: `SinPermisoPortal` o `SinPermisoConsola`. En la consola, el `AdminShell` ya lo aplica por ruta.
+  - El afiliado no ve enlaces a la consola: se abre desde el control de demostración.
 - **Todos los estados**: carga, vacío, error y sin permiso. Un estado vacío nunca es una tarjeta que dice que no hay nada: desaparece o propone la acción siguiente.
 - **Accesibilidad WCAG 2.1 AA**: contraste verificado, foco visible, navegación por teclado, etiquetas en formularios.
 - **Tema claro y oscuro**, ambos cuidados. Los colores se definen en `:root` y se redefinen por token, nunca sueltos dentro de un bloque de tema.

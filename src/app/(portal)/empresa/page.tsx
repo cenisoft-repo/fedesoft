@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useNivelPortal } from "@/lib/useAcceso";
 import { useState } from "react";
 import { Check, Info, Mail, Phone, UserCog } from "lucide-react";
 import { useDemo } from "@/lib/demo";
@@ -11,14 +12,16 @@ import { Boton, Card, Chip, Eyebrow, PageHeader } from "@/components/ui/primitiv
 export default function Empresa() {
   const { escenario } = useDemo();
   const { vinculos, porCorreo } = useIdentidad();
-  const { empresa, rol } = escenario;
+  const { empresa } = escenario;
   /* El acceso de cada contacto sale del estado de identidad, no de la ficha:
      si el gerente lo desactiva en Contactos y accesos, aquí se ve. */
   const tieneAcceso = (correo: string) => {
     const u = porCorreo(correo);
     return vinculos.some((v) => v.usuarioId === u?.id && v.empresa === empresa.nit && v.estado === "activo");
   };
-  const puedeEditar = rol === "gerente";
+  const puedeEditar = useNivelPortal("empresa") === "gestiona";
+  /* El contacto no ve la afiliación (docs/03 §4); el talento la consulta. */
+  const veAfiliacion = useNivelPortal("afiliacion") !== null;
   const [guardado, setGuardado] = useState(false);
 
   return (
@@ -106,6 +109,7 @@ export default function Empresa() {
         </section>
 
         <aside className="grid h-fit gap-5">
+          {veAfiliacion && (
           <Card className="p-5">
             <Eyebrow>Tu afiliación</Eyebrow>
             <dl className="mt-3 grid gap-3 text-[14.5px]">
@@ -116,6 +120,7 @@ export default function Empresa() {
               <Dato termino="Verticales" valor={empresa.verticales.join(", ") || "Ninguna"} />
             </dl>
           </Card>
+          )}
 
           <Card className="p-5">
             <Eyebrow>Historial</Eyebrow>

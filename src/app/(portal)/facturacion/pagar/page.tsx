@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { SinPermisoPortal } from "@/components/SinPermisoRol";
+import { useNivelPortal } from "@/lib/useAcceso";
 import { useEffect, useState } from "react";
 import { Award, CheckCircle2, Copy, CreditCard, FileCheck2, Loader2, ShieldCheck } from "lucide-react";
 import { useDemo } from "@/lib/demo";
@@ -11,7 +13,7 @@ type Paso = "resumen" | "pasarela" | "confirmando" | "listo";
 
 const CUFE_DEMO = "e4b91d07ca8f236510bd9e74a3c0f82b6d15e9a742c8031f";
 
-export default function Pagar() {
+function PagarContenido() {
   const { escenario, registrarPago } = useDemo();
   const { empresa } = escenario;
   const [paso, setPaso] = useState<Paso>("resumen");
@@ -235,4 +237,11 @@ function Campo({ etiqueta, valor }: { etiqueta: string; valor: string }) {
       />
     </div>
   );
+}
+
+/* La matriz de acceso decide antes de pintar: sin permiso, pantalla explícita. */
+export default function Pagar() {
+  const nivel = useNivelPortal("facturacion");
+  if (!nivel) return <SinPermisoPortal seccion="facturacion" />;
+  return <PagarContenido />;
 }

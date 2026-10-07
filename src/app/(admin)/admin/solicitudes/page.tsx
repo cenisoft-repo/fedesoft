@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import {
-  AlertTriangle, Building2, Check, CircleDashed, FileWarning, Mail,
+  AlertTriangle, Building2, Check, CircleDashed, Eye, FileWarning, Mail,
   MapPin, Phone, Settings2, Sliders, Users, X,
 } from "lucide-react";
 import {
@@ -10,6 +10,7 @@ import {
   type EstadoSolicitud, type Solicitud,
 } from "@/lib/mock/admin";
 import { cop, diasHasta, fecha } from "@/lib/format";
+import { useAccesoConsola } from "@/lib/useAcceso";
 import { Boton, Card, Chip, Eyebrow, PageHeader, Vacio } from "@/components/ui/primitivos";
 
 const ESTADOS: { id: EstadoSolicitud | "todas"; etiqueta: string }[] = [
@@ -34,6 +35,7 @@ export default function Solicitudes() {
   const [abierta, setAbierta] = useState<string>(SOLICITUDES[0].radicado);
   const [resueltas, setResueltas] = useState<Record<string, EstadoSolicitud>>({});
   const [verParametro, setVerParametro] = useState(false);
+  const { nivel } = useAccesoConsola("solicitudes");
 
   const estadoDe = (s: Solicitud): EstadoSolicitud => resueltas[s.radicado] ?? s.estado;
 
@@ -45,6 +47,23 @@ export default function Solicitudes() {
 
   const seleccionada = SOLICITUDES.find((s) => s.radicado === abierta);
   const pendientes = SOLICITUDES.filter((s) => ["nueva", "en-revision", "info-solicitada"].includes(estadoDe(s)));
+
+  /* Las solicitudes son empresas que aún no están afiliadas: ninguna tiene gestor asignado. */
+  if (nivel === "asignadas") {
+    return (
+      <div className="grid gap-7">
+        <PageHeader
+          eyebrow="Gestión operativa"
+          titulo="Bandeja de solicitudes de afiliación"
+          lede="Como gestor de cuenta ves solo lo que pertenece a tus empresas asignadas."
+        />
+        <Vacio
+          titulo="Ninguna solicitud es de tus empresas"
+          detalle="Las solicitudes llegan de empresas que aún no están afiliadas. Cuando una de tus cuentas abra un trámite, aparecerá aquí."
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="grid gap-7">
@@ -135,6 +154,7 @@ export default function Solicitudes() {
             s={seleccionada}
             estado={estadoDe(seleccionada)}
             onResolver={(nuevo) => setResueltas((r) => ({ ...r, [seleccionada.radicado]: nuevo }))}
+            soloLectura={nivel !== "gestiona"}
           />
         )}
       </div>
@@ -194,10 +214,13 @@ function Expediente({
   s,
   estado,
   onResolver,
+  soloLectura,
 }: {
   s: Solicitud;
   estado: EstadoSolicitud;
   onResolver: (e: EstadoSolicitud) => void;
+  /** Consulta sin decisión: Cartera, Dirección y Auditoría ven el expediente, no lo resuelven. */
+  soloLectura: boolean;
 }) {
   const tarifa = tarifaPara(s.empleados);
   const faltantes = s.documentos.filter((d) => d.estado !== "recibido");
@@ -282,7 +305,12 @@ function Expediente({
       )}
 
       {/* Decisión */}
-      {cerrada ? (
+      {soloLectura && !cerrada ? (
+        <div className="flex items-center gap-2 border-t border-line pt-5 text-[14px] text-muted">
+          <Eye size={15} aria-hidden />
+          Solo lectura: tu rol consulta el expediente; aprobar o rechazar le corresponde a Operaciones.
+        </div>
+      ) : cerrada ? (
         <div className="flex items-center gap-2 border-t border-line pt-5 text-[14px] text-muted">
           <CircleDashed size={15} aria-hidden />
           Solicitud cerrada. Reabrirla exige justificación y queda en la auditoría.

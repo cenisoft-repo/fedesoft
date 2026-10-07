@@ -14,7 +14,17 @@ import { DATALABS, VERTICE } from "./empresas";
 import type { Empresa } from "./tipos";
 
 export type RolEmpresa = "gerente" | "talento" | "contacto";
-export type RolInterno = "super-admin" | "operaciones" | "kam" | "auditor";
+/* Los nueve roles internos de docs/01-consola-administracion.md §2.1. */
+export type RolInterno =
+  | "super-admin"
+  | "operaciones"
+  | "cartera"
+  | "formacion"
+  | "comunicaciones"
+  | "relacionamiento"
+  | "kam"
+  | "direccion"
+  | "auditor";
 export type EstadoUsuario = "activo" | "invitado" | "bloqueado";
 export type EstadoVinculo = "activo" | "invitado" | "desactivado";
 
@@ -73,9 +83,14 @@ export const ROLES_EMPRESA: { id: RolEmpresa; nombre: string; resumen: string; a
 
 export const ROLES_INTERNOS: { id: RolInterno; nombre: string; resumen: string }[] = [
   { id: "super-admin", nombre: "Super Admin", resumen: "Configuración y emergencia. Asigna roles internos. Siempre hay al menos dos." },
-  { id: "operaciones", nombre: "Operaciones", resumen: "Afiliación, cartera, conciliación y formación." },
+  { id: "operaciones", nombre: "Operaciones · Afiliación", resumen: "Padrón, solicitudes y estados de afiliación, certificados." },
+  { id: "cartera", nombre: "Cartera · Financiera", resumen: "Cargos, pagos, conciliación y facturas electrónicas." },
+  { id: "formacion", nombre: "Formación y comunidades", resumen: "Cursos, sesiones, cupos, inscripciones y comunidades." },
+  { id: "comunicaciones", nombre: "Comunicaciones · Contenido", resumen: "Comunicaciones, insights y moderación del directorio." },
+  { id: "relacionamiento", nombre: "Relacionamiento · Verticales", resumen: "Verticales, mesas, oportunidades y postulaciones." },
   { id: "kam", nombre: "Gestor de cuenta", resumen: "Solo las empresas que tiene asignadas." },
-  { id: "auditor", nombre: "Auditor", resumen: "Lectura de todo, sin cambiar nada." },
+  { id: "direccion", nombre: "Dirección", resumen: "Resultados y reportes; lectura de todo el padrón." },
+  { id: "auditor", nombre: "Auditor", resumen: "Lectura y exportación de todo, sin cambiar nada." },
 ];
 
 export const nombreRolEmpresa = (r: RolEmpresa) => ROLES_EMPRESA.find((x) => x.id === r)?.nombre ?? r;
@@ -159,6 +174,11 @@ const INTERNOS: Usuario[] = [
   },
   { id: "u-marcela-o", nombre: "Marcela Ospina", correo: "cuentas.estrategicas@fedesoft.org", estado: "activo", rolesInternos: ["kam"], ultimoAcceso: "2026-09-20 15:44", sesiones: [] },
   { id: "u-jorge", nombre: "Jorge Prieto", correo: "jorge.prieto@fedesoft.org", estado: "activo", rolesInternos: ["auditor"], ultimoAcceso: "2026-09-01 09:30", sesiones: [] },
+  { id: "u-andrea", nombre: "Andrea Villamil", correo: "andrea.villamil@fedesoft.org", estado: "activo", rolesInternos: ["cartera"], ultimoAcceso: "2026-09-22 07:40", sesiones: [] },
+  { id: "u-paula", nombre: "Paula Andrade", correo: "paula.andrade@fedesoft.org", estado: "activo", rolesInternos: ["formacion"], ultimoAcceso: "2026-09-21 16:12", sesiones: [] },
+  { id: "u-valentina", nombre: "Valentina Duarte", correo: "valentina.duarte@fedesoft.org", estado: "activo", rolesInternos: ["comunicaciones"], ultimoAcceso: "2026-09-22 09:01", sesiones: [] },
+  { id: "u-german", nombre: "Germán Castaño", correo: "german.castano@fedesoft.org", estado: "activo", rolesInternos: ["relacionamiento"], ultimoAcceso: "2026-09-19 14:25", sesiones: [] },
+  { id: "u-carolina", nombre: "Carolina Vélez", correo: "carolina.velez@fedesoft.org", estado: "activo", rolesInternos: ["direccion"], ultimoAcceso: "2026-09-20 08:15", sesiones: [] },
 ];
 
 export const USUARIOS_INICIALES: Usuario[] = [...INTERNOS, ...datalabs.usuarios, ...vertice.usuarios, ...EXTRA_USUARIOS];
@@ -170,5 +190,20 @@ export const EMPRESAS_POR_NIT: Record<string, string> = {
   [VERTICE.nit]: VERTICE.razonSocial,
 };
 
-/** Cuentas de la consola que se ofrecen en el acceso de demostración. */
-export const OPERADORES_DEMO = ["lorena.mejia@fedesoft.org", "natalia.rincon@fedesoft.org"];
+/** Cuentas de la consola del acceso de demostración: una por rol interno, en el orden de ROLES_INTERNOS. */
+export const OPERADORES_DEMO = [
+  "natalia.rincon@fedesoft.org",
+  "lorena.mejia@fedesoft.org",
+  "andrea.villamil@fedesoft.org",
+  "paula.andrade@fedesoft.org",
+  "valentina.duarte@fedesoft.org",
+  "german.castano@fedesoft.org",
+  "cuentas.estrategicas@fedesoft.org",
+  "carolina.velez@fedesoft.org",
+  "jorge.prieto@fedesoft.org",
+];
+
+/** Empresas a cargo de cada gestor de cuenta (ABAC: el KAM solo ve estas). */
+export const ASIGNACIONES_KAM: Record<string, string[]> = {
+  "u-marcela-o": [VERTICE.nit],
+};

@@ -6,6 +6,8 @@ import {
   AlertOctagon, AlertTriangle, ArrowUpRight, CheckCircle2, Clock,
   Info, Lock, Search,
 } from "lucide-react";
+import { ASIGNACIONES_KAM } from "@/lib/mock/usuarios";
+import { useAccesoConsola } from "@/lib/useAcceso";
 import { CARTERA, TRAMOS_MORA, type CuentaCartera, type EstadoCartera } from "@/lib/mock/admin";
 import { cop, fecha } from "@/lib/format";
 import { Card, Chip, Cifra, Eyebrow, PageHeader, Vacio } from "@/components/ui/primitivos";
@@ -27,13 +29,20 @@ const ESTADO: Record<EstadoCartera, {
 const ORDEN: EstadoCartera[] = ["al-dia", "por-vencer", "vencida"];
 
 export default function Cartera() {
+  const { nivel, operadorId } = useAccesoConsola("cartera");
+  /* ABAC del gestor de cuenta: solo la cartera de sus empresas asignadas. */
+  const cuentas = useMemo(() => {
+    if (nivel !== "asignadas") return CARTERA;
+    const suyas = ASIGNACIONES_KAM[operadorId ?? ""] ?? [];
+    return CARTERA.filter((c) => suyas.includes(c.nit));
+  }, [nivel, operadorId]);
   const [filtro, setFiltro] = useState<EstadoCartera | "todas">("todas");
   const [busqueda, setBusqueda] = useState("");
 
   const t = useMemo(() => {
     const suma = (f: (c: CuentaCartera) => boolean) =>
-      CARTERA.filter(f).reduce((a, c) => a + c.monto, 0);
-    const cuenta = (f: (c: CuentaCartera) => boolean) => CARTERA.filter(f).length;
+      cuentas.filter(f).reduce((a, c) => a + c.monto, 0);
+    const cuenta = (f: (c: CuentaCartera) => boolean) => cuentas.filter(f).length;
     return {
       facturado: suma(() => true),
       recaudado: suma((c) => c.estado === "al-dia"),
@@ -51,16 +60,16 @@ export default function Cartera() {
         n: cuenta((c) => c.mora >= tr.desde && c.mora <= tr.hasta),
       })),
     };
-  }, []);
+  }, [cuentas]);
 
   const lista = useMemo(() => {
     const q = busqueda.trim().toLowerCase();
-    return CARTERA.filter((c) => filtro === "todas" || c.estado === filtro)
+    return cuentas.filter((c) => filtro === "todas" || c.estado === filtro)
       .filter((c) => !q || c.empresa.toLowerCase().includes(q) || c.nit.includes(q))
       .sort((a, b) => b.mora - a.mora || b.monto - a.monto);
-  }, [filtro, busqueda]);
+  }, [cuentas, filtro, busqueda]);
 
-  const maxEstado = Math.max(...t.porEstado.map((e) => e.monto));
+  const maxEstado = Math.max(...t.porEstado.map((e) => e.monto), 1);
   const maxTramo = Math.max(...t.tramos.map((e) => e.monto), 1);
 
   return (
@@ -81,8 +90,12 @@ export default function Cartera() {
 
       <p className="flex items-start gap-2 text-[13.5px] leading-relaxed text-muted">
         <Info size={15} className="mt-0.5 shrink-0" aria-hidden />
-        Muestra de <span className="num font-semibold text-ink">{CARTERA.length}</span> cuentas para la demostración,
-        no la cartera completa de las 518 afiliadas. Las cifras son simuladas y coherentes entre sí.
+        {nivel === "asignadas" ? (
+          <>Ves solo la cartera de tus <span className="num font-semibold text-ink">{cuentas.length}</span> empresas asignadas: el resto del padrón no se consulta desde tu rol.</>
+        ) : (
+          <>Muestra de <span className="num font-semibold text-ink">{cuentas.length}</span> cuentas para la demostración,
+          no la cartera completa de las 518 afiliadas. Las cifras son simuladas y coherentes entre sí.</>
+        )}
       </p>
 
       <div className="grid items-start gap-5 lg:grid-cols-2">
@@ -173,7 +186,7 @@ export default function Cartera() {
           <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filtrar por estado">
             {(["todas", ...ORDEN] as const).map((e) => {
               const activo = filtro === e;
-              const n = e === "todas" ? CARTERA.length : CARTERA.filter((c) => c.estado === e).length;
+              const n = e === "todas" ? cuentas.length : cuentas.filter((c) => c.estado === e).length;
               return (
                 <button
                   key={e}
@@ -261,5 +274,5 @@ export default function Cartera() {
 }
 
 function pct(parte: number, total: number): string {
-  return `${Math.round((parte / total) * 100)}%`;
+  return total > 0 ? `${Math.round((parte / total) * 100)}%` : "0%";
 }

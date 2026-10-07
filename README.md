@@ -43,16 +43,60 @@ Usuarios de prueba y secreto TOTP: `infra/docker/keycloak/README.md` del repo re
 
 ## Modo demostración
 
-El control flotante de la esquina inferior derecha cambia **toda la aplicación en vivo** entre cuatro escenarios. Es la herramienta central de la presentación:
+El control flotante de la esquina inferior derecha cambia **toda la aplicación en vivo** entre siete escenarios: uno por persona con acceso y el de pago vencido. Desde ese mismo control se abre la consola interna, que el afiliado no ve en su menú.
 
 | Escenario | Qué demuestra |
 |---|---|
 | **Gerente · MIPYME al día** | La experiencia completa: todo habilitado, certificado descargable |
 | **Gerente · pago vencido** | Las reglas de negocio: el certificado se bloquea y se explica qué falta |
-| **Líder de talento humano** | La segmentación por rol: ve formación, no ve facturación |
+| **Talento humano · MIPYME** | La segmentación por rol: ve formación, no ve facturación |
+| **Contacto · MIPYME** | El perfil más acotado: consulta la empresa y se inscribe a formación propia |
 | **Gerente · empresa grande** | El Eje 2: aparece la cuenta estratégica con su gestora asignada |
+| **Talento humano · empresa grande** | Rol y segmento juntos: ve la cuenta estratégica, no la facturación |
+| **Contacto · empresa grande** | Aunque la empresa sea grande, el contacto no entra a la cuenta estratégica |
 
 También hay conmutador de tema claro/oscuro en el encabezado.
+
+## Quién ve qué
+
+La separación por rol vive en un solo archivo, `src/lib/acceso.ts`. Transcribe las matrices del repo rector: `docs/03-arquitectura-de-informacion.md` §4 para el portal y `docs/01-consola-administracion.md` §2.2 para la consola.
+
+- **El menú muestra solo lo que el rol alcanza.**
+- **Entrar por la URL a un módulo ajeno da una pantalla explícita de «sin permiso»**, que dice quién sí tiene acceso. No basta con esconder el botón.
+- **Los niveles:**
+  - **gestiona:** ve y cambia;
+  - **solo lectura:** consulta sin cambiar;
+  - **solo tus empresas asignadas:** el gestor de cuenta ve únicamente las empresas a su cargo;
+  - **solo tu área:** auditoría y resultados filtrados por el área de quien opera.
+
+**Cuentas de demostración del portal** (`/entrar`; cualquier contraseña sirve):
+
+| Rol | Persona | Empresa |
+|---|---|---|
+| Gerente | Camilo Restrepo | Datalabs Andina (MIPYME) |
+| Talento humano | Diana Salazar | Datalabs Andina |
+| Contacto | Julián Ospina | Datalabs Andina |
+| Gerente | Marcela Betancur | Sistemas Vértice (grande) |
+| Talento humano | Ricardo Peñaloza | Sistemas Vértice |
+| Contacto | Sandra Quintero | Sistemas Vértice |
+
+Además: Laura Gómez (invitación pendiente), Andrés Mora (acceso desactivado) y Mauricio Lara (cuenta bloqueada).
+
+**Cuentas de demostración de la consola** (`/admin/entrar`; cualquier contraseña y el código de segundo factor que muestra la pantalla). Hay una por rol interno:
+
+| Rol | Persona | Módulos |
+|---|---|---|
+| Super Admin | Natalia Rincón | Los 10 |
+| Operaciones · Afiliación | Lorena Mejía | Gestiona afiliados y solicitudes; consulta cartera, formación, contenidos y cuentas |
+| Cartera · Financiera | Andrea Villamil | Gestiona cartera; consulta afiliados, solicitudes y contenidos |
+| Formación y comunidades | Paula Andrade | Gestiona formación; consulta afiliados y contenidos |
+| Comunicaciones · Contenido | Valentina Duarte | Gestiona contenidos; consulta afiliados, formación y relacionamiento |
+| Relacionamiento · Verticales | Germán Castaño | Gestiona relacionamiento; consulta afiliados, contenidos y cuentas |
+| Gestor de cuenta | Marcela Ospina | Solo sus empresas asignadas (Sistemas Vértice) en cada módulo |
+| Dirección | Carolina Vélez | Lectura de todo; exporta resultados |
+| Auditor | Jorge Prieto | Lectura de todo; exporta resultados y auditoría |
+
+Resultados y Auditoría los ven todos los roles, pero cada área ve solo lo suyo.
 
 ## Pantallas
 
@@ -69,7 +113,14 @@ También hay conmutador de tema claro/oscuro en el encabezado.
 | `/oportunidades` | Convocatorias Cenisoft filtradas por el perfil de la empresa |
 | `/entrar` · `/entrar/recuperar` | Acceso con correo y proveedor de identidad, invitaciones y rechazos explicados |
 | `/empresa/contactos` | **Contactos y accesos**: el gerente invita, cambia roles, desactiva y reactiva |
-| `/admin` | Un vistazo de la **ficha 360** que ve el equipo interno de Fedesoft |
+| `/admin` | **Ficha 360** de la empresa (el gestor de cuenta ve la suya asignada) |
+| `/admin/solicitudes` · `/admin/cartera` | Bandeja de solicitudes de afiliación y tablero de cartera |
+| `/admin/formacion` | Programación de TrainingLAB, TIC Talks y Series C+I: cupos, inscripciones y comunidades |
+| `/admin/contenidos` | Campañas, insights publicados y moderación del directorio |
+| `/admin/relacionamiento` | Verticales, mesas y convocatorias con sus postulaciones |
+| `/admin/cuentas` | Cuentas estratégicas: salud, plan de acción y registro de interacciones |
+| `/admin/resultados` | Indicadores del gremio y de cada área |
+| `/admin/auditoria` | Registro de solo adición, filtrable por área |
 | `/admin/entrar` · `/admin/usuarios` | Consola con segundo factor obligatorio; usuarios, roles internos, bloqueo y sesiones |
 
 ## Decisiones de construcción

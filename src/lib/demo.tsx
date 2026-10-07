@@ -4,7 +4,14 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import { DATALABS, DATALABS_VENCIDA, VERTICE } from "./mock/empresas";
 import type { Empresa, Rol } from "./mock/tipos";
 
-export type EscenarioId = "mipyme-al-dia" | "mipyme-vencida" | "talento" | "grande";
+export type EscenarioId =
+  | "mipyme-al-dia"
+  | "mipyme-vencida"
+  | "talento"
+  | "contacto"
+  | "grande"
+  | "grande-talento"
+  | "grande-contacto";
 
 export interface Escenario {
   id: EscenarioId;
@@ -45,6 +52,15 @@ export const ESCENARIOS: Escenario[] = [
     contactoId: "c2",
   },
   {
+    id: "contacto",
+    etiqueta: "Contacto · MIPYME",
+    descripcion: "Julián Ospina · Datalabs Andina",
+    demuestra: "El perfil más acotado: consulta la empresa y se inscribe a formación propia.",
+    empresa: DATALABS,
+    rol: "contacto",
+    contactoId: "c3",
+  },
+  {
     id: "grande",
     etiqueta: "Gerente · empresa grande",
     descripcion: "Marcela Betancur · Sistemas Vértice",
@@ -52,6 +68,24 @@ export const ESCENARIOS: Escenario[] = [
     empresa: VERTICE,
     rol: "gerente",
     contactoId: "v1",
+  },
+  {
+    id: "grande-talento",
+    etiqueta: "Talento humano · empresa grande",
+    descripcion: "Ricardo Peñaloza · Sistemas Vértice",
+    demuestra: "Rol y segmento juntos: ve la cuenta estratégica, no la facturación.",
+    empresa: VERTICE,
+    rol: "talento",
+    contactoId: "v2",
+  },
+  {
+    id: "grande-contacto",
+    etiqueta: "Contacto · empresa grande",
+    descripcion: "Sandra Quintero · Sistemas Vértice",
+    demuestra: "Aunque la empresa sea grande, el contacto no entra a la cuenta estratégica.",
+    empresa: VERTICE,
+    rol: "contacto",
+    contactoId: "v3",
   },
 ];
 

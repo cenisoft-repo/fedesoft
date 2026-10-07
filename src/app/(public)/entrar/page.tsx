@@ -31,10 +31,17 @@ type Paso =
   | { id: "verificado"; usuarioId: string }
   | { id: "rechazo"; motivo: "sin-acceso" | "bloqueada" | "interno" | "desactivado"; correo: string; empresa?: string };
 
-const DEMO = [
+/* Una cuenta por rol y segmento, y los casos que el acceso debe rechazar o desviar. */
+const DEMO_ROLES = [
   { correo: "camilo.restrepo@datalabsandina.co", etiqueta: "Gerente · MIPYME", detalle: "Camilo Restrepo" },
-  { correo: "diana.salazar@datalabsandina.co", etiqueta: "Líder de talento", detalle: "Diana Salazar" },
-  { correo: "marcela.betancur@sistemasvertice.com.co", etiqueta: "Gerente · empresa grande", detalle: "Marcela Betancur" },
+  { correo: "diana.salazar@datalabsandina.co", etiqueta: "Talento humano · MIPYME", detalle: "Diana Salazar" },
+  { correo: "julian.ospina@datalabsandina.co", etiqueta: "Contacto · MIPYME", detalle: "Julián Ospina" },
+  { correo: "marcela.betancur@sistemasvertice.com.co", etiqueta: "Gerente · grande", detalle: "Marcela Betancur" },
+  { correo: "ricardo.penaloza@sistemasvertice.com.co", etiqueta: "Talento humano · grande", detalle: "Ricardo Peñaloza" },
+  { correo: "sandra.quintero@sistemasvertice.com.co", etiqueta: "Contacto · grande", detalle: "Sandra Quintero" },
+];
+
+const DEMO_CASOS = [
   { correo: "laura.gomez@datalabsandina.co", etiqueta: "Invitación pendiente", detalle: "Laura Gómez" },
   { correo: "andres.mora@datalabsandina.co", etiqueta: "Acceso desactivado", detalle: "Andrés Mora" },
   { correo: "mauricio.lara@sistemasvertice.com.co", etiqueta: "Cuenta bloqueada", detalle: "Mauricio Lara" },
@@ -196,24 +203,31 @@ function EntrarSimulado() {
                 </Boton>
               </form>
 
-              <div className="mt-8">
-                <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-muted">Cuentas de demostración</p>
-                <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                  {DEMO.map((d) => (
-                    <button
-                      key={d.correo}
-                      type="button"
-                      onClick={() => {
-                        setCorreo(d.correo);
-                        irAClave(d.correo);
-                      }}
-                      className="rounded-lg border border-line px-3 py-2.5 text-left transition hover:border-accent"
-                    >
-                      <span className="block text-[13.5px] font-semibold">{d.etiqueta}</span>
-                      <span className="block truncate text-[12.5px] text-muted">{d.detalle}</span>
-                    </button>
-                  ))}
-                </div>
+              <div className="mt-8 grid gap-5">
+                {[
+                  { titulo: "Cuentas de demostración por rol", cuentas: DEMO_ROLES },
+                  { titulo: "Casos de acceso", cuentas: DEMO_CASOS },
+                ].map((g) => (
+                  <section key={g.titulo} aria-label={g.titulo}>
+                    <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-muted">{g.titulo}</p>
+                    <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                      {g.cuentas.map((d) => (
+                        <button
+                          key={d.correo}
+                          type="button"
+                          onClick={() => {
+                            setCorreo(d.correo);
+                            irAClave(d.correo);
+                          }}
+                          className="rounded-lg border border-line px-3 py-2.5 text-left transition hover:border-accent"
+                        >
+                          <span className="block text-[13.5px] font-semibold">{d.etiqueta}</span>
+                          <span className="block truncate text-[12.5px] text-muted">{d.detalle}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </section>
+                ))}
               </div>
 
               <Pie />

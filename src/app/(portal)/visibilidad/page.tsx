@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useNivelPortal } from "@/lib/useAcceso";
 import { BadgeCheck, Download, Eye, FileBarChart, Lock, Plus } from "lucide-react";
 import { useDemo } from "@/lib/demo";
 import { INSIGHTS, MIS_OFERTAS } from "@/lib/mock/catalogo";
@@ -11,9 +12,9 @@ type Pestana = "ficha" | "ofertas" | "insights";
 
 export default function Visibilidad() {
   const { escenario } = useDemo();
-  const { empresa, rol } = escenario;
+  const { empresa } = escenario;
   const [pestana, setPestana] = useState<Pestana>("ficha");
-  const puedeEditar = rol === "gerente";
+  const puedeEditar = useNivelPortal("visibilidad") === "gestiona";
   const alDia = empresa.estado === "al-dia";
 
   const pestanas: { id: Pestana; etiqueta: string }[] = [

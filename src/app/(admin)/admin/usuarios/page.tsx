@@ -336,7 +336,7 @@ function Ficha({
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h3 className="text-[13px] font-semibold uppercase tracking-[0.12em] text-muted">Sesiones abiertas</h3>
             {u.sesiones.length > 0 && (
-              <Boton tamano="sm" variante="secundario" onClick={() => onResultado(id.cerrarSesiones(u.id))}>
+              <Boton tamano="sm" variante="secundario" disabled={!esSuperAdmin} onClick={() => onResultado(id.cerrarSesiones(u.id))}>
                 <LogOut size={14} aria-hidden /> Cerrar todas
               </Boton>
             )}
@@ -363,12 +363,14 @@ function Ficha({
           <Boton
             variante={u.estado === "bloqueado" ? "secundario" : "peligro"}
             onClick={onBloquear}
-            disabled={esYo}
+            disabled={esYo || !esSuperAdmin}
           >
             {u.estado === "bloqueado" ? <><Unlock size={15} aria-hidden /> Desbloquear cuenta</> : <><Ban size={15} aria-hidden /> Bloquear cuenta</>}
           </Boton>
           <p className="max-w-[44ch] text-[12.5px] text-muted">
-            {esYo
+            {!esSuperAdmin
+              ? "Solo lectura: bloquear cuentas y cerrar sesiones le corresponde a un Super Admin."
+              : esYo
               ? "No puedes bloquear tu propia cuenta."
               : u.estado === "bloqueado"
                 ? "Vuelve a poder entrar; sus accesos en cada empresa se conservan."

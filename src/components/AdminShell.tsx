@@ -3,15 +3,19 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { ArrowLeft, Building2, Inbox, Loader2, LogOut, Moon, Receipt, Sun, UserCog } from "lucide-react";
+import {
+  ArrowLeft, Building2, ChartColumn, GraduationCap, Inbox, Loader2, LogOut, Megaphone, Moon, Network, Receipt,
+  ScrollText, Star, Sun, UserCog,
+} from "lucide-react";
 import { Firma, Logo } from "./Logo";
 import { useTema } from "@/lib/demo";
 import { iniciales, useIdentidad } from "@/lib/identidad";
 import { nombreRolInterno } from "@/lib/mock/usuarios";
-import { Chip } from "./ui/primitivos";
 import { SOLICITUDES } from "@/lib/mock/admin";
 import { MODO_API } from "@/lib/api/cliente";
 import { tienePermiso, useSesionApi } from "@/lib/api/sesion";
+import { MODULOS_CONSOLA, nivelConsola, type ModuloConsola, type Nivel } from "@/lib/acceso";
+import { SinPermisoConsola } from "./SinPermisoRol";
 
 /**
  * La consola es otra superficie, no otra pestaña del portal: banda oscura,
@@ -19,12 +23,25 @@ import { tienePermiso, useSesionApi } from "@/lib/api/sesion";
  * Corresponde a la separación de ADR-005 (apps/web vs. apps/admin).
  */
 
-const NAV = [
-  { href: "/admin", etiqueta: "Afiliados", icono: Building2, exacto: true },
-  { href: "/admin/solicitudes", etiqueta: "Solicitudes", icono: Inbox },
-  { href: "/admin/cartera", etiqueta: "Cartera", icono: Receipt },
-  { href: "/admin/usuarios", etiqueta: "Usuarios", icono: UserCog },
-];
+const ICONOS: Record<ModuloConsola, typeof Building2> = {
+  afiliados: Building2,
+  solicitudes: Inbox,
+  cartera: Receipt,
+  formacion: GraduationCap,
+  contenidos: Megaphone,
+  relacionamiento: Network,
+  cuentas: Star,
+  resultados: ChartColumn,
+  usuarios: UserCog,
+  auditoria: ScrollText,
+};
+
+/** Módulo dueño de la ruta: el de prefijo más largo ("/admin" es solo Afiliados). */
+function moduloDeRuta(pathname: string): ModuloConsola {
+  const propio = MODULOS_CONSOLA.filter((m) => m.href !== "/admin" && (pathname === m.href || pathname.startsWith(`${m.href}/`)))
+    .sort((a, b) => b.href.length - a.href.length)[0];
+  return propio?.id ?? "afiliados";
+}
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const { tema, alternar } = useTema();
@@ -43,6 +60,11 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         correo: vista.user.email,
         rolesTexto: (vista.internalRoles ?? []).map((r) => r.name).join(" · ") || "Equipo interno",
         esSuperAdmin: tienePermiso(vista.permissions, "role:assign"),
+        nivel: (m: ModuloConsola): Nivel | null => {
+          const def = MODULOS_CONSOLA.find((x) => x.id === m)!;
+          if (tienePermiso(vista.permissions, def.permisoEscritura)) return "gestiona";
+          return tienePermiso(vista.permissions, def.permisoLectura) ? "consulta" : null;
+        },
       }
     : simulado
       ? {
@@ -50,6 +72,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           correo: simulado.correo,
           rolesTexto: simulado.rolesInternos.map(nombreRolInterno).join(" · "),
           esSuperAdmin: simulado.rolesInternos.includes("super-admin"),
+          nivel: (m: ModuloConsola): Nivel | null => nivelConsola(simulado.rolesInternos, m),
         }
       : null;
   const sinSesion = MODO_API ? actual.estado === "anonimo" : !simulado;
@@ -79,7 +102,11 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     );
   }
 
-  const { rolesTexto, esSuperAdmin } = operador;
+  const { rolesTexto } = operador;
+  /* Guard de la consola: como el del servidor, decide antes de pintar la página. */
+  const modulo = moduloDeRuta(pathname ?? "/admin");
+  const permitido = operador.nivel(modulo) !== null;
+  const nav = MODULOS_CONSOLA.filter((m) => operador.nivel(m.id) !== null);
 
   const pendientes = SOLICITUDES.filter((s) => s.estado === "nueva" || s.estado === "en-revision").length;
 
@@ -146,16 +173,16 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         </div>
 
         <nav aria-label="Secciones de la consola" className="border-b border-line bg-surface/90 backdrop-blur">
-          <div className="mx-auto flex max-w-[1200px] gap-1 overflow-x-auto px-2 sm:px-4">
-            {NAV.map((e) => {
-              const activo = e.exacto ? pathname === e.href : pathname?.startsWith(e.href);
-              const Icono = e.icono;
+          <div className="mx-auto flex max-w-[1200px] gap-0.5 overflow-x-auto px-2 sm:px-4 lg:flex-wrap lg:overflow-visible">
+            {nav.map((e) => {
+              const activo = modulo === e.id;
+              const Icono = ICONOS[e.id];
               return (
                 <Link
                   key={e.href}
                   href={e.href}
                   aria-current={activo ? "page" : undefined}
-                  className={`relative flex shrink-0 items-center gap-2 px-3 py-3 text-[14px] font-semibold transition ${
+                  className={`relative flex shrink-0 items-center gap-2 px-2.5 py-3 text-[14px] font-semibold transition ${
                     activo ? "text-ink" : "text-muted hover:text-ink"
                   }`}
                 >
@@ -172,16 +199,13 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                 </Link>
               );
             })}
-            <span className="ml-auto hidden items-center py-3 pr-2 sm:flex">
-              <Chip tono="neutro">
-                Rol: {rolesTexto} · {esSuperAdmin ? "administra roles y usuarios internos" : "permisos limitados"}
-              </Chip>
-            </span>
           </div>
         </nav>
       </header>
 
-      <main className="mx-auto max-w-[1200px] px-4 pb-24 pt-8 sm:px-6">{children}</main>
+      <main className="mx-auto max-w-[1200px] px-4 pb-24 pt-8 sm:px-6">
+        {permitido ? children : <SinPermisoConsola modulo={modulo} />}
+      </main>
 
       <footer className="border-t border-line">
         <div className="mx-auto flex max-w-[1200px] flex-wrap items-center gap-x-5 gap-y-3 px-4 py-7 text-[13px] text-muted sm:px-6">

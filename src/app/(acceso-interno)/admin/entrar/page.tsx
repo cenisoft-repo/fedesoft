@@ -165,8 +165,8 @@ function EntrarConsolaSimulada() {
                   {error && <p id="error-interno" role="alert" className="text-[13.5px] text-danger">{error}</p>}
                   <Boton type="submit" className="mt-1 w-full">Continuar <ArrowRight size={16} aria-hidden /></Boton>
                 </form>
-                <p className="mt-6 text-[12px] font-semibold uppercase tracking-[0.14em] text-muted">Cuentas de demostración</p>
-                <div className="mt-3 grid gap-2">
+                <p className="mt-6 text-[12px] font-semibold uppercase tracking-[0.14em] text-muted">Cuentas de demostración · una por rol</p>
+                <div className="mt-3 grid gap-2 sm:grid-cols-2">
                   {OPERADORES_DEMO.map((c) => {
                     const u = id.porCorreo(c);
                     return (
@@ -179,13 +179,13 @@ function EntrarConsolaSimulada() {
                           setClave("");
                           setPaso({ id: "clave", correo: c });
                         }}
-                        className="flex items-center justify-between gap-3 rounded-lg border border-line px-3 py-2.5 text-left transition hover:border-accent"
+                        className="flex min-w-0 items-center justify-between gap-2 rounded-lg border border-line px-3 py-2.5 text-left transition hover:border-accent"
                       >
-                        <span>
-                          <span className="block text-[13.5px] font-semibold">{u?.nombre}</span>
-                          <span className="block text-[12.5px] text-muted">{u?.rolesInternos.map(nombreRolInterno).join(", ")}</span>
+                        <span className="min-w-0">
+                          <span className="block text-[13.5px] font-semibold leading-snug">{u?.rolesInternos.map(nombreRolInterno).join(", ")}</span>
+                          <span className="block truncate text-[12.5px] text-muted">{u?.nombre}</span>
                         </span>
-                        <ArrowRight size={15} className="text-muted" aria-hidden />
+                        <ArrowRight size={15} className="shrink-0 text-muted" aria-hidden />
                       </button>
                     );
                   })}

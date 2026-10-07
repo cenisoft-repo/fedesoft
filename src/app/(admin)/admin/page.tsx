@@ -2,12 +2,25 @@
 
 import Link from "next/link";
 import { Building2, ChevronRight, FileText, GraduationCap, History, Receipt, ShieldCheck, Target } from "lucide-react";
-import { DATALABS } from "@/lib/mock/empresas";
+import { DATALABS, VERTICE } from "@/lib/mock/empresas";
+import { ASIGNACIONES_KAM } from "@/lib/mock/usuarios";
+import { useAccesoConsola } from "@/lib/useAcceso";
 import { HISTORIAL_EQUIPO } from "@/lib/mock/catalogo";
 import { cop, fecha, truncar } from "@/lib/format";
-import { Boton, Card, Chip, Eyebrow } from "@/components/ui/primitivos";
+import { Card, Chip, Eyebrow } from "@/components/ui/primitivos";
 
-const e = DATALABS;
+/* La ficha de cada empresa trae su propia historia; el prototipo tiene dos. */
+const HISTORIAL_VERTICE = [
+  { contacto: "Ricardo Peñaloza", actividad: "Agentes de IA y talento humano en acción", fecha: "2026-09-10", asistio: true },
+  { contacto: "Marcela Betancur", actividad: "Mesa Financiera · core bancario abierto", fecha: "2026-08-28", asistio: true },
+  { contacto: "Sandra Quintero", actividad: "Entérate de regulaciones · boletín normativo", fecha: "2026-08-14", asistio: false },
+];
+
+const AUDITORIA_VERTICE = [
+  { actor: "Gestora de cuenta · M. Ospina", accion: "Registró reunión trimestral con la vicepresidencia", cuando: "2026-09-18 15:02" },
+  { actor: "Sistema", accion: "Emitió certificado FS-2026-00121", cuando: "2026-03-04 10:22" },
+  { actor: "Sistema", accion: "Aplicó pago y emitió factura FES-8790", cuando: "2025-10-03 09:41" },
+];
 
 const AUDITORIA = [
   { actor: "Camilo Restrepo (afiliado)", accion: "Actualizó los datos de la empresa", cuando: "2026-09-20 14:32" },
@@ -17,6 +30,24 @@ const AUDITORIA = [
 ];
 
 export default function Admin() {
+  const { nivel, operadorId } = useAccesoConsola("afiliados");
+  const veCartera = useAccesoConsola("cartera").nivel !== null;
+  /* ABAC del gestor de cuenta: solo abre las empresas que tiene asignadas. */
+  const asignadas = nivel === "asignadas" ? (ASIGNACIONES_KAM[operadorId ?? ""] ?? []) : null;
+  const e = asignadas ? (asignadas.includes(VERTICE.nit) ? VERTICE : null) : DATALABS;
+
+  if (!e) {
+    return (
+      <Card className="mx-auto max-w-[520px] p-8 text-center">
+        <h1 className="font-display text-[20px] font-bold">Aún no tienes empresas asignadas</h1>
+        <p className="mt-2 text-[15px] text-muted">Cuando un Super Admin te asigne cuentas, aparecerán aquí.</p>
+      </Card>
+    );
+  }
+  const segmento = e.segmento === "grande" ? "Empresa grande" : "MIPYME";
+  const historial = e === VERTICE ? HISTORIAL_VERTICE : HISTORIAL_EQUIPO;
+  const auditoria = e === VERTICE ? AUDITORIA_VERTICE : AUDITORIA;
+
   return (
     <div className="grid gap-6">
       <nav aria-label="Ruta" className="flex flex-wrap items-center gap-1.5 text-[13.5px] text-muted">
@@ -24,8 +55,12 @@ export default function Admin() {
         <ChevronRight size={14} aria-hidden />
         <span className="text-ink">{e.razonSocial}</span>
         <span className="ml-auto">
-          Una de <span className="num font-semibold text-ink">518</span> afiliadas. En el prototipo se abre
-          directamente esta ficha.
+          {asignadas ? (
+            <>Una de tus <span className="num font-semibold text-ink">{asignadas.length}</span> empresas asignadas.</>
+          ) : (
+            <>Una de <span className="num font-semibold text-ink">518</span> afiliadas. En el prototipo se abre
+            directamente esta ficha.</>
+          )}
         </span>
       </nav>
 
@@ -42,7 +77,7 @@ export default function Admin() {
           </div>
           <div className="flex flex-wrap gap-2">
             <Chip tono="exito"><ShieldCheck size={13} aria-hidden /> Al día</Chip>
-            <Chip tono="neutro">MIPYME</Chip>
+            <Chip tono="neutro">{segmento}</Chip>
             <Chip tono="neutro">Afiliado {e.tipoAfiliacion}</Chip>
           </div>
         </div>
@@ -53,6 +88,7 @@ export default function Admin() {
       </header>
 
       <div className="grid gap-5 lg:grid-cols-3">
+        {veCartera && (
         <Panel
           titulo="Cartera"
           icono={Receipt}
@@ -67,6 +103,7 @@ export default function Admin() {
           <Fila termino="Última factura" valor={e.facturas[0].numero} />
           <Fila termino="CUFE" valor={truncar(e.facturas[0].cufe, 10, 6)} mono />
         </Panel>
+        )}
 
         <Panel titulo="Afiliación" icono={Building2}>
           <Fila termino="Desde" valor={fecha(e.afiliadaDesde)} />
@@ -76,8 +113,8 @@ export default function Admin() {
         </Panel>
 
         <Panel titulo="Participación" icono={Target}>
-          <Fila termino="Formación 2026" valor={`${HISTORIAL_EQUIPO.length} registros`} />
-          <Fila termino="Asistencia" valor={`${HISTORIAL_EQUIPO.filter((h) => h.asistio).length} de ${HISTORIAL_EQUIPO.length}`} />
+          <Fila termino="Formación 2026" valor={`${historial.length} registros`} />
+          <Fila termino="Asistencia" valor={`${historial.filter((h) => h.asistio).length} de ${historial.length}`} />
           <Fila termino="Comunidades" valor="2 activas" />
           <Fila termino="Directorio" valor="Publicada y verificada" />
         </Panel>
@@ -89,7 +126,7 @@ export default function Admin() {
             <GraduationCap size={18} className="text-accent" aria-hidden /> Participación del equipo
           </h2>
           <Card className="divide-y divide-line">
-            {HISTORIAL_EQUIPO.slice(0, 4).map((h, i) => (
+            {historial.slice(0, 4).map((h, i) => (
               <div key={i} className="flex flex-wrap items-center gap-3 p-3.5">
                 <div className="min-w-[180px] flex-1">
                   <p className="text-[14.5px] font-semibold">{h.contacto}</p>
@@ -107,7 +144,7 @@ export default function Admin() {
             <History size={18} className="text-accent" aria-hidden /> Auditoría
           </h2>
           <Card className="divide-y divide-line">
-            {AUDITORIA.map((a, i) => (
+            {auditoria.map((a, i) => (
               <div key={i} className="p-3.5">
                 <p className="text-[14.5px] font-semibold">{a.accion}</p>
                 <p className="text-[13px] text-muted">
