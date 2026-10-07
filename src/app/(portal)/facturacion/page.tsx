@@ -137,7 +137,7 @@ function SinPermiso() {
           Tu perfil de líder de talento humano no tiene acceso a facturación. Si necesitas consultar el estado de
           cuenta, pídeselo al gerente registrado de tu empresa.
         </p>
-        <Link href="/" className="mt-1">
+        <Link href="/portal" className="mt-1">
           <Boton variante="secundario">Volver al inicio</Boton>
         </Link>
       </div>

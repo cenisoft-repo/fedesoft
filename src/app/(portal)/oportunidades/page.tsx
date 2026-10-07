@@ -25,7 +25,7 @@ export default function Oportunidades() {
           <Lock size={22} className="text-muted" aria-hidden />
           <h1 className="font-display text-[20px] font-bold">Sección del rol de gerencia</h1>
           <p className="text-[15px] text-muted">Las postulaciones a oportunidades las gestiona el gerente registrado.</p>
-          <Link href="/"><Boton variante="secundario">Volver al inicio</Boton></Link>
+          <Link href="/portal"><Boton variante="secundario">Volver al inicio</Boton></Link>
         </div>
       </Card>
     );

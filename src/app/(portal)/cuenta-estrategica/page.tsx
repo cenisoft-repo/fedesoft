@@ -21,7 +21,7 @@ export default function CuentaEstrategica() {
             Este panel se activa para empresas grandes con gestor de cuenta asignado. Tu afiliación tiene acceso a todos
             los servicios del eje de autoservicio.
           </p>
-          <Link href="/"><Boton variante="secundario">Volver al inicio</Boton></Link>
+          <Link href="/portal"><Boton variante="secundario">Volver al inicio</Boton></Link>
         </div>
       </Card>
     );
