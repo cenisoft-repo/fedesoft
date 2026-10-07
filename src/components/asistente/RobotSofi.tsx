@@ -16,6 +16,8 @@ export type EstadoSofi =
   | "triste"
   | "durmiendo";
 type Pose = "saluda" | "explica" | "escribe" | "celebra";
+/** Escenas de cuerpo entero: saludando, trabajando en la laptop o en su centro de mando. */
+export type EscenaSofi = "cuerpo" | "laptop" | "mando";
 
 /**
  * Arte oficial de Sofi: cuatro poses del robot de Fedesoft, con su geometría
@@ -102,6 +104,16 @@ const GESTO_DE: Partial<Record<EstadoSofi, string>> = {
   triste: "sofi-decae",
 };
 
+/** Cada escena: su pose, su cara, hacia dónde mira y su gesto. */
+const ESCENA: Record<EscenaSofi, { pose: Pose; expresion: Expresion; mirada: { x: number; y: number }; gesto: string }> = {
+  cuerpo: { pose: "saluda", expresion: "abiertos", mirada: { x: 0, y: 0.5 }, gesto: "sofi-saluda-cuerpo" },
+  laptop: { pose: "escribe", expresion: "escucha", mirada: { x: 3, y: 3 }, gesto: "sofi-teclea" },
+  mando: { pose: "explica", expresion: "abiertos", mirada: { x: 4, y: -1.5 }, gesto: "sofi-mando" },
+};
+
+/** Lo que brota de la laptop mientras trabaja. */
+const GLIFOS = ["</>", "{ }", "✓", "01", "•••"] as const;
+
 /** Fondo del arte: el mismo azul grisáceo de las imágenes, para que el marco no se note. */
 const FONDO = "radial-gradient(circle at 50% 38%, #eef3fb 0%, #dfe7f5 55%, #d3dff2 100%)";
 
@@ -152,11 +164,14 @@ export function RobotSofi({
   modo = "cabeza",
   tamano = 64,
   interactivo = false,
+  escena,
 }: {
   estado?: EstadoSofi;
   modo?: "cabeza" | "cuerpo";
   tamano?: number;
   interactivo?: boolean;
+  /** De cuerpo entero en una escena; manda sobre el estado mientras dura. */
+  escena?: EscenaSofi;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const marco = useRef<HTMLDivElement>(null);
@@ -164,7 +179,8 @@ export function RobotSofi({
   const [puntero, setPuntero] = useState(QUIETA);
   const [rafaga, setRafaga] = useState(0);
   const [micro, setMicro] = useState<Micro | null>(null);
-  const pose = POSE_DE[estado];
+  const enEscena = escena ? ESCENA[escena] : null;
+  const pose = enEscena ? enEscena.pose : POSE_DE[estado];
   const detalle = tamano >= 40;
   /* Las que se ven grandes tienen vida propia: el lanzador y la ilustración entera. */
   const viva = detalle && (interactivo || modo === "cuerpo");
@@ -202,7 +218,7 @@ export function RobotSofi({
   /* Vida propia en reposo: cada pocos segundos, un gesto breve al azar. */
   useEffect(() => {
     setMicro(null);
-    if (!viva || estado !== "reposo" || sinMovimiento()) return;
+    if (!viva || estado !== "reposo" || escena || sinMovimiento()) return;
     let espera = 0;
     let fin = 0;
     const programar = () => {
@@ -219,7 +235,7 @@ export function RobotSofi({
       window.clearTimeout(espera);
       window.clearTimeout(fin);
     };
-  }, [viva, estado]);
+  }, [viva, estado, escena]);
 
   /* Rebote al cambiar de pose o al despertar: se nota que reacciona. */
   const previo = useRef({ pose, estado });
@@ -248,12 +264,13 @@ export function RobotSofi({
   const redondo = modo === "cabeza";
   /* Flotan el lanzador y la ilustración entera; los avatares de los mensajes quedan quietos. */
   const flota = interactivo || modo === "cuerpo";
-  const enReposo = estado === "reposo" && micro;
-  const expresion = enReposo && micro.expresion ? micro.expresion : CARA_DE[estado];
-  const gesto = enReposo && micro.gesto ? micro.gesto : GESTO_DE[estado];
+  const enReposo = !enEscena && estado === "reposo" && micro;
+  const expresion = enEscena ? enEscena.expresion : enReposo && micro.expresion ? micro.expresion : CARA_DE[estado];
+  const gesto = enEscena ? enEscena.gesto : enReposo && micro.gesto ? micro.gesto : GESTO_DE[estado];
   /* La mirada: hacia arriba al pensar, hacia el campo al escuchar, al frente dormida; si no, al puntero. */
-  const mirada =
-    estado === "pensando"
+  const mirada = enEscena
+    ? enEscena.mirada
+    : estado === "pensando"
       ? { x: 3.5, y: -3 }
       : estado === "escuchando"
         ? { x: -1, y: 3 }
@@ -354,6 +371,7 @@ export function RobotSofi({
                         >
                           <CaraSofi expresion={expresion} mirada={mirada} />
                         </div>
+                        {escena && !redondo && <Escenario escena={escena} tamano={tamano} />}
                       </>
                     )}
                   </div>
@@ -402,5 +420,97 @@ export function RobotSofi({
         </>
       )}
     </div>
+  );
+}
+
+/**
+ * Lo que se anima alrededor de Sofi en cada escena, medido sobre su imagen
+ * (porcentajes del arte): la luz y los glifos de la laptop, el barrido del
+ * holograma y el anillo de la mano en el centro de mando, los destellos al saludar.
+ */
+function Escenario({ escena, tamano }: { escena: EscenaSofi; tamano: number }) {
+  if (escena === "laptop") {
+    return (
+      <>
+        {/* La pantalla ilumina a Sofi desde detrás de la tapa */}
+        <span className="escena-luz absolute rounded-full" style={{ left: "28%", top: "38%", width: "52%", height: "52%" }} />
+        {/* El logo de la tapa late */}
+        <span className="escena-logo absolute rounded-full" style={{ left: "74%", top: "63%", width: "12%", height: "14%" }} />
+        {GLIFOS.map((g, i) => (
+          <span
+            key={g}
+            className="escena-glifo absolute font-mono font-bold text-[#008BED]"
+            style={
+              {
+                left: `${70 + i * 5.5}%`,
+                top: "49%",
+                fontSize: Math.max(8, tamano * 0.055),
+                animationDelay: `${i * 0.45}s`,
+                "--sube": `${-tamano * 0.24}px`,
+              } as React.CSSProperties
+            }
+          >
+            {g}
+          </span>
+        ))}
+      </>
+    );
+  }
+  if (escena === "mando") {
+    return (
+      <>
+        {/* Barrido sobre el holograma */}
+        <span className="absolute overflow-hidden rounded-md" style={{ left: "57%", top: "13%", width: "39%", height: "34%" }}>
+          <span className="escena-barrido absolute inset-x-0 h-[18%]" />
+        </span>
+        {/* Esquinas del holograma que parpadean */}
+        {[
+          ["57%", "13%", "border-l-2 border-t-2"],
+          ["93%", "11%", "border-r-2 border-t-2"],
+          ["57%", "44%", "border-b-2 border-l-2"],
+          ["93%", "44%", "border-b-2 border-r-2"],
+        ].map(([l, t, b]) => (
+          <span key={l + t} className={`escena-esquina absolute h-[3.5%] w-[3.5%] border-[#008BED] ${b}`} style={{ left: l, top: t }} />
+        ))}
+        {/* Anillo de datos que gira sobre la mano */}
+        <span className="absolute" style={{ left: "73%", top: "50%", width: "18%", height: "10%" }}>
+          <span className="block h-full w-full" style={{ transform: "scaleY(0.4)" }}>
+            <span className="escena-anillo block h-full w-full rounded-full border-2 border-dashed border-[#2EA0F9]" />
+          </span>
+        </span>
+        {[0, 1, 2].map((i) => (
+          <span
+            key={i}
+            className="escena-dato absolute rounded-full bg-[#2EA0F9]"
+            style={
+              {
+                left: `${78 + i * 4}%`,
+                top: "52%",
+                width: Math.max(3, tamano * 0.018),
+                height: Math.max(3, tamano * 0.018),
+                animationDelay: `${i * 0.5}s`,
+                "--sube": `${-tamano * 0.2}px`,
+              } as React.CSSProperties
+            }
+          />
+        ))}
+      </>
+    );
+  }
+  return (
+    <>
+      {[
+        ["10%", "30%", 0],
+        ["84%", "18%", 0.5],
+        ["88%", "58%", 1],
+        ["6%", "70%", 1.4],
+      ].map(([l, t, d]) => (
+        <span
+          key={String(l) + String(t)}
+          className="escena-destello sofi-estrella absolute bg-[#EABC12]"
+          style={{ left: l, top: t, width: "5%", height: "5%", animationDelay: `${d}s` } as React.CSSProperties}
+        />
+      ))}
+    </>
   );
 }

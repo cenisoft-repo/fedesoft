@@ -16,7 +16,7 @@ import { MODO_API } from "@/lib/api/cliente";
 import { useSesionApi } from "@/lib/api/sesion";
 import { BotonTema } from "@/components/BotonTema";
 import { useTema } from "@/lib/tema";
-import { RobotSofi, type EstadoSofi } from "./RobotSofi";
+import { RobotSofi, type EscenaSofi, type EstadoSofi } from "./RobotSofi";
 import {
   autocompletar, avisoContextual, bienvenida, responder,
   type Accion, type Aviso, type Bloque, type Contexto, type Respuesta,
@@ -30,6 +30,19 @@ const MAX_CARACTERES = 300;
 const ID_PANEL = "sofi-panel";
 const ID_SUGERIDAS = "sofi-sugeridas";
 const CLAVE_AVISOS = "fedesoft-sofi-avisos";
+
+/** Escenas de cuerpo entero que Sofi muestra de vez en cuando, en este orden. */
+const ESCENAS: EscenaSofi[] = ["laptop", "mando", "cuerpo"];
+const TEXTO_ESCENA: Record<EscenaSofi, { titulo: string; detalle: string }> = {
+  laptop: { titulo: "Trabajando para ti", detalle: "Preparando tu próxima respuesta…" },
+  mando: { titulo: "Centro de mando", detalle: "500+ empresas · 4 verticales" },
+  cuerpo: { titulo: "¡Aquí estoy!", detalle: "Toca para conversar" },
+};
+/* Tarjeta de escena: la primera a los 12 s, luego cada 30 s, a lo sumo seis por visita. */
+const ESCENA_PRIMERA = 12_000;
+const ESCENA_CADA = 30_000;
+const ESCENA_DURA = 5600;
+const ESCENA_TOPE = 6;
 
 const hora = () => {
   const d = new Date();
@@ -132,6 +145,11 @@ export function Sofi() {
   const [animando, setAnimando] = useState<number | null>(null);
   const [estado, setEstado] = useState<EstadoSofi>("reposo");
   const [aviso, setAviso] = useState<Aviso | null>(null);
+  /* Escena de cuerpo entero sobre el lanzador, y la del escenario del panel. */
+  const [escena, setEscena] = useState<{ tipo: EscenaSofi; sale: boolean } | null>(null);
+  const [escenaPanel, setEscenaPanel] = useState<EscenaSofi | null>(null);
+  const cajaAviso = useRef<HTMLDivElement>(null);
+  const avisoVisible = useRef(false);
   const [activa, setActiva] = useState(-1);
   const [listaCerrada, setListaCerrada] = useState(false);
   /* Lo que oye un lector de pantalla: solo la respuesta nueva, no el historial entero. */
@@ -156,6 +174,8 @@ export function Sofi() {
   }, [ctx]);
   useEffect(() => {
     estadoRef.current = estado;
+    /* Si Sofi deja el reposo (escuchas, preguntas), la escena del panel termina. */
+    if (estado !== "reposo") setEscenaPanel(null);
   }, [estado]);
 
   const setAbierto = useCallback((v: boolean) => {
@@ -225,15 +245,74 @@ export function Sofi() {
   useEffect(() => {
     setAviso(null);
     if (!avisoActual || !claveAviso || avisosVistos().includes(claveAviso)) return;
+    let retirar = 0;
     const t = window.setTimeout(() => {
       if (abiertoRef.current) return;
       /* Mostrado cuenta como visto: si se ignora, no reaparece en esta pestaña. */
       marcarAviso(claveAviso);
       setAviso({ ...avisoActual, clave: claveAviso });
       gesto("atento", 1100);
+      /* Se ofrece sin quedarse: a los 14 s se retira solo (y el foco, si estaba ahí, pasa a Sofi). */
+      retirar = window.setTimeout(() => {
+        if (cajaAviso.current?.contains(document.activeElement)) lanzador.current?.focus();
+        setAviso(null);
+      }, 14_000);
     }, 1800);
-    return () => window.clearTimeout(t);
+    return () => {
+      window.clearTimeout(t);
+      window.clearTimeout(retirar);
+    };
   }, [avisoActual, claveAviso, gesto]);
+  useEffect(() => {
+    avisoVisible.current = Boolean(aviso);
+  }, [aviso]);
+
+  /* De vez en cuando, Sofi aparece de cuerpo entero sobre el lanzador: en su laptop,
+     en su centro de mando o saludando. Solo en reposo, sin aviso y con el panel cerrado. */
+  useEffect(() => {
+    if (sinMovimiento()) return;
+    let n = 0;
+    let quitar = 0;
+    let borrar = 0;
+    const mostrar = () => {
+      if (n >= ESCENA_TOPE || abiertoRef.current || document.hidden || avisoVisible.current) return;
+      if (estadoRef.current !== "reposo") return;
+      setEscena({ tipo: ESCENAS[n % ESCENAS.length], sale: false });
+      n++;
+      window.clearTimeout(quitar);
+      window.clearTimeout(borrar);
+      quitar = window.setTimeout(() => {
+        setEscena((e) => (e ? { ...e, sale: true } : e));
+        borrar = window.setTimeout(() => setEscena(null), 320);
+      }, ESCENA_DURA);
+    };
+    const primera = window.setTimeout(mostrar, ESCENA_PRIMERA);
+    const cada = window.setInterval(mostrar, ESCENA_CADA);
+    return () => {
+      window.clearTimeout(primera);
+      window.clearInterval(cada);
+      window.clearTimeout(quitar);
+      window.clearTimeout(borrar);
+    };
+  }, []);
+
+  /* Con el panel abierto y en calma, el escenario también cambia de escena. */
+  useEffect(() => {
+    if (!abierto || sinMovimiento()) return;
+    let n = 0;
+    let fin = 0;
+    const cada = window.setInterval(() => {
+      if (estadoRef.current !== "reposo" || document.hidden) return;
+      setEscenaPanel(ESCENAS[n++ % ESCENAS.length]);
+      window.clearTimeout(fin);
+      fin = window.setTimeout(() => setEscenaPanel(null), 5000);
+    }, 16_000);
+    return () => {
+      window.clearInterval(cada);
+      window.clearTimeout(fin);
+      setEscenaPanel(null);
+    };
+  }, [abierto]);
 
   const cerrarAviso = (devolverFoco = false) => {
     if (aviso) marcarAviso(aviso.clave);
@@ -306,6 +385,7 @@ export function Sofi() {
 
   const abrir = (pregunta?: string) => {
     if (aviso) cerrarAviso();
+    setEscena(null);
     setAbierto(true);
     if (pregunta) {
       preguntar(pregunta);
@@ -491,7 +571,7 @@ export function Sofi() {
                   aria-label="Saludar a Sofi"
                   className="rounded-2xl transition-transform active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
                 >
-                  <RobotSofi estado={estado} modo="cuerpo" tamano={148} />
+                  <RobotSofi estado={estado} modo="cuerpo" tamano={148} escena={escenaPanel ?? undefined} />
                 </button>
                 {dicho && (
                   <span
@@ -621,7 +701,7 @@ export function Sofi() {
 
       {/* Aviso oportuno, una vez por sitio y pestaña: Sofi de cuerpo entero se ofrece */}
       {aviso && !abierto && (
-        <div className="sofi-entra relative mr-1 flex max-w-[300px] items-center gap-3 rounded-2xl rounded-br-md border border-line bg-surface p-2.5 pr-1 shadow-[var(--shadow-pop)]">
+        <div ref={cajaAviso} className="sofi-entra relative mr-1 flex max-w-[300px] items-center gap-3 rounded-2xl rounded-br-md border border-line bg-surface p-2.5 pr-1 shadow-[var(--shadow-pop)]">
           <button type="button" onClick={() => abrir(aviso.pregunta)} className="group flex items-center gap-3 text-left">
             <RobotSofi estado="reposo" modo="cuerpo" tamano={64} />
             <span className="text-[13.5px]">
@@ -634,6 +714,27 @@ export function Sofi() {
           <button type="button" onClick={() => cerrarAviso(true)} className="self-start rounded p-2 text-muted hover:text-ink" aria-label="Cerrar aviso">
             <X size={14} aria-hidden />
           </button>
+        </div>
+      )}
+
+      {/* Escena de cuerpo entero: decorativa (el lanzador ya abre la conversación); un clic también la abre */}
+      {escena && !abierto && !aviso && (
+        <div
+          aria-hidden
+          data-sofi-escena={escena.tipo}
+          onClick={() => abrir()}
+          className={`${escena.sale ? "sofi-escena-sale" : "sofi-escena-entra"} relative mr-1 w-[180px] cursor-pointer overflow-hidden rounded-2xl border border-line bg-surface shadow-[var(--shadow-pop)] [@media(max-height:560px)]:hidden`}
+        >
+          <RobotSofi estado="reposo" modo="cuerpo" tamano={180} escena={escena.tipo} />
+          {escena.tipo === "mando" && (
+            <span className="absolute left-2 top-2 inline-flex items-center gap-1.5 rounded-full bg-[var(--navy-700)] px-2 py-0.5 font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-white">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#4ade80] sofi-pulso" /> En vivo
+            </span>
+          )}
+          <div className="border-t border-line px-3 py-2">
+            <p className="text-[13px] font-semibold leading-tight text-ink">{TEXTO_ESCENA[escena.tipo].titulo}</p>
+            <p className="mt-0.5 text-[12px] leading-tight text-muted">{TEXTO_ESCENA[escena.tipo].detalle}</p>
+          </div>
         </div>
       )}
 

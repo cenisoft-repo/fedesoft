@@ -90,6 +90,12 @@ Sofi es la asistente de Fedesoft y vive en la esquina inferior derecha. Es el ro
   - los ojos siguen al puntero y parpadean, a veces dos veces;
   - nueve expresiones: atenta, escuchando (mira al campo mientras escribes), pensando (puntos que laten), hablando (la boca se mueve), ojos de estrella al celebrar, guiño, duda cuando no entiende, tristeza si la respuesta no sirvió y dormida.
 - **Gestos del cuerpo:** rebota al cambiar de pose, brinca al celebrar, se inclina a escuchar, se mece al hablar, ladea la cabeza al dudar, decae si está triste; la luz de la frente respira y se aviva al hablar.
+- **Escenas de cuerpo entero:** de vez en cuando Sofi sale sobre el lanzador en una tarjeta que se retira sola:
+  - **trabajando en su laptop**: le brotan glifos de código y late el logo de la tapa;
+  - **en su centro de mando**: barrido y esquinas sobre el holograma, anillo de datos en la mano, "En vivo";
+  - **de cuerpo entero saludando**, entre destellos.
+
+  La primera a los 12 s y luego cada 30 s, a lo sumo seis por visita. Solo aparecen en reposo, sin aviso y con el panel cerrado; un clic abre la conversación. Con el panel abierto y en calma, el escenario del panel también cambia de escena. El aviso contextual se retira solo a los 14 s.
 - **Vida propia:**
   - en reposo, cada pocos segundos mira alrededor, guiña, ladea la cabeza o brinca;
   - al llegar aparece con un rebote y guiña; de vez en cuando saluda; se duerme si nadie la usa;
