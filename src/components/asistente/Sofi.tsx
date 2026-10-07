@@ -15,6 +15,7 @@ import { esRutaPortal } from "@/lib/acceso";
 import { MODO_API } from "@/lib/api/cliente";
 import { useSesionApi } from "@/lib/api/sesion";
 import { BotonTema } from "@/components/BotonTema";
+import { useTema } from "@/lib/tema";
 import { RobotSofi, type EstadoSofi } from "./RobotSofi";
 import {
   autocompletar, avisoContextual, bienvenida, responder,
@@ -55,12 +56,12 @@ const sinMovimiento = () =>
 /** Ícono de cada tema sugerido: la bienvenida se lee de un vistazo. */
 function iconoDe(s: string): LucideIcon {
   const t = s.toLowerCase();
+  if (/gestora|persona/.test(t)) return UserRound;
   if (/pag|cuota|factur|cuenta/.test(t)) return Receipt;
   if (/certificad/.test(t)) return BadgeCheck;
   if (/afili/.test(t)) return BadgeCheck;
   if (/inscrib|inscripci|curso|formaci/.test(t)) return GraduationCap;
   if (/acceso|equipo/.test(t)) return UsersRound;
-  if (/gestora|persona/.test(t)) return UserRound;
   if (/concurso|program/.test(t)) return Code2;
   if (/premio|ingenio/.test(t)) return Trophy;
   if (/softic|evento/.test(t)) return CalendarDays;
@@ -103,6 +104,10 @@ export function Sofi() {
   const { sesionPortal } = useIdentidad();
   const { actual } = useSesionApi("portal");
   const rol = useRolPortal();
+  const { elegido } = useTema();
+  /* En el lienzo oscuro de la landing, Sofi también es oscura mientras nadie elija otra vista. */
+  const enLienzo = pathname === "/" || pathname.startsWith("/afiliarme") || pathname.startsWith("/verificar");
+  const temaPropio = enLienzo && !elegido ? "dark" : undefined;
 
   /* Dentro del portal y con sesión (la simulada o la real del API), responde con contexto. */
   const vista = MODO_API && actual.estado === "lista" ? actual.vista : null;
@@ -133,6 +138,8 @@ export function Sofi() {
   const [anuncio, setAnuncio] = useState("");
   const siguienteId = useRef(1);
   const lanzador = useRef<HTMLButtonElement>(null);
+  const panel = useRef<HTMLElement>(null);
+  const temporizadorAnuncio = useRef<number | undefined>(undefined);
   const campo = useRef<HTMLInputElement>(null);
   const lista = useRef<HTMLDivElement>(null);
   const temporizadorGesto = useRef<number | undefined>(undefined);
@@ -159,11 +166,23 @@ export function Sofi() {
     temporizadorGesto.current = window.setTimeout(() => setEstado("reposo"), ms);
   }, []);
 
+  /* Vaciar y volver a escribir: el lector de pantalla anuncia aunque el texto se repita. */
+  const anunciar = useCallback((t: string) => {
+    setAnuncio("");
+    window.clearTimeout(temporizadorAnuncio.current);
+    temporizadorAnuncio.current = window.setTimeout(() => setAnuncio(t), 80);
+  }, []);
+
   const agregarSofi = useCallback(
     (respuesta: Respuesta) => {
       const id = siguienteId.current++;
       setMensajes((m) => [...m, { id, de: "sofi", respuesta, hora: hora() }]);
-      setAnuncio(`Sofi: ${textoCompleto(respuesta)}`);
+      /* Con el panel cerrado (se cerró mientras pensaba) queda en el historial, sin anunciarse. */
+      if (!abiertoRef.current) {
+        setEstado("reposo");
+        return;
+      }
+      anunciar(`Sofi: ${textoCompleto(respuesta)}`);
       if (sinMovimiento()) {
         gesto("hablando", 1200);
       } else {
@@ -172,7 +191,7 @@ export function Sofi() {
         gesto("hablando", 4000);
       }
     },
-    [gesto],
+    [gesto, anunciar],
   );
 
   const alTerminarRespuesta = useCallback(() => {
@@ -199,15 +218,19 @@ export function Sofi() {
     if (!avisoActual || !claveAviso || avisosVistos().includes(claveAviso)) return;
     const t = window.setTimeout(() => {
       if (abiertoRef.current) return;
+      /* Mostrado cuenta como visto: si se ignora, no reaparece en esta pestaña. */
+      marcarAviso(claveAviso);
       setAviso({ ...avisoActual, clave: claveAviso });
       gesto("atento", 1100);
     }, 1800);
     return () => window.clearTimeout(t);
   }, [avisoActual, claveAviso, gesto]);
 
-  const cerrarAviso = () => {
+  const cerrarAviso = (devolverFoco = false) => {
     if (aviso) marcarAviso(aviso.clave);
     setAviso(null);
+    /* El botón que tenía el foco desaparece: el foco pasa a Sofi, no se pierde. */
+    if (devolverFoco) lanzador.current?.focus();
   };
 
   /* Se duerme tras un rato sin actividad y despierta con el puntero o el teclado.
@@ -240,6 +263,7 @@ export function Sofi() {
     () => () => {
       window.clearTimeout(temporizadorGesto.current);
       window.clearTimeout(temporizadorRespuesta.current);
+      window.clearTimeout(temporizadorAnuncio.current);
     },
     [],
   );
@@ -280,8 +304,16 @@ export function Sofi() {
   }, [setAbierto]);
 
   useEffect(() => {
-    if (abierto) campo.current?.focus();
+    if (!abierto) return;
+    /* En pantallas táctiles el foco va al panel: el teclado en pantalla no tapa la bienvenida. */
+    if (window.matchMedia("(pointer: coarse)").matches) panel.current?.focus();
+    else campo.current?.focus();
   }, [abierto]);
+
+  /* En pantallas angostas el panel tapa la página: al seguir un atajo interno, se cierra. */
+  const alNavegar = useCallback(() => {
+    if (window.matchMedia("(max-width: 639px)").matches) cerrar();
+  }, [cerrar]);
 
   /* Escape solo cuando el foco está en Sofi: no le roba el Escape a un diálogo o a un menú. */
   const alTeclear = (e: KeyboardEvent<HTMLElement>) => {
@@ -297,13 +329,14 @@ export function Sofi() {
     const el = lista.current;
     if (!el) return;
     const soloSaludo = mensajes.length <= 1 && !escribiendo;
-    el.scrollTo({ top: soloSaludo ? 0 : el.scrollHeight, behavior: soloSaludo ? "auto" : "smooth" });
+    el.scrollTo({ top: soloSaludo ? 0 : el.scrollHeight, behavior: soloSaludo || sinMovimiento() ? "auto" : "smooth" });
   }, [mensajes.length, escribiendo]);
 
   /* Mientras se escribe la respuesta, la lista acompaña el texto que crece. */
   const seguirTexto = useCallback(() => {
     const el = lista.current;
-    if (el && mensajes.length > 1) el.scrollTop = el.scrollHeight;
+    /* Solo si ya estaba al fondo: si la persona subió a leer, no se la arrastra. */
+    if (el && mensajes.length > 1 && el.scrollHeight - el.scrollTop - el.clientHeight < 96) el.scrollTop = el.scrollHeight;
   }, [mensajes.length]);
 
   /* Autocompletar: las preguntas que Sofi sabe responder y encajan con lo escrito. */
@@ -319,11 +352,19 @@ export function Sofi() {
   };
 
   const alTeclearCampo = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (!hayOpciones) return;
+    if (!hayOpciones) {
+      /* Tras cerrar la lista con Escape, flecha abajo la vuelve a abrir. */
+      if (e.key === "ArrowDown" && listaCerrada) {
+        e.preventDefault();
+        setListaCerrada(false);
+      }
+      return;
+    }
     if (e.key === "ArrowDown" || e.key === "ArrowUp") {
       e.preventDefault();
       const n = opciones.length;
-      setActiva((i) => (e.key === "ArrowDown" ? (i + 1) % n : (i - 1 + n) % n));
+      const abajo = e.key === "ArrowDown";
+      setActiva((i) => (abajo ? (i + 1) % n : i <= 0 ? n - 1 : i - 1));
     } else if (e.key === "Escape") {
       /* El primer Escape cierra la lista; el segundo, a Sofi. */
       e.stopPropagation();
@@ -340,7 +381,7 @@ export function Sofi() {
 
   const valorar = (id: number, util: boolean) => {
     setMensajes((m) => m.map((x) => (x.id === id && x.de === "sofi" ? { ...x, util } : x)));
-    setAnuncio(util ? "¡Gracias! Me alegra haberte ayudado." : "Gracias, lo tendremos en cuenta para mejorar.");
+    anunciar(util ? "¡Gracias! Me alegra haberte ayudado." : "Gracias, lo tendremos en cuenta para mejorar.");
     if (util) gesto("feliz", 1800);
   };
 
@@ -358,7 +399,10 @@ export function Sofi() {
   const ocupada = escribiendo || animando !== null;
 
   return (
-    <div className="fixed bottom-4 right-4 z-40 flex flex-col items-end gap-3 print:hidden sm:bottom-5 sm:right-5">
+    <div
+      data-theme={temaPropio}
+      className="fixed bottom-4 right-4 z-40 flex flex-col items-end gap-3 print:hidden sm:bottom-5 sm:right-5"
+    >
       <p className="sr-only" aria-live="polite">{anuncio}</p>
 
       {abierto && (
@@ -366,21 +410,26 @@ export function Sofi() {
           id={ID_PANEL}
           role="dialog"
           aria-label="Sofi, asistente virtual de Fedesoft"
+          ref={panel}
+          tabIndex={-1}
           onKeyDown={alTeclear}
-          className="sofi-entra flex h-[min(680px,calc(100dvh-7rem))] w-[min(400px,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-line bg-surface shadow-[var(--shadow-pop)]"
+          className="sofi-entra flex h-[min(680px,calc(100dvh-7rem))] w-[min(400px,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-line bg-surface shadow-[var(--shadow-pop)] focus:outline-none [@media(max-height:560px)]:h-[calc(100dvh-1.5rem)]"
         >
           <header className="relative flex items-center gap-3 overflow-hidden bg-navy px-4 py-3 text-white">
             {/* La barra del manual: un énfasis por vista */}
             <span aria-hidden className="absolute inset-x-0 bottom-0 h-[3px] bg-[var(--brand-azure)]" />
-            <RobotSofi estado={estado} tamano={44} />
+            <RobotSofi estado={estado} tamano={40} />
             <div className="min-w-0 flex-1">
-              <p className="font-display text-[15.5px] font-bold leading-tight">Sofi de Fedesoft</p>
-              <p className="flex items-center gap-1.5 text-[12px] text-azure-200">
+              <p className="truncate font-display text-[15.5px] font-bold leading-tight">Sofi de Fedesoft</p>
+              <p className="flex items-center gap-1.5 truncate text-[12px] text-azure-200">
                 <span aria-hidden className={`h-1.5 w-1.5 rounded-full bg-[#4ade80] ${ocupada ? "sofi-pulso" : ""}`} />
                 {ocupada ? "Escribiendo…" : "Asistente virtual · en línea"}
               </p>
             </div>
-            <BotonTema className="rounded-lg p-2.5 text-azure-200 transition hover:bg-white/10 hover:text-white" />
+            <BotonTema
+              predeterminado={enLienzo ? "oscuro" : undefined}
+              className="rounded-lg p-2.5 text-azure-200 transition hover:bg-white/10 hover:text-white"
+            />
             <button
               type="button"
               onClick={reiniciar}
@@ -402,7 +451,7 @@ export function Sofi() {
 
           <div ref={lista} className="flex-1 space-y-4 overflow-y-auto bg-bg px-4 py-4">
             {/* Escenario: Sofi de cuerpo entero, viva, al comienzo de la conversación */}
-            <div className="flex flex-col items-center gap-2 pb-1 pt-1 text-center">
+            <div className="flex flex-col items-center gap-2 pb-1 pt-1 text-center [@media(max-height:560px)]:hidden">
               <RobotSofi estado={estado} modo="cuerpo" tamano={148} />
               <p className="text-[12.5px] text-muted">
                 {ctx.superficie === "portal" ? `Asistente del portal · ${ctx.empresa?.razonSocial ?? ""}` : "Asistente virtual de Fedesoft"}
@@ -424,6 +473,7 @@ export function Sofi() {
                   animar={m.id === animando}
                   esUltimo={m.id === ultimaSofi?.id && m.id === ultimo?.id && !escribiendo}
                   onCrece={seguirTexto}
+                  onNavegar={alNavegar}
                   onTerminado={alTerminarRespuesta}
                   onSugerencia={sugerir}
                   onValorar={(util) => valorar(m.id, util)}
@@ -460,8 +510,9 @@ export function Sofi() {
                     aria-selected={i === activa}
                     onPointerDown={(e) => e.preventDefault()}
                     onClick={() => sugerir(o)}
-                    onPointerEnter={() => setActiva(i)}
-                    className={`flex cursor-pointer items-center gap-2.5 px-3 py-2.5 text-[14px] ${i === activa ? "bg-[var(--info-bg)] text-link" : "text-ink"}`}
+                    className={`flex cursor-pointer items-center gap-2.5 px-3 py-2.5 text-[14px] ${
+                      i === activa ? "bg-[var(--info-bg)] text-link" : "text-ink hover:bg-[var(--info-bg)]"
+                    }`}
                   >
                     <Search size={14} aria-hidden className="shrink-0 text-muted" />
                     <span className="min-w-0 flex-1 truncate">{o}</span>
@@ -478,7 +529,7 @@ export function Sofi() {
                 role="combobox"
                 aria-autocomplete="list"
                 aria-expanded={hayOpciones}
-                aria-controls={ID_SUGERIDAS}
+                aria-controls={hayOpciones ? ID_SUGERIDAS : undefined}
                 aria-activedescendant={hayOpciones && activa >= 0 ? `${ID_SUGERIDAS}-${activa}` : undefined}
                 value={entrada}
                 onChange={(e) => {
@@ -487,6 +538,10 @@ export function Sofi() {
                   setListaCerrada(false);
                 }}
                 onKeyDown={alTeclearCampo}
+                onBlur={() => {
+                  setListaCerrada(true);
+                  setActiva(-1);
+                }}
                 maxLength={MAX_CARACTERES}
                 autoComplete="off"
                 placeholder="Escribe tu pregunta…"
@@ -501,7 +556,7 @@ export function Sofi() {
                 <SendHorizontal size={16} aria-hidden />
               </button>
             </div>
-            <p className="mt-2 text-center text-[11.5px] leading-snug text-muted">
+            <p className="mt-2 text-center text-[11.5px] leading-snug text-muted [@media(max-height:560px)]:hidden">
               Asistente de demostración con respuestas predefinidas a partir de información oficial de Fedesoft. No
               compartas contraseñas ni datos sensibles.
             </p>
@@ -521,7 +576,7 @@ export function Sofi() {
               </span>
             </span>
           </button>
-          <button type="button" onClick={cerrarAviso} className="self-start rounded p-2 text-muted hover:text-ink" aria-label="Cerrar aviso">
+          <button type="button" onClick={() => cerrarAviso(true)} className="self-start rounded p-2 text-muted hover:text-ink" aria-label="Cerrar aviso">
             <X size={14} aria-hidden />
           </button>
         </div>
@@ -539,7 +594,9 @@ export function Sofi() {
         aria-expanded={abierto}
         aria-controls={ID_PANEL}
         aria-label={aviso && !abierto ? "Sofi, asistente virtual de Fedesoft (tiene un aviso)" : "Sofi, asistente virtual de Fedesoft"}
-        className="group relative grid h-[76px] w-[76px] place-items-center rounded-full transition-transform active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+        className={`group relative grid h-[76px] w-[76px] place-items-center rounded-full transition-transform active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${
+          abierto ? "[@media(max-height:560px)]:hidden" : ""
+        }`}
       >
         <span aria-hidden className="absolute inset-0.5 rounded-full shadow-[var(--shadow-pop)]" />
         <RobotSofi estado={estado} tamano={66} interactivo />
@@ -566,6 +623,7 @@ function MensajeSofi({
   animar,
   esUltimo,
   onCrece,
+  onNavegar,
   onTerminado,
   onSugerencia,
   onValorar,
@@ -574,6 +632,7 @@ function MensajeSofi({
   animar: boolean;
   esUltimo: boolean;
   onCrece: () => void;
+  onNavegar: () => void;
   onTerminado: () => void;
   onSugerencia: (t: string) => void;
   onValorar: (util: boolean) => void;
@@ -591,18 +650,18 @@ function MensajeSofi({
     if (conOpciones) opcionesRef.current?.scrollIntoView({ block: "nearest", behavior: sinMovimiento() ? "auto" : "smooth" });
   }, [conOpciones]);
 
-  /* Escribe en ~1 s sin importar el largo: viva, pero sin hacer esperar. */
+  /* Escribe por tiempo, no por tics: ~1 s sin importar el largo, y en una pestaña
+     oculta (sin cuadros) termina al volver en vez de arrastrarse. */
   useEffect(() => {
     if (!animar) return;
-    const paso = Math.max(1, Math.ceil(total / 60));
-    const t = window.setInterval(() => {
-      setAvance((a) => {
-        const n = a + paso;
-        if (n >= total) window.clearInterval(t);
-        return n;
-      });
-    }, 16);
-    return () => window.clearInterval(t);
+    const duracion = Math.min(1100, Math.max(350, total * 8));
+    const inicio = performance.now();
+    let cuadro = requestAnimationFrame(function escribir(ahora) {
+      const n = Math.max(0, Math.ceil((total * (ahora - inicio)) / duracion));
+      setAvance(n);
+      if (n < total) cuadro = requestAnimationFrame(escribir);
+    });
+    return () => cancelAnimationFrame(cuadro);
   }, [animar, total]);
 
   /* Si deja de animarse a mitad (llegó otra pregunta), se muestra completo. */
@@ -626,7 +685,7 @@ function MensajeSofi({
     resto -= peso;
     const actual = !listo && visible > 0 && visible < peso;
     if (visible <= 0) return null;
-    return <BloqueSofi key={i} b={b} primero={i === 0} hasta={listo ? undefined : visible} cursor={actual} />;
+    return <BloqueSofi key={i} b={b} primero={i === 0} hasta={listo ? undefined : visible} cursor={actual} onNavegar={onNavegar} />;
   });
 
   return (
@@ -640,13 +699,15 @@ function MensajeSofi({
         >
           {/* Mientras se escribe, el lector de pantalla lee el texto completo (y el anuncio ya lo dijo). */}
           {!listo && <p className="sr-only">{textoCompleto(respuesta)}</p>}
-          <div aria-hidden={!listo || undefined}>{bloques}</div>
+          <div aria-hidden={!listo || undefined} inert={!listo || undefined}>
+            {bloques}
+          </div>
 
           {listo && respuesta.acciones && respuesta.acciones.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-2">
               {respuesta.acciones.map((a, i) => (
                 <span key={a.href + a.etiqueta} className="sofi-chip inline-block" style={{ animationDelay: `${i * 60}ms` }}>
-                  <BotonAccion a={a} />
+                  <BotonAccion a={a} onNavegar={onNavegar} />
                 </span>
               ))}
             </div>
@@ -728,7 +789,19 @@ function MensajeSofi({
 }
 
 /** Un bloque de la respuesta; `hasta` recorta el texto mientras se escribe. */
-function BloqueSofi({ b, primero, hasta, cursor }: { b: Bloque; primero: boolean; hasta?: number; cursor: boolean }) {
+function BloqueSofi({
+  b,
+  primero,
+  hasta,
+  cursor,
+  onNavegar,
+}: {
+  b: Bloque;
+  primero: boolean;
+  hasta?: number;
+  cursor: boolean;
+  onNavegar: () => void;
+}) {
   const margen = primero ? undefined : "mt-2";
   const marca = cursor ? <span aria-hidden className="sofi-cursor" /> : null;
   switch (b.tipo) {
@@ -779,7 +852,7 @@ function BloqueSofi({ b, primero, hasta, cursor }: { b: Bloque; primero: boolean
             return (
               <li key={t.titulo} className="sofi-chip" style={{ animationDelay: `${i * 70}ms` }}>
                 {t.href ? (
-                  <Link href={t.href} className={clase}>
+                  <Link href={t.href} className={clase} onClick={onNavegar}>
                     {contenido}
                   </Link>
                 ) : (
@@ -801,13 +874,14 @@ function BloqueSofi({ b, primero, hasta, cursor }: { b: Bloque; primero: boolean
             {b.etiqueta}
           </p>
           <p className="font-mono text-[22px] font-medium leading-tight tabular-nums text-ink">{b.valor}</p>
-          {b.detalle && <p className="mt-0.5 text-[12.5px] text-muted">{b.detalle}</p>}
+          {/* Sobre el fondo de alerta, el gris secundario no alcanza 4,5:1: va en tinta. */}
+          {b.detalle && <p className={`mt-0.5 text-[12.5px] ${b.alerta ? "text-ink" : "text-muted"}`}>{b.detalle}</p>}
         </div>
       );
   }
 }
 
-function BotonAccion({ a }: { a: Accion }) {
+function BotonAccion({ a, onNavegar }: { a: Accion; onNavegar: () => void }) {
   const clase =
     "inline-flex items-center gap-1 rounded-full bg-[var(--info-bg)] px-3 py-2 text-[13px] font-semibold text-link transition hover:brightness-95 active:scale-95";
   if (a.externo) {
@@ -821,7 +895,7 @@ function BotonAccion({ a }: { a: Accion }) {
     );
   }
   return (
-    <Link href={a.href} className={clase}>
+    <Link href={a.href} className={clase} onClick={onNavegar}>
       {a.etiqueta}
     </Link>
   );

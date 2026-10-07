@@ -70,8 +70,9 @@ Cada persona elige la experiencia que prefiere con el botón sol/luna.
   - Un script en el `<head>` la aplica antes de pintar, así que no hay destello del tema equivocado.
   - Si cambia en una pestaña, las demás la siguen.
 - **Sin elección:**
-  - el portal y la consola siguen al equipo (`prefers-color-scheme`);
-  - la landing y los accesos conservan su lienzo oscuro cinematográfico.
+  - el portal, la consola y las pantallas de acceso siguen al equipo (`prefers-color-scheme`);
+  - la landing, `/afiliarme` y `/verificar` conservan su lienzo oscuro cinematográfico, y Sofi se pone oscura con ellos.
+- **Vista clara de la landing:** papel `#f5f8fc`, metraje multiplicado como tinta navy, halos suaves y contrastes AA medidos (tabla en `src/app/lienzo.css`).
 - **Código:** `src/lib/tema.tsx` (preferencia), `src/components/BotonTema.tsx` (botón) y `src/app/lienzo.css` (tokens del lienzo de la landing).
 
 ## Sofi, la asistente virtual

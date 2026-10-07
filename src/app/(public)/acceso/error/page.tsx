@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { Ban, KeyRound, RotateCcw, ShieldAlert, UserX } from "lucide-react";
 import { urlLogin, MODO_API } from "@/lib/api/cliente";
 import { SelectorVista } from "@/components/acceso/SelectorVista";
+import { Acceso } from "@/components/acceso/Acceso";
 
 /**
  * Adónde redirige el API cuando rechaza un login (ADR-008). El motivo solo
@@ -41,7 +42,7 @@ function Contenido() {
     : info.consola ? "/admin/entrar" : "/entrar";
 
   return (
-    <main className="relative grid min-h-dvh place-items-center bg-surface px-6 py-14">
+    <Acceso as="main" className="relative grid min-h-dvh place-items-center bg-surface px-6 py-14">
       <SelectorVista />
       <div className="w-full max-w-[460px]">
         <span className="grid h-11 w-11 place-items-center rounded-full bg-bg text-muted">
@@ -64,6 +65,6 @@ function Contenido() {
           </Link>
         </div>
       </div>
-    </main>
+    </Acceso>
   );
 }

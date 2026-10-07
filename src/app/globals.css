@@ -127,7 +127,11 @@
   --font-mono: var(--font-jetbrains), ui-monospace, Menlo, monospace;
 }
 
-* { border-color: var(--line); }
+/* En la capa base: el color de borde por defecto no debe ganarle a las utilidades
+   (hover:border-accent, border-t-accent…), que viven en @layer utilities. */
+@layer base {
+  * { border-color: var(--line); }
+}
 
 body {
   background: var(--bg);
@@ -180,8 +184,10 @@ h1, h2, h3, h4 {
    fondo apenas insinuada. */
 .vidrio-menu {
   background: var(--lienzo-vidrio);
-  backdrop-filter: blur(20px) saturate(140%);
+  /* El prefijo va primero: con el orden inverso el minificador conserva solo el prefijado
+     y Chrome se queda sin desenfoque. */
   -webkit-backdrop-filter: blur(20px) saturate(140%);
+  backdrop-filter: blur(20px) saturate(140%);
   box-shadow: var(--lienzo-vidrio-sombra);
 }
 

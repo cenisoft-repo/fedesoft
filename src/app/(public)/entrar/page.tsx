@@ -5,6 +5,7 @@ import { destinoSeguro } from "@/lib/acceso";
 import { Logo } from "@/components/Logo";
 import { MarcaAcceso } from "@/components/acceso/MarcaAcceso";
 import { SelectorVista } from "@/components/acceso/SelectorVista";
+import { Acceso } from "@/components/acceso/Acceso";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import {
@@ -154,7 +155,7 @@ function EntrarSimulado() {
   };
 
   return (
-    <div className="grid min-h-dvh lg:grid-cols-[1fr_1.1fr]">
+    <Acceso className="grid min-h-dvh lg:grid-cols-[1fr_1.1fr]">
       <MarcaAcceso pie="Prototipo de demostración · datos simulados" />
 
       {/* Columna de acceso */}
@@ -315,7 +316,7 @@ function EntrarSimulado() {
           {paso.id === "rechazo" && <Rechazo paso={paso} onReintentar={reiniciar} />}
         </div>
       </main>
-    </div>
+    </Acceso>
   );
 }
 

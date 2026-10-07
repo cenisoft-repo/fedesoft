@@ -1,10 +1,10 @@
 import { BotonTema } from "@/components/BotonTema";
 
 /**
- * Selector de vista clara/oscura para las pantallas de acceso que pintan con los
- * tokens del portal: sin elección siguen al equipo, igual que el resto del portal,
- * y la elección se recuerda para todo el sitio. Va en la esquina superior derecha
- * de la columna de contenido, que debe ser `relative`.
+ * Selector de vista clara/oscura de las pantallas de acceso (`.acceso`): como el
+ * portal, siguen al equipo mientras la persona no elija, y la elección se recuerda
+ * para todo el sitio. Va en la esquina superior derecha de la columna de contenido,
+ * que debe ser `relative`.
  */
 export function SelectorVista() {
   return (

@@ -34,10 +34,13 @@ export function Logo({
   compacto = false,
   alto = 22,
   tema = "auto",
+  subtituloDesdeSm = false,
 }: {
   compacto?: boolean;
   alto?: number;
   tema?: Tema;
+  /** El subtítulo solo aparece desde 640 px: en pantallas angostas, el wordmark solo. */
+  subtituloDesdeSm?: boolean;
 }) {
   return (
     <span className="inline-flex items-center gap-2.5">
@@ -60,8 +63,12 @@ export function Logo({
       {!compacto && (
         <>
           {/* Sobre fondo oscuro fijo, el subtítulo pasa a blanco translúcido para conservar contraste AA. */}
-          <span aria-hidden className={`h-4 w-px ${SUBTITULO[tema].linea}`} />
-          <span className={`text-[13px] font-semibold ${SUBTITULO[tema].texto}`}>Portal del Afiliado</span>
+          <span aria-hidden className={`h-4 w-px ${SUBTITULO[tema].linea} ${subtituloDesdeSm ? "hidden sm:block" : ""}`} />
+          <span
+            className={`whitespace-nowrap text-[13px] font-semibold ${SUBTITULO[tema].texto} ${subtituloDesdeSm ? "hidden sm:inline" : ""}`}
+          >
+            Portal del Afiliado
+          </span>
         </>
       )}
     </span>

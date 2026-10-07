@@ -223,7 +223,10 @@ function servicios(ctx: Contexto): Respuesta {
       },
     ],
     acciones,
-    sugerencias: ["Formación para mi equipo", "Quiero afiliarme a Fedesoft"],
+    sugerencias:
+      ctx.superficie !== "portal"
+        ? ["Formación para mi equipo", "Quiero afiliarme a Fedesoft"]
+        : [puede(ctx, "formacion") === "gestiona" ? "Formación para mi equipo" : "Mis inscripciones", "Eventos de Fedesoft"],
     fuente: { titulo: "fedesoft.org/servicios-gremiales", url: "https://fedesoft.org/servicios-gremiales" },
   };
 }
@@ -550,7 +553,12 @@ export function responder(entrada: string, ctx: Contexto): Respuesta {
 export function preguntasFrecuentes(ctx: Contexto): string[] {
   const base =
     ctx.superficie === "portal"
-      ? [...sugerenciasPortal(ctx), "Datos de la empresa", "Formación para mi equipo", "Servicios gremiales"]
+      ? [
+          ...sugerenciasPortal(ctx),
+          "Datos de la empresa",
+          puede(ctx, "formacion") === "gestiona" ? "Formación para mi equipo" : "Mis inscripciones",
+          "Servicios gremiales",
+        ]
       : [...MENU, "Formación para mi equipo", "Servicios gremiales", "Eventos de Fedesoft", "Ver mi estado de cuenta"];
   return [...new Set([...base, "Eventos de Fedesoft", "Olvidé mi contraseña", "Hablar con una persona", "¿Qué puedes hacer?"])];
 }
@@ -583,13 +591,17 @@ export interface Aviso {
 export function avisoContextual(ruta: string, ctx: Contexto): Aviso | null {
   if (ctx.superficie === "portal" && ctx.empresa) {
     const vencido = puede(ctx, "facturacion") && ctx.empresa.cargos.some((c) => c.estado === "vencido");
-    if (vencido) return { texto: "Tienes una cuota vencida. ¿Te ayudo a ponerte al día?", pregunta: "Pagar la cuota", clave: `vencido-${ctx.empresa.nit}` };
+    /* En facturación ya está donde se paga: ahí no se interrumpe. */
+    if (vencido && !ruta.startsWith("/facturacion")) {
+      return { texto: "Tienes una cuota vencida. ¿Te ayudo a ponerte al día?", pregunta: "Pagar la cuota", clave: `vencido-${ctx.empresa.nit}` };
+    }
     if (ruta.startsWith("/formacion")) return { texto: "¿Buscas una sesión? Te muestro las próximas con cupo.", pregunta: "Cursos con cupo", clave: "formacion" };
     if (ruta.startsWith("/empresa/contactos") && puede(ctx, "contactos")) return { texto: "¿Vas a invitar a alguien? Te explico cómo.", pregunta: "Gestionar accesos", clave: "contactos" };
     if (ruta === "/portal") return { texto: `¡Hola${ctx.nombre ? `, ${primerNombre(ctx.nombre)}` : ""}! ¿Te ayudo con algo del portal?`, pregunta: "¿Qué puedes hacer?", clave: "inicio" };
     return null;
   }
-  if (ruta.startsWith("/entrar")) return { texto: "¿Problemas para entrar? Te ayudo.", pregunta: "No puedo entrar", clave: "entrar" };
+  /* Solo en el login: en la recuperación ya se está resolviendo. */
+  if (ruta === "/entrar") return { texto: "¿Problemas para entrar? Te ayudo.", pregunta: "No puedo entrar", clave: "entrar" };
   if (ruta.startsWith("/afiliarme")) return { texto: "¿Dudas sobre la afiliación? Pregúntame.", pregunta: "Quiero afiliarme a Fedesoft", clave: "afiliarme" };
   if (ruta === "/") return { texto: "¡Hola! Soy Sofi. ¿En qué te ayudo hoy?", pregunta: "¿Qué puedes hacer?", clave: "landing" };
   return null;

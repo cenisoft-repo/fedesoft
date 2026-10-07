@@ -147,7 +147,7 @@ export default function Landing() {
         <VideoTextura
           src="/recursos/video/teclado-red.mp4"
           poster="/recursos/video/teclado-red-poster.jpg"
-          className="opacity-30 claro:opacity-[0.2] claro:mix-blend-multiply claro:invert"
+          className="opacity-30 claro:opacity-[0.18] claro:mix-blend-multiply claro:invert"
         />
         <div
           aria-hidden
@@ -156,18 +156,27 @@ export default function Landing() {
         <div aria-hidden className="absolute inset-0 opacity-60">
           <CampoRed densidad={1.1} />
         </div>
-        {/* Viñeta pesada que funde el fondo al color del lienzo */}
+        {/* Viñeta pesada que funde el fondo al color del lienzo. En claro el velo es más cerrado
+            detrás del titular: el metraje queda en los bordes y el texto lee sobre papel. */}
         <div
           aria-hidden
-          className="absolute inset-0"
+          className="absolute inset-0 claro:hidden"
           style={{
             background: `radial-gradient(ellipse 80% 60% at 50% 45%, ${velo(0.25)} 0%, ${velo(0.72)} 55%, var(--lienzo-fondo) 100%)`,
           }}
         />
         <div
           aria-hidden
-          className="absolute left-1/2 top-[38%] h-[520px] w-[520px] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-40 blur-[120px] claro:opacity-25"
-          style={{ background: "radial-gradient(circle, var(--lienzo-acento) 0%, transparent 70%)" }}
+          className="absolute inset-0 hidden claro:block"
+          style={{
+            background: `radial-gradient(ellipse 80% 60% at 50% 45%, ${velo(0.6)} 0%, ${velo(0.82)} 55%, var(--lienzo-fondo) 100%)`,
+          }}
+        />
+        {/* Halo: azure en la vista oscura; en la clara, un claro luminoso azulado que no resta contraste al titular */}
+        <div
+          aria-hidden
+          className="absolute left-1/2 top-[38%] h-[520px] w-[520px] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-40 blur-[120px] claro:opacity-80"
+          style={{ background: "radial-gradient(circle, var(--lienzo-halo) 0%, transparent 70%)" }}
         />
 
         <div className="relative mx-auto w-full max-w-[1240px]">
@@ -175,7 +184,7 @@ export default function Landing() {
             Federación Colombiana de la Industria de Software y TI
           </p>
           <h1 className="mt-6 max-w-[16ch] font-display text-[clamp(44px,8.2vw,104px)] font-light leading-[0.98] tracking-[-0.02em]">
-            Colombia, país origen de <span className="text-lienzo-acento">software</span>
+            Colombia, país origen de <span className="text-lienzo-acento-titular">software</span>
           </h1>
           <p className="mt-7 max-w-[54ch] text-[clamp(16px,2vw,21px)] font-light leading-relaxed text-lienzo-tinta-3">
             Treinta años representando a las empresas que construyen el software que mueve al país.

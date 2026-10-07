@@ -71,7 +71,7 @@ src/lib/api/          Cliente y sesión del API real (solo en modo API)
 - **Accesibilidad WCAG 2.1 AA**: contraste verificado, foco visible, navegación por teclado, etiquetas en formularios.
 - **Tema claro y oscuro**, ambos cuidados. Los colores se definen en `:root` y se redefinen por token, nunca sueltos dentro de un bloque de tema.
   - La persona elige con `BotonTema` (`src/lib/tema.tsx`); la elección vale para todo el sitio.
-  - Sin elección, el portal y la consola siguen al equipo; la landing y los accesos usan su lienzo oscuro (tokens `--lienzo-*` en `src/app/lienzo.css`).
+  - Sin elección, el portal, la consola y los accesos siguen al equipo; la landing, `/afiliarme` y `/verificar` usan su lienzo oscuro (tokens `--lienzo-*` en `src/app/lienzo.css`, raíz `Lienzo`).
 - Sin bibliotecas de componentes. Los primitivos se construyen a medida para que el resultado se vea a Fedesoft y no a una plantilla.
 
 ## Dominio único (regla de Cenisoft)

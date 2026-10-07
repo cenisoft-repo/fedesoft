@@ -6,6 +6,7 @@ import { ArrowLeft, KeyRound, ShieldCheck, Smartphone } from "lucide-react";
 import { urlLogin } from "@/lib/api/cliente";
 import { Logo } from "@/components/Logo";
 import { BotonTema } from "@/components/BotonTema";
+import { Acceso } from "@/components/acceso/Acceso";
 
 /**
  * Acceso a la consola con el API real. El segundo factor lo pide el proveedor
@@ -22,7 +23,7 @@ export function EntrarConsolaApi() {
   }, []);
 
   return (
-    <div className="grid min-h-dvh grid-rows-[auto_1fr] bg-bg">
+    <Acceso className="grid min-h-dvh grid-rows-[auto_1fr] bg-bg">
       <header className="bg-navy text-white">
         <div className="mx-auto flex max-w-[1200px] items-center gap-4 px-4 py-3 sm:px-6">
           <Logo tema="oscuro" compacto />
@@ -63,6 +64,6 @@ export function EntrarConsolaApi() {
           </p>
         </div>
       </main>
-    </div>
+    </Acceso>
   );
 }

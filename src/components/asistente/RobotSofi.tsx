@@ -162,6 +162,8 @@ export function RobotSofi({
 
   const dormida = estado === "durmiendo";
   const redondo = modo === "cabeza";
+  /* Flotan el lanzador y la ilustración entera; los avatares de los mensajes quedan quietos. */
+  const flota = interactivo || modo === "cuerpo";
   /* Instancias desfasadas: varias Sofi en pantalla no parpadean al unísono. */
   const desfase = `${((tamano * 7) % 23) / 10}s`;
 
@@ -189,7 +191,7 @@ export function RobotSofi({
           transformStyle: "preserve-3d",
         }}
       >
-        <div className={`h-full w-full ${dormida ? "sofi-respira" : "sofi-flota"}`}>
+        <div className={`h-full w-full ${dormida ? "sofi-respira" : flota ? "sofi-flota" : ""}`}>
           <div
             className={`h-full w-full ${estado === "atento" ? "sofi-salta" : estado === "pensando" ? "sofi-teclea" : ""}`}
           >

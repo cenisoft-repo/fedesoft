@@ -26,10 +26,10 @@ export default function Afiliarme() {
 
       <header className="relative mx-auto flex max-w-[860px] items-center justify-between gap-3 px-6 py-7">
         <Link href="/" aria-label="Fedesoft · ir al inicio" className="rounded">
-          <Logo tema="lienzo" alto={26} />
+          <Logo tema="lienzo" alto={26} subtituloDesdeSm />
         </Link>
         <div className="flex items-center gap-1 sm:gap-3">
-          <Link href="/entrar" className="text-[13.5px] font-semibold text-lienzo-tinta-4 transition hover:text-lienzo-tinta">
+          <Link href="/entrar" className="whitespace-nowrap text-[13.5px] font-semibold text-lienzo-tinta-4 transition hover:text-lienzo-tinta">
             Ya estoy afiliado
           </Link>
           <BotonTema
