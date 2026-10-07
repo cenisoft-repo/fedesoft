@@ -261,29 +261,97 @@ h1, h2, h3, h4 {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(1.2px); }
 }
-/* Parpadeo: un párpado del color del visor baja y sube sobre cada ojo;
-   cada tanto, doble. En reposo, el párpado no se ve (scaleY 0). */
-@keyframes sofi-parpadea {
-  0%, 88%, 100% { transform: scaleY(0); }
-  90% { transform: scaleY(1); }
-  92% { transform: scaleY(0); }
-  95% { transform: scaleY(0); }
-  96.5% { transform: scaleY(1); }
-  98% { transform: scaleY(0); }
+/* Gestos del cuerpo por estado. */
+@keyframes sofi-inclina {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-1.5px) scale(1.035); }
 }
-/* La boca se enciende al hablar, a ritmo irregular, como una voz. */
 @keyframes sofi-habla {
-  0%, 100% { opacity: 0; transform: scale(0.6, 0.4); }
-  12% { opacity: 0.95; transform: scale(1.1, 1.25); }
-  26% { opacity: 0.55; transform: scale(0.9, 0.7); }
-  40% { opacity: 1; transform: scale(1.15, 1.4); }
-  58% { opacity: 0.45; transform: scale(0.85, 0.6); }
-  74% { opacity: 0.9; transform: scale(1.05, 1.1); }
+  0%, 100% { transform: rotate(0deg) translateY(0); }
+  25% { transform: rotate(-1.6deg) translateY(-1px); }
+  50% { transform: rotate(0.8deg) translateY(0.5px); }
+  75% { transform: rotate(1.6deg) translateY(-1px); }
 }
-/* Los ojos brillan cuando la miran o celebra. */
-@keyframes sofi-brilla {
-  0%, 100% { opacity: 0; }
-  45% { opacity: 0.85; }
+@keyframes sofi-brinca {
+  0%, 100% { transform: translateY(0) scale(1); }
+  15% { transform: translateY(2px) scale(1.08, 0.9); }
+  40% { transform: translateY(-12px) scale(0.95, 1.07) rotate(-4deg); }
+  62% { transform: translateY(0) scale(1.06, 0.94) rotate(3deg); }
+  80% { transform: translateY(-4px) scale(1) rotate(-1deg); }
+}
+@keyframes sofi-ladea {
+  0% { transform: rotate(0deg); }
+  25%, 85% { transform: rotate(9deg); }
+  40% { transform: rotate(6deg); }
+  55% { transform: rotate(10deg); }
+  100% { transform: rotate(0deg); }
+}
+@keyframes sofi-ladea-corto {
+  0%, 100% { transform: rotate(0deg); }
+  35%, 65% { transform: rotate(-7deg) translateY(-1px); }
+}
+@keyframes sofi-decae {
+  0% { transform: none; }
+  30%, 80% { transform: translateY(3px) scale(0.97) rotate(-2deg); }
+  100% { transform: none; }
+}
+/* La entrada del lanzador: aparece desde abajo con un rebote. */
+@keyframes sofi-aparece {
+  0% { opacity: 0; transform: translateY(26px) scale(0.4); }
+  60% { opacity: 1; transform: translateY(-6px) scale(1.08); }
+  80% { transform: translateY(2px) scale(0.97); }
+  100% { transform: none; }
+}
+/* La luz de la frente respira; más viva cuando habla, piensa o celebra. */
+@keyframes sofi-frente {
+  0%, 100% { opacity: 0.25; transform: scale(0.85); }
+  50% { opacity: 0.85; transform: scale(1.15); }
+}
+/* Cara LED. En reposo cada animación vuelve a su estado normal. */
+@keyframes cara-entra {
+  0% { opacity: 0.2; transform: scale(0.82); }
+  60% { opacity: 1; transform: scale(1.06); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes cara-parpadeo {
+  0%, 90%, 100% { transform: scaleY(1); }
+  92% { transform: scaleY(0.08); }
+  94% { transform: scaleY(1); }
+  96% { transform: scaleY(1); }
+  97.5% { transform: scaleY(0.08); }
+  99% { transform: scaleY(1); }
+}
+@keyframes cara-habla {
+  0%, 100% { transform: scale(0.85, 0.3); }
+  14% { transform: scale(1, 1.05); }
+  28% { transform: scale(0.9, 0.45); }
+  44% { transform: scale(1.05, 1.2); }
+  60% { transform: scale(0.8, 0.35); }
+  78% { transform: scale(1, 0.85); }
+}
+@keyframes cara-estrella {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  50% { transform: scale(1.25) rotate(20deg); }
+}
+@keyframes cara-punto {
+  0%, 70%, 100% { opacity: 0.35; transform: translateY(0); }
+  35% { opacity: 1; transform: translateY(-2.5px); }
+}
+@keyframes cara-respira {
+  0%, 100% { transform: scale(0.8); }
+  50% { transform: scale(1.25); }
+}
+/* Confeti al valorar una respuesta como útil. */
+@keyframes sofi-confeti {
+  0% { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(0.6); }
+  70% { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--dx), var(--dy)) rotate(var(--giro)) scale(1); }
+}
+/* Lo que dice Sofi cuando la saludas: una burbuja que sube y se va. */
+@keyframes sofi-dicho {
+  0% { opacity: 0; transform: translateY(6px) scale(0.6); }
+  15%, 75% { opacity: 1; transform: none; }
+  100% { opacity: 0; transform: translateY(-8px) scale(0.95); }
 }
 /* Chispas de celebración: salen del centro y se apagan. */
 @keyframes sofi-chispa {
@@ -340,30 +408,28 @@ h1, h2, h3, h4 {
 .sofi-respira { animation: sofi-respira 5.5s ease-in-out infinite; }
 .sofi-salta { transform-origin: 50% 90%; animation: sofi-salta 0.9s ease-in-out; }
 .sofi-teclea { animation: sofi-teclea 0.22s ease-in-out infinite; }
-.sofi-parpado {
-  border-radius: 45%;
-  background: #04060d;
-  transform: scaleY(0);
-  transform-origin: 50% 20%;
-  animation: sofi-parpadea 5.2s linear infinite;
-  transition: transform 0.5s ease;
-}
-/* Dormida: ojos cerrados, quietos. */
-.sofi-parpado-cerrado { animation: none; transform: scaleY(1); }
-.sofi-boca {
-  border-radius: 50%;
-  background: radial-gradient(closest-side, rgba(170, 236, 255, 0.95), rgba(46, 160, 249, 0.65) 55%, transparent);
+.sofi-inclina { transform-origin: 50% 90%; animation: sofi-inclina 1.6s ease-in-out infinite; }
+.sofi-habla { transform-origin: 50% 85%; animation: sofi-habla 0.9s ease-in-out infinite; }
+.sofi-brinca { transform-origin: 50% 90%; animation: sofi-brinca 0.85s cubic-bezier(0.3, 0.7, 0.4, 1); }
+.sofi-ladea { transform-origin: 50% 80%; animation: sofi-ladea 1.5s ease-in-out; }
+.sofi-ladea-corto { transform-origin: 50% 80%; animation: sofi-ladea-corto 0.8s ease-in-out; }
+.sofi-decae { transform-origin: 50% 90%; animation: sofi-decae 1.5s ease-in-out; }
+.sofi-aparece { animation: sofi-aparece 0.75s cubic-bezier(0.3, 0.8, 0.4, 1) both; }
+.sofi-frente,
+.sofi-frente-viva {
+  background: radial-gradient(closest-side, rgba(190, 245, 255, 0.95), rgba(31, 139, 255, 0.55) 55%, transparent);
   mix-blend-mode: screen;
-  opacity: 0;
-  animation: sofi-habla 0.95s ease-in-out infinite;
+  animation: sofi-frente 3.2s ease-in-out infinite;
 }
-.sofi-brillo {
-  border-radius: 50%;
-  background: radial-gradient(closest-side, rgba(150, 225, 255, 0.9), rgba(0, 139, 237, 0.35) 60%, transparent);
-  mix-blend-mode: screen;
-  opacity: 0;
-  animation: sofi-brilla 1.1s ease-in-out;
-}
+.sofi-frente-viva { animation-duration: 0.9s; }
+.cara-entra { transform-box: fill-box; transform-origin: center; animation: cara-entra 0.32s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.cara-parpadeo { transform-box: fill-box; transform-origin: center; animation: cara-parpadeo 4.6s linear infinite; }
+.cara-habla { transform-box: fill-box; transform-origin: center; animation: cara-habla 0.62s ease-in-out infinite; }
+.cara-estrella { transform-box: fill-box; transform-origin: center; animation: cara-estrella 0.7s ease-in-out infinite; }
+.cara-punto { transform-box: fill-box; transform-origin: center; animation: cara-punto 1s ease-in-out infinite; }
+.cara-respira { transform-box: fill-box; transform-origin: center; animation: cara-respira 2.6s ease-in-out infinite; }
+.sofi-confeti { opacity: 0; animation: sofi-confeti 1.1s cubic-bezier(0.2, 0.6, 0.35, 1) both; }
+.sofi-dicho { opacity: 0; transform-origin: 0% 100%; animation: sofi-dicho 1.6s ease-out both; }
 .sofi-chispa { opacity: 0; animation: sofi-chispa 0.9s cubic-bezier(0.2, 0.7, 0.3, 1) both; }
 .sofi-estrella { clip-path: polygon(50% 0%, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0% 50%, 39% 39%); }
 .sofi-gira { animation: sofi-gira 1.1s linear infinite; }

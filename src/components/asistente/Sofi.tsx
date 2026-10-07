@@ -136,6 +136,9 @@ export function Sofi() {
   const [listaCerrada, setListaCerrada] = useState(false);
   /* Lo que oye un lector de pantalla: solo la respuesta nueva, no el historial entero. */
   const [anuncio, setAnuncio] = useState("");
+  /* Lo que dice Sofi cuando la saludas tocándola. */
+  const [dicho, setDicho] = useState<{ n: number; texto: string } | null>(null);
+  const temaEnCurso = useRef<string | null>(null);
   const siguienteId = useRef(1);
   const lanzador = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLElement>(null);
@@ -188,15 +191,21 @@ export function Sofi() {
       } else {
         /* Habla mientras escribe; al terminar vuelve al reposo (con tope por si acaso). */
         setAnimando(id);
+        temaEnCurso.current = respuesta.tema;
         gesto("hablando", 4000);
       }
     },
     [gesto, anunciar],
   );
 
+  /* Al terminar de escribir, reacciona: duda si no entendió, guiña al saludar. */
   const alTerminarRespuesta = useCallback(() => {
     setAnimando(null);
-    gesto("hablando", 350);
+    const tema = temaEnCurso.current;
+    temaEnCurso.current = null;
+    if (tema === "desconocido") gesto("confundido", 1600);
+    else if (tema === "bienvenida" || tema === "gracias") gesto("guino", 900);
+    else gesto("hablando", 350);
   }, [gesto]);
 
   /* Cambiar de superficie, de empresa o de rol empieza una conversación con el contexto nuevo.
@@ -257,6 +266,15 @@ export function Sofi() {
       window.removeEventListener("pointermove", despertar);
       window.removeEventListener("keydown", despertar);
     };
+  }, [gesto]);
+
+  /* Al llegar, el lanzador aparece con un rebote y guiña. */
+  useEffect(() => {
+    if (sinMovimiento()) return;
+    const t = window.setTimeout(() => {
+      if (estadoRef.current === "reposo") gesto("guino", 900);
+    }, 900);
+    return () => window.clearTimeout(t);
   }, [gesto]);
 
   useEffect(
@@ -382,7 +400,21 @@ export function Sofi() {
   const valorar = (id: number, util: boolean) => {
     setMensajes((m) => m.map((x) => (x.id === id && x.de === "sofi" ? { ...x, util } : x)));
     anunciar(util ? "¡Gracias! Me alegra haberte ayudado." : "Gracias, lo tendremos en cuenta para mejorar.");
-    if (util) gesto("feliz", 1800);
+    gesto(util ? "feliz" : "triste", util ? 1800 : 1600);
+  };
+
+  /* Tocar a Sofi: saluda, guiña o celebra, y lo dice en una burbuja. */
+  const mimar = () => {
+    const reacciones: [EstadoSofi, string][] = [
+      ["feliz", "¡Hola! 👋"],
+      ["guino", "¡Aquí estoy!"],
+      ["atento", "¿Te ayudo?"],
+      ["feliz", "¡Vamos!"],
+    ];
+    const [e, texto] = reacciones[Math.floor(Math.random() * reacciones.length)];
+    gesto(e, e === "feliz" ? 1400 : 1000);
+    setDicho((d) => ({ n: (d?.n ?? 0) + 1, texto }));
+    anunciar(`Sofi: ${texto}`);
   };
 
   const reiniciar = () => {
@@ -452,7 +484,26 @@ export function Sofi() {
           <div ref={lista} className="flex-1 space-y-4 overflow-y-auto bg-bg px-4 py-4">
             {/* Escenario: Sofi de cuerpo entero, viva, al comienzo de la conversación */}
             <div className="flex flex-col items-center gap-2 pb-1 pt-1 text-center [@media(max-height:560px)]:hidden">
-              <RobotSofi estado={estado} modo="cuerpo" tamano={148} />
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={mimar}
+                  aria-label="Saludar a Sofi"
+                  className="rounded-2xl transition-transform active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+                >
+                  <RobotSofi estado={estado} modo="cuerpo" tamano={148} />
+                </button>
+                {dicho && (
+                  <span
+                    key={dicho.n}
+                    aria-hidden
+                    onAnimationEnd={() => setDicho(null)}
+                    className="sofi-dicho pointer-events-none absolute left-[calc(100%-16px)] top-3 whitespace-nowrap rounded-2xl rounded-bl-md bg-[var(--navy-700)] px-3 py-1.5 text-[12.5px] font-semibold text-white shadow-[var(--shadow-pop)]"
+                  >
+                    {dicho.texto}
+                  </span>
+                )}
+              </div>
               <p className="text-[12.5px] text-muted">
                 {ctx.superficie === "portal" ? `Asistente del portal · ${ctx.empresa?.razonSocial ?? ""}` : "Asistente virtual de Fedesoft"}
               </p>
@@ -536,11 +587,15 @@ export function Sofi() {
                   setEntrada(e.target.value);
                   setActiva(-1);
                   setListaCerrada(false);
+                  /* Mientras escribes, Sofi te escucha: mira hacia el campo. */
+                  const hay = e.target.value.trim().length > 0;
+                  setEstado((x) => (hay && (x === "reposo" || x === "durmiendo") ? "escuchando" : !hay && x === "escuchando" ? "reposo" : x));
                 }}
                 onKeyDown={alTeclearCampo}
                 onBlur={() => {
                   setListaCerrada(true);
                   setActiva(-1);
+                  setEstado((x) => (x === "escuchando" ? "reposo" : x));
                 }}
                 maxLength={MAX_CARACTERES}
                 autoComplete="off"
@@ -736,7 +791,8 @@ function MensajeSofi({
                 </button>
               </>
             ) : (
-              <span className="sofi-pop inline-block px-1 py-2 text-[12px]">
+              <span className="sofi-pop relative inline-block px-1 py-2 text-[12px]">
+                {m.util && <Confeti />}
                 {m.util ? "¡Gracias! Me alegra haberte ayudado." : "Gracias, lo tendremos en cuenta para mejorar."}
               </span>
             )}
@@ -879,6 +935,41 @@ function BloqueSofi({
         </div>
       );
   }
+}
+
+/** Confeti con la paleta del manual: sale del agradecimiento y cae. */
+const CONFETI = Array.from({ length: 14 }, (_, i) => {
+  const a = (-160 + (i * 140) / 13) * (Math.PI / 180);
+  const dist = 34 + (i % 4) * 9;
+  return {
+    dx: Math.cos(a) * dist,
+    dy: Math.sin(a) * dist + 26,
+    giro: (i % 2 ? 1 : -1) * (180 + i * 25),
+    color: ["#008BED", "#EABC12", "#3CACC8", "#2EA0F9", "#11428a"][i % 5],
+    retraso: (i % 3) * 35,
+  };
+});
+
+function Confeti() {
+  return (
+    <span aria-hidden className="pointer-events-none absolute left-3 top-1/2">
+      {CONFETI.map((c, i) => (
+        <span
+          key={i}
+          className={`sofi-confeti absolute h-1.5 ${i % 3 ? "w-1.5 rounded-full" : "w-2.5 rounded-sm"}`}
+          style={
+            {
+              background: c.color,
+              "--dx": `${c.dx}px`,
+              "--dy": `${c.dy}px`,
+              "--giro": `${c.giro}deg`,
+              animationDelay: `${c.retraso}ms`,
+            } as React.CSSProperties
+          }
+        />
+      ))}
+    </span>
+  );
 }
 
 function BotonAccion({ a, onNavegar }: { a: Accion; onNavegar: () => void }) {

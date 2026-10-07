@@ -86,16 +86,15 @@ Sofi es la asistente de Fedesoft y vive en la esquina inferior derecha. Es el ro
 | Presenta un tablero | Mientras responde |
 | Celebra | Cuando una respuesta te sirvió |
 
-- **Animación** (la cara se anima sobre el arte oficial: los LED de ojos y boca están medidos en cada pose):
-  - parpadea, a veces dos veces seguidas;
-  - enciende la boca mientras habla;
-  - cierra los ojos y respira despacio cuando se duerme;
-  - rebota al cambiar de pose y al despertar;
-  - salta y le brillan los ojos cuando la miras;
-  - celebra con chispas de la paleta del manual;
-  - flota y se inclina en 3D hacia el puntero;
-  - un anillo de luz gira mientras piensa y late mientras habla;
-  - de vez en cuando saluda para recordar que está ahí.
+- **Cara LED vectorial** (`CaraSofi.tsx`): sobre el visor del arte oficial se dibuja una cara propia (ojos, cejas y boca), medida en cada pose (centro, distancia entre ojos y giro de la cabeza):
+  - los ojos siguen al puntero y parpadean, a veces dos veces;
+  - nueve expresiones: atenta, escuchando (mira al campo mientras escribes), pensando (puntos que laten), hablando (la boca se mueve), ojos de estrella al celebrar, guiño, duda cuando no entiende, tristeza si la respuesta no sirvió y dormida.
+- **Gestos del cuerpo:** rebota al cambiar de pose, brinca al celebrar, se inclina a escuchar, se mece al hablar, ladea la cabeza al dudar, decae si está triste; la luz de la frente respira y se aviva al hablar.
+- **Vida propia:**
+  - en reposo, cada pocos segundos mira alrededor, guiña, ladea la cabeza o brinca;
+  - al llegar aparece con un rebote y guiña; de vez en cuando saluda; se duerme si nadie la usa;
+  - tócala en el panel y reacciona con una burbuja ("¡Hola! 👋");
+  - valorar una respuesta como útil lanza confeti con la paleta del manual.
 - **Chat dinámico:**
   - **avisos según dónde estás**, una vez por sitio y pestaña. Por ejemplo, la cuota vencida al gerente que paga, las sesiones con cupo en Formación o la ayuda para entrar en el login. Al tocarlo, abre la conversación con esa pregunta;
   - **escribe en vivo** con un cursor (en ~1 s, sin importar el largo); acciones y sugerencias aparecen al terminar;

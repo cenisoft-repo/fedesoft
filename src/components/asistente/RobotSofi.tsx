@@ -2,56 +2,104 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
+import { CaraSofi, type Expresion } from "./CaraSofi";
 
-export type EstadoSofi = "reposo" | "atento" | "pensando" | "hablando" | "feliz" | "durmiendo";
+export type EstadoSofi =
+  | "reposo"
+  | "atento"
+  | "escuchando"
+  | "pensando"
+  | "hablando"
+  | "feliz"
+  | "guino"
+  | "confundido"
+  | "triste"
+  | "durmiendo";
 type Pose = "saluda" | "explica" | "escribe" | "celebra";
-/** Caja en fracciones de la imagen: [izquierda, arriba, derecha, abajo]. */
-type Caja = readonly [number, number, number, number];
 
 /**
- * Arte oficial de Sofi: cuatro poses del robot de Fedesoft.
- * - `cabeza`: centro de la cabeza y su ancho relativo, para encuadrar la cara
- *   en el avatar redondo.
- * - `ojos` y `boca`: dónde están los LED de la cara, medidos sobre cada imagen;
- *   ahí parpadea y ahí se enciende la boca cuando habla.
+ * Arte oficial de Sofi: cuatro poses del robot de Fedesoft, con su geometría
+ * medida sobre cada imagen (fracciones del ancho):
+ * - `cabeza`: centro y ancho relativo, para encuadrar la cara en el avatar redondo;
+ * - `cara`: punto medio entre los ojos, distancia entre ojos y giro de la cabeza,
+ *   para montar encima la cara LED vectorial;
+ * - `frente`: la luz de la frente, que respira.
  */
-const ARTE: Record<Pose, { src: string; cabeza: { x: number; y: number; ancho: number }; ojos: readonly [Caja, Caja]; boca: Caja }> = {
+const ARTE: Record<
+  Pose,
+  {
+    src: string;
+    cabeza: { x: number; y: number; ancho: number };
+    cara: { x: number; y: number; d: number; giro: number };
+    frente: { x: number; y: number };
+  }
+> = {
   saluda: {
     src: "/recursos/sofi/sofi-saluda.webp",
     cabeza: { x: 0.534, y: 0.2, ancho: 0.47 },
-    ojos: [[0.417, 0.211, 0.517, 0.27], [0.578, 0.225, 0.677, 0.284]],
-    boca: [0.5, 0.283, 0.584, 0.317],
+    cara: { x: 0.5473, y: 0.2475, d: 0.1611, giro: 5 },
+    frente: { x: 0.568, y: 0.064 },
   },
   explica: {
     src: "/recursos/sofi/sofi-explica.webp",
     cabeza: { x: 0.32, y: 0.215, ancho: 0.48 },
-    ojos: [[0.225, 0.241, 0.325, 0.3], [0.384, 0.211, 0.478, 0.272]],
-    boca: [0.317, 0.284, 0.4, 0.322],
+    cara: { x: 0.353, y: 0.256, d: 0.1587, giro: -10.5 },
+    frente: { x: 0.323, y: 0.076 },
   },
   escribe: {
     src: "/recursos/sofi/sofi-escribe.webp",
     cabeza: { x: 0.444, y: 0.223, ancho: 0.51 },
-    ojos: [[0.353, 0.27, 0.466, 0.33], [0.533, 0.267, 0.631, 0.327]],
-    boca: [0.448, 0.339, 0.541, 0.369],
+    cara: { x: 0.4957, y: 0.2985, d: 0.1725, giro: -1 },
+    frente: { x: 0.494, y: 0.092 },
   },
   celebra: {
     src: "/recursos/sofi/sofi-celebra.webp",
     cabeza: { x: 0.526, y: 0.207, ancho: 0.48 },
-    ojos: [[0.416, 0.227, 0.506, 0.281], [0.583, 0.245, 0.67, 0.306]],
-    boca: [0.489, 0.281, 0.589, 0.348],
+    cara: { x: 0.5437, y: 0.2648, d: 0.1669, giro: 7.4 },
+    frente: { x: 0.566, y: 0.067 },
   },
 };
 
 const POSES = Object.keys(ARTE) as Pose[];
 
-/** Qué hace Sofi en cada momento de la conversación. */
+/** Qué hace el cuerpo en cada momento de la conversación. */
 const POSE_DE: Record<EstadoSofi, Pose> = {
   reposo: "saluda",
   atento: "saluda",
+  escuchando: "saluda",
   pensando: "escribe",
   hablando: "explica",
   feliz: "celebra",
+  guino: "saluda",
+  confundido: "explica",
+  triste: "saluda",
   durmiendo: "saluda",
+};
+
+/** Qué cara pone en cada estado. */
+const CARA_DE: Record<EstadoSofi, Expresion> = {
+  reposo: "abiertos",
+  atento: "escucha",
+  escuchando: "escucha",
+  pensando: "pensando",
+  hablando: "habla",
+  feliz: "estrellas",
+  guino: "guino",
+  confundido: "confundido",
+  triste: "triste",
+  durmiendo: "dormido",
+};
+
+/** Gesto del cuerpo entero en cada estado (clases de globals.css). */
+const GESTO_DE: Partial<Record<EstadoSofi, string>> = {
+  atento: "sofi-salta",
+  escuchando: "sofi-inclina",
+  pensando: "sofi-teclea",
+  hablando: "sofi-habla",
+  feliz: "sofi-brinca",
+  guino: "sofi-ladea-corto",
+  confundido: "sofi-ladea",
+  triste: "sofi-decae",
 };
 
 /** Fondo del arte: el mismo azul grisáceo de las imágenes, para que el marco no se note. */
@@ -71,26 +119,32 @@ const CHISPAS = [
   { a: 265, d: 0.9, c: "#3CACC8" },
 ] as const;
 
-const enCaja = ([x0, y0, x1, y1]: Caja) => ({
-  left: `${x0 * 100}%`,
-  top: `${y0 * 100}%`,
-  width: `${(x1 - x0) * 100}%`,
-  height: `${(y1 - y0) * 100}%`,
-});
+/** Lo que hace sola cuando nadie le habla: mirar alrededor, guiñar, ladear la cabeza, brincar. */
+type Micro = { mirada?: { x: number; y: number }; expresion?: Expresion; gesto?: string };
+const MICROS: Micro[] = [
+  { mirada: { x: -4, y: -1 } },
+  { mirada: { x: 4, y: -1.5 } },
+  { mirada: { x: 3, y: 2.5 } },
+  { expresion: "guino", gesto: "sofi-ladea-corto" },
+  { gesto: "sofi-ladea-corto", mirada: { x: -2.5, y: 1 } },
+  { gesto: "sofi-salta", expresion: "escucha" },
+];
+
+const QUIETA = { x: 0, y: 0 };
 
 const sinMovimiento = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 /**
- * Sofi animada:
- * - cambia de pose según el estado (saluda, escribe mientras piensa, presenta
- *   al responder, celebra) con un pequeño rebote;
- * - parpadea, enciende la boca al hablar, cierra los ojos al dormirse;
- * - flota, se inclina hacia el puntero y salta cuando la miran;
- * - celebra con chispas, y su anillo de luz dice si piensa o habla.
+ * Sofi animada sobre el arte oficial:
+ * - una cara LED vectorial que mira al puntero, parpadea, habla con la boca,
+ *   guiña, duda, se pone triste, celebra con ojos de estrella y duerme;
+ * - el cuerpo cambia de pose con un rebote, flota, se inclina hacia el puntero
+ *   y hace un gesto propio en cada estado (brinca, ladea, se inclina a escuchar);
+ * - cuando nadie le habla, mira alrededor, guiña o brinca por su cuenta;
+ * - la luz de la frente respira, las chispas celebran y el anillo dice si piensa o habla.
  *
  * `modo="cabeza"` es el avatar redondo; `modo="cuerpo"`, la ilustración entera.
- * Los gestos finos (parpadeo, boca, chispas) solo se dibujan desde 40 px: más
- * pequeños no se verían y solo costarían.
+ * La cara LED y las chispas se dibujan desde 40 px; más pequeña queda el arte quieto.
  * Decorativa (aria-hidden): quien la usa pone la etiqueta accesible.
  */
 export function RobotSofi({
@@ -107,24 +161,32 @@ export function RobotSofi({
   const ref = useRef<HTMLDivElement>(null);
   const marco = useRef<HTMLDivElement>(null);
   const [giro, setGiro] = useState({ x: 0, y: 0 });
+  const [puntero, setPuntero] = useState(QUIETA);
   const [rafaga, setRafaga] = useState(0);
+  const [micro, setMicro] = useState<Micro | null>(null);
   const pose = POSE_DE[estado];
   const detalle = tamano >= 40;
+  /* Las que se ven grandes tienen vida propia: el lanzador y la ilustración entera. */
+  const viva = detalle && (interactivo || modo === "cuerpo");
 
-  /* Se inclina hacia el puntero, con tope: un gesto, no un mareo. */
+  /* Los ojos siguen al puntero; el lanzador además se inclina hacia él (con tope: un gesto, no un mareo). */
   useEffect(() => {
-    if (!interactivo || sinMovimiento()) return;
+    if (!detalle || sinMovimiento()) return;
     let cuadro = 0;
     const mover = (e: PointerEvent) => {
       cancelAnimationFrame(cuadro);
       cuadro = requestAnimationFrame(() => {
         const r = ref.current?.getBoundingClientRect();
-        if (!r) return;
+        if (!r || r.width === 0) return;
         const dx = e.clientX - (r.left + r.width / 2);
         const dy = e.clientY - (r.top + r.height / 2);
         const d = Math.hypot(dx, dy) || 1;
         const fuerza = Math.min(1, d / 420);
-        /* Redondeado a medio grado: sin re-render si el gesto no cambia. */
+        /* Redondeado a medio punto: sin re-render si la mirada no cambia. */
+        const mx = Math.round((dx / d) * 4 * Math.min(1, d / 160) * 2) / 2;
+        const my = Math.round((dy / d) * 3 * Math.min(1, d / 160) * 2) / 2;
+        setPuntero((p) => (p.x === mx && p.y === my ? p : { x: mx, y: my }));
+        if (!interactivo) return;
         const x = Math.round((-dy / d) * 10 * fuerza * 2) / 2;
         const y = Math.round((dx / d) * 14 * fuerza * 2) / 2;
         setGiro((g) => (g.x === x && g.y === y ? g : { x, y }));
@@ -135,7 +197,29 @@ export function RobotSofi({
       window.removeEventListener("pointermove", mover);
       cancelAnimationFrame(cuadro);
     };
-  }, [interactivo]);
+  }, [detalle, interactivo]);
+
+  /* Vida propia en reposo: cada pocos segundos, un gesto breve al azar. */
+  useEffect(() => {
+    setMicro(null);
+    if (!viva || estado !== "reposo" || sinMovimiento()) return;
+    let espera = 0;
+    let fin = 0;
+    const programar = () => {
+      espera = window.setTimeout(() => {
+        setMicro(MICROS[Math.floor(Math.random() * MICROS.length)]);
+        fin = window.setTimeout(() => {
+          setMicro(null);
+          programar();
+        }, 1100);
+      }, 3200 + Math.random() * 3800);
+    };
+    programar();
+    return () => {
+      window.clearTimeout(espera);
+      window.clearTimeout(fin);
+    };
+  }, [viva, estado]);
 
   /* Rebote al cambiar de pose o al despertar: se nota que reacciona. */
   const previo = useRef({ pose, estado });
@@ -164,11 +248,29 @@ export function RobotSofi({
   const redondo = modo === "cabeza";
   /* Flotan el lanzador y la ilustración entera; los avatares de los mensajes quedan quietos. */
   const flota = interactivo || modo === "cuerpo";
-  /* Instancias desfasadas: varias Sofi en pantalla no parpadean al unísono. */
-  const desfase = `${((tamano * 7) % 23) / 10}s`;
+  const enReposo = estado === "reposo" && micro;
+  const expresion = enReposo && micro.expresion ? micro.expresion : CARA_DE[estado];
+  const gesto = enReposo && micro.gesto ? micro.gesto : GESTO_DE[estado];
+  /* La mirada: hacia arriba al pensar, hacia el campo al escuchar, al frente dormida; si no, al puntero. */
+  const mirada =
+    estado === "pensando"
+      ? { x: 3.5, y: -3 }
+      : estado === "escuchando"
+        ? { x: -1, y: 3 }
+        : dormida
+          ? QUIETA
+          : enReposo && micro.mirada
+            ? micro.mirada
+            : puntero;
+  const hablaFuerte = estado === "hablando" || estado === "pensando" || estado === "feliz";
 
   return (
-    <div ref={ref} aria-hidden className="relative shrink-0" style={{ width: tamano, height: tamano, perspective: 600 }}>
+    <div
+      ref={ref}
+      aria-hidden
+      className={`relative shrink-0 ${interactivo ? "sofi-aparece" : ""}`}
+      style={{ width: tamano, height: tamano, perspective: 600 }}
+    >
       {/* Anillo de estado: gira mientras piensa, late mientras habla o celebra */}
       {redondo && (estado === "pensando" || estado === "hablando" || estado === "feliz") && (
         <span
@@ -192,16 +294,15 @@ export function RobotSofi({
         }}
       >
         <div className={`h-full w-full ${dormida ? "sofi-respira" : flota ? "sofi-flota" : ""}`}>
-          <div
-            className={`h-full w-full ${estado === "atento" ? "sofi-salta" : estado === "pensando" ? "sofi-teclea" : ""}`}
-          >
+          {/* Cambiar de clase reinicia el gesto; sin remontar el arte (el rebote y las poses siguen vivos). */}
+          <div className={`h-full w-full ${detalle ? (gesto ?? "") : ""}`}>
             <div
               ref={marco}
               className={`relative h-full w-full overflow-hidden ${redondo ? "rounded-full ring-2 ring-white/70" : "rounded-2xl"}`}
               style={{ background: FONDO, filter: dormida ? "saturate(0.6) brightness(0.94)" : undefined }}
             >
               {POSES.map((p) => {
-                const { src, cabeza, ojos, boca } = ARTE[p];
+                const { src, cabeza, cara, frente } = ARTE[p];
                 const activa = p === pose;
                 /* Encuadre: en cabeza, la cara ocupa ~95% del círculo; en cuerpo, la imagen entera. */
                 const zoom = redondo ? 0.95 / cabeza.ancho : 1;
@@ -213,6 +314,9 @@ export function RobotSofi({
                       top: `calc(50% - ${cabeza.y * zoom * 100}%)`,
                     }
                   : { inset: 0 };
+                /* La cara LED: 100 unidades de ancho, 44 de ellas son la distancia entre ojos. */
+                const ancho = (cara.d * 100) / 44;
+                const alto = ancho * 0.72;
                 return (
                   <div
                     key={p}
@@ -229,16 +333,27 @@ export function RobotSofi({
                     />
                     {activa && detalle && (
                       <>
-                        {ojos.map((o, i) => (
-                          <span
-                            key={i}
-                            className={`sofi-parpado absolute ${dormida ? "sofi-parpado-cerrado" : ""}`}
-                            style={{ ...enCaja(o), animationDelay: desfase }}
-                          />
-                        ))}
-                        {estado === "hablando" && <span className="sofi-boca absolute" style={enCaja(boca)} />}
-                        {(estado === "atento" || estado === "feliz") &&
-                          ojos.map((o, i) => <span key={`b${i}`} className="sofi-brillo absolute" style={enCaja(o)} />)}
+                        <span
+                          className={`absolute rounded-full ${hablaFuerte ? "sofi-frente-viva" : "sofi-frente"}`}
+                          style={{
+                            left: `${(frente.x - 0.022) * 100}%`,
+                            top: `${(frente.y - 0.03) * 100}%`,
+                            width: "4.4%",
+                            height: "6%",
+                          }}
+                        />
+                        <div
+                          className="absolute"
+                          style={{
+                            left: `${(cara.x - ancho / 2) * 100}%`,
+                            top: `${(cara.y - alto / 2) * 100}%`,
+                            width: `${ancho * 100}%`,
+                            height: `${alto * 100}%`,
+                            transform: `rotate(${cara.giro}deg)`,
+                          }}
+                        >
+                          <CaraSofi expresion={expresion} mirada={mirada} />
+                        </div>
                       </>
                     )}
                   </div>
