@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import {
-  Bell, Briefcase, Building2, ChevronDown, GraduationCap, LayoutGrid, LogOut, Moon, Network, Receipt, Sparkles,
+  Bell, Briefcase, Building2, ChevronDown, GraduationCap, LayoutGrid, Loader2, LogOut, Moon, Network, Receipt, Sparkles,
   Search, ShieldCheck, Star, Sun, UserCog, UsersRound,
 } from "lucide-react";
 import { Firma, Logo } from "./Logo";
@@ -64,11 +64,32 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     return true;
   });
 
+  /* Al portal se entra siempre por el login: sin sesión, se va a /entrar y se
+     vuelve aquí después. En modo API lo resuelve PuertaPortalApi. */
+  const { sesionPortal, sesionLista, salidaVoluntaria } = useIdentidad();
+  const router = useRouter();
+  const sinSesion = !MODO_API && sesionLista && !sesionPortal;
+  useEffect(() => {
+    if (!sinSesion) return;
+    /* Quien cerró sesión vuelve al login a secas; quien llegó sin sesión, regresa después a lo que pidió. */
+    router.replace(salidaVoluntaria ? "/entrar" : `/entrar?destino=${encodeURIComponent(pathname ?? "/portal")}`);
+  }, [sinSesion, salidaVoluntaria, pathname, router]);
+
   const estadoChip = {
     "al-dia": { tono: "exito" as const, texto: "Al día" },
     pendiente: { tono: "aviso" as const, texto: "Pendiente" },
     vencida: { tono: "error" as const, texto: "Vencida" },
   }[escenario.empresa.estado];
+
+  if (!MODO_API && (!sesionLista || !sesionPortal)) {
+    return (
+      <div className="grid min-h-dvh place-items-center bg-bg text-[14px] text-muted" role="status">
+        <span className="inline-flex items-center gap-2">
+          <Loader2 size={16} className="animate-spin" aria-hidden /> Verificando tu sesión…
+        </span>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-dvh">

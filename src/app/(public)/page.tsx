@@ -172,7 +172,7 @@ export default function Landing() {
           </p>
           <div className="mt-10 flex flex-wrap gap-3">
             <Link
-              href="/portal"
+              href="/entrar"
               className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-[15px] font-semibold text-[var(--navy-abismo)] transition hover:bg-white/90"
             >
               Ingresar al portal <ArrowRight size={16} aria-hidden />
@@ -392,7 +392,7 @@ export default function Landing() {
           </p>
           <div className="mt-11 flex flex-wrap gap-3">
             <Link
-              href="/portal"
+              href="/entrar"
               className="inline-flex items-center gap-2 rounded-full bg-[var(--navy-700)] px-7 py-3.5 text-[15.5px] font-semibold text-white transition hover:brightness-110"
             >
               Ingresar al portal <ArrowUpRight size={17} aria-hidden />

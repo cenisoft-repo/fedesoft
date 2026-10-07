@@ -11,7 +11,7 @@ export function DemoSwitcher() {
   const [abierto, setAbierto] = useState(false);
 
   return (
-    <div className="fixed bottom-4 right-4 z-40 print:hidden">
+    <div className="fixed bottom-4 left-4 z-40 print:hidden">
       {abierto && (
         <div
           role="dialog"

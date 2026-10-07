@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Logo } from "@/components/Logo";
 import { useState } from "react";
 import { ArrowLeft, ArrowRight, Check, Copy, FileText } from "lucide-react";
 
@@ -22,8 +23,8 @@ export default function Afiliarme() {
       />
 
       <header className="relative mx-auto flex max-w-[860px] items-center justify-between px-6 py-7">
-        <Link href="/" className="font-display text-[13px] font-bold uppercase tracking-[0.34em] text-white/80">
-          Fedesoft
+        <Link href="/" aria-label="Fedesoft · ir al inicio" className="rounded">
+          <Logo tema="oscuro" alto={26} />
         </Link>
         <Link href="/entrar" className="text-[13.5px] font-semibold text-white/60 transition hover:text-white">
           Ya estoy afiliado

@@ -103,6 +103,16 @@ const Ctx = createContext<DemoState | null>(null);
 
 export function DemoProvider({ children }: { children: ReactNode }) {
   const [id, setId] = useState<EscenarioId>("mipyme-al-dia");
+
+  /* El escenario acompaña a la sesión de la pestaña (ver identidad.tsx). */
+  useEffect(() => {
+    try {
+      const guardado = window.sessionStorage.getItem("fedesoft-escenario");
+      if (guardado && ESCENARIOS.some((e) => e.id === guardado)) setId(guardado as EscenarioId);
+    } catch {
+      /* Sin almacenamiento: escenario por defecto. */
+    }
+  }, []);
   const [pagoRealizado, setPagoRealizado] = useState(false);
   const [inscripciones, setInscripciones] = useState<string[]>(["a1"]);
 
@@ -126,6 +136,11 @@ export function DemoProvider({ children }: { children: ReactNode }) {
       escenario,
       cambiarEscenario: (nuevo) => {
         setId(nuevo);
+        try {
+          window.sessionStorage.setItem("fedesoft-escenario", nuevo);
+        } catch {
+          /* Sin almacenamiento: el cambio vale para esta página. */
+        }
         setPagoRealizado(false);
       },
       pagoRealizado,

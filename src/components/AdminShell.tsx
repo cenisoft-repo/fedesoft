@@ -128,7 +128,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
             <div className="ml-auto flex items-center gap-2">
               <Link
-                href="/portal"
+                href="/entrar"
                 title="Volver al portal del afiliado"
                 className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[13px] font-semibold text-azure-200 transition hover:bg-white/10 hover:text-white sm:px-3"
               >

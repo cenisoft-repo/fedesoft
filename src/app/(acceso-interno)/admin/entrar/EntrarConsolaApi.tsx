@@ -28,7 +28,7 @@ export function EntrarConsolaApi() {
           <span aria-hidden className="hidden h-5 w-px bg-white/25 sm:block" />
           <p className="text-[13px] font-semibold uppercase tracking-[0.16em] text-azure-200">Consola interna</p>
           <Link
-            href="/portal"
+            href="/entrar"
             className="ml-auto inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-semibold text-azure-200 transition hover:bg-white/10 hover:text-white"
           >
             <ArrowLeft size={14} aria-hidden /> Portal del afiliado

@@ -172,7 +172,7 @@ export function MenuPrincipal() {
 
           <div className="ml-auto flex items-center gap-2">
             <Link
-              href="/portal"
+              href="/entrar"
               className="inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-[13.5px] font-semibold text-[var(--navy-abismo)] transition hover:bg-white/90"
             >
               Ingresar al portal <ArrowRight size={14} aria-hidden />

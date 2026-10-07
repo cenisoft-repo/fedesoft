@@ -141,7 +141,8 @@ export const MODULOS_CONSOLA: DefModulo[] = [
   {
     id: "relacionamiento", href: "/admin/relacionamiento", etiqueta: "Relacionamiento", area: "relacionamiento",
     resumen: "Verticales, mesas, oportunidades y postulaciones.",
-    permisoLectura: "opportunity:read", permisoEscritura: "opportunity:update",
+    /* Se entra por las verticales (ADR-009 del API): Comunicaciones las lee, no las convocatorias. */
+    permisoLectura: "vertical:read", permisoEscritura: "opportunity:update",
     acceso: R("gestiona", null, null, null, "consulta", "gestiona", "asignadas", "consulta", "consulta"),
   },
   {

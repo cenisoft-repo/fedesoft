@@ -53,8 +53,9 @@ export function Logo({
       />
       {!compacto && (
         <>
-          <span aria-hidden className="h-4 w-px bg-line" />
-          <span className="text-[13px] font-semibold text-muted">Portal del Afiliado</span>
+          {/* Sobre fondo oscuro fijo, el subtítulo pasa a blanco translúcido para conservar contraste AA. */}
+          <span aria-hidden className={`h-4 w-px ${tema === "oscuro" ? "bg-white/30" : "bg-line"}`} />
+          <span className={`text-[13px] font-semibold ${tema === "oscuro" ? "text-white/80" : "text-muted"}`}>Portal del Afiliado</span>
         </>
       )}
     </span>

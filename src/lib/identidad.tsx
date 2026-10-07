@@ -14,7 +14,7 @@
  *  - la consola exige segundo factor.
  */
 
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { HOY } from "./format";
 import { useDemo } from "./demo";
 import { nivelConsola } from "./acceso";
@@ -85,6 +85,10 @@ interface IdentidadState {
 
   /* Sesiones de esta demostración */
   sesionPortal: string | null;
+  /** Falso hasta leer la sesión guardada de la pestaña: antes de eso no se redirige a nadie. */
+  sesionLista: boolean;
+  /** Verdadero si la persona cerró sesión: el login no ofrece volver a donde estaba. */
+  salidaVoluntaria: boolean;
   sesionConsola: string | null;
   iniciarPortal: (usuarioId: string) => void;
   iniciarConsola: (usuarioId: string) => void;
@@ -117,12 +121,40 @@ interface IdentidadState {
 
 const Ctx = createContext<IdentidadState | null>(null);
 
+const CLAVE_SESION = "fedesoft-sesion-portal";
+
 export function IdentidadProvider({ children }: { children: ReactNode }) {
   const { escenario } = useDemo();
   const [usuarios, setUsuarios] = useState<Usuario[]>(USUARIOS_INICIALES);
   const [vinculos, setVinculos] = useState<Vinculo[]>(VINCULOS_INICIALES);
   const [auditoria, setAuditoria] = useState<EventoAuditoria[]>([]);
   const [sesionPortal, setSesionPortal] = useState<string | null>(null);
+  const [sesionLista, setSesionLista] = useState(false);
+  const [salidaVoluntaria, setSalidaVoluntaria] = useState(false);
+
+  /* La sesión del portal vive en la pestaña, como la cookie de sesión del
+     sistema real: recargar no te saca; cerrar la pestaña o salir, sí. */
+  useEffect(() => {
+    try {
+      const guardada = window.sessionStorage.getItem(CLAVE_SESION);
+      if (guardada && USUARIOS_INICIALES.some((u) => u.id === guardada && u.estado !== "bloqueado")) {
+        setSesionPortal(guardada);
+      }
+    } catch {
+      /* Sin almacenamiento: la sesión dura lo que dure la página. */
+    }
+    setSesionLista(true);
+  }, []);
+
+  useEffect(() => {
+    if (!sesionLista) return;
+    try {
+      if (sesionPortal) window.sessionStorage.setItem(CLAVE_SESION, sesionPortal);
+      else window.sessionStorage.removeItem(CLAVE_SESION);
+    } catch {
+      /* Sin almacenamiento: nada que guardar. */
+    }
+  }, [sesionPortal, sesionLista]);
   const [sesionConsola, setSesionConsola] = useState<string | null>(null);
   const [destinoConsola, setDestinoConsola] = useState("/admin");
 
@@ -200,10 +232,13 @@ export function IdentidadProvider({ children }: { children: ReactNode }) {
       porCorreo,
       porId,
       sesionPortal,
+      sesionLista,
+      salidaVoluntaria,
       sesionConsola,
 
       iniciarPortal: (usuarioId) => {
         setSesionPortal(usuarioId);
+        setSalidaVoluntaria(false);
         setUsuarios((prev) =>
           prev.map((u) =>
             u.id === usuarioId
@@ -242,7 +277,10 @@ export function IdentidadProvider({ children }: { children: ReactNode }) {
         const u = usuarios.find((x) => x.id === usuarioId);
         registrar(u?.nombre ?? "Operador", "Inició sesión en la consola con segundo factor", null);
       },
-      cerrarPortal: () => setSesionPortal(null),
+      cerrarPortal: () => {
+        setSalidaVoluntaria(true);
+        setSesionPortal(null);
+      },
       cerrarConsola: () => setSesionConsola(null),
       destinoConsola,
       /* Solo rutas de la consola: nunca un destino arbitrario. */
@@ -429,7 +467,7 @@ export function IdentidadProvider({ children }: { children: ReactNode }) {
         return { ok: true, mensaje: `Cuenta creada. Entrará con su correo y deberá configurar el segundo factor.` };
       },
     };
-  }, [usuarios, vinculos, auditoria, sesionPortal, sesionConsola, destinoConsola, escenario, porCorreo, porId, nombreDe, registrar, cerrar]);
+  }, [usuarios, vinculos, auditoria, sesionPortal, sesionLista, salidaVoluntaria, sesionConsola, destinoConsola, escenario, porCorreo, porId, nombreDe, registrar, cerrar]);
 
   return <Ctx.Provider value={valor}>{children}</Ctx.Provider>;
 }

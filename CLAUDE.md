@@ -63,6 +63,10 @@ src/lib/api/          Cliente y sesión del API real (solo en modo API)
   - La página pregunta su nivel con `useNivelPortal` o `useAccesoConsola`.
   - Sin acceso: `SinPermisoPortal` o `SinPermisoConsola`. En la consola, el `AdminShell` ya lo aplica por ruta.
   - El afiliado no ve enlaces a la consola: se abre desde el control de demostración.
+- **Al portal se entra siempre por el login.** `AppShell` redirige a `/entrar` sin sesión simulada, y el destino de regreso se valida contra las rutas del portal. Ningún enlace de ingreso apunta directo a `/portal`.
+- **Sofi** (`src/components/asistente/`) acompaña la landing, el acceso y el portal, no la consola.
+  - Su contenido sale del asistente oficial de Fedesoft; no se inventan fechas ni datos.
+  - En el portal toda sugerencia o atajo respeta la matriz de acceso.
 - **Todos los estados**: carga, vacío, error y sin permiso. Un estado vacío nunca es una tarjeta que dice que no hay nada: desaparece o propone la acción siguiente.
 - **Accesibilidad WCAG 2.1 AA**: contraste verificado, foco visible, navegación por teclado, etiquetas en formularios.
 - **Tema claro y oscuro**, ambos cuidados. Los colores se definen en `:root` y se redefinen por token, nunca sueltos dentro de un bloque de tema.

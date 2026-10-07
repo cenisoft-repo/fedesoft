@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { MarcaAcceso } from "@/components/acceso/MarcaAcceso";
 import { ArrowRight, KeyRound, ShieldCheck } from "lucide-react";
 import { urlLogin } from "@/lib/api/cliente";
 import { useSesionApi } from "@/lib/api/sesion";
@@ -16,20 +17,7 @@ export function EntrarApi() {
 
   return (
     <div className="grid min-h-dvh lg:grid-cols-[1fr_1.1fr]">
-      <aside className="relative hidden overflow-hidden bg-navy-abismo px-12 py-14 lg:flex lg:flex-col lg:justify-between">
-        <div
-          aria-hidden
-          className="absolute left-1/2 top-1/3 h-[560px] w-[560px] -translate-x-1/2 rounded-full opacity-35 blur-[130px]"
-          style={{ background: "radial-gradient(circle, #008BED 0%, transparent 70%)" }}
-        />
-        <Link href="/" className="relative font-display text-[13px] font-bold uppercase tracking-[0.34em] text-white/85">
-          Fedesoft
-        </Link>
-        <h1 className="relative max-w-[16ch] font-display text-[clamp(32px,3.6vw,48px)] font-light leading-[1.05] text-white">
-          Todo lo tuyo con la federación, en un solo lugar
-        </h1>
-        <p className="relative text-[12.5px] text-white/35">Modo API · identidad real, resto de datos simulados</p>
-      </aside>
+      <MarcaAcceso pie="Modo API · identidad real, resto de datos simulados" />
 
       <main className="flex items-center bg-surface px-6 py-14 sm:px-12">
         <div className="mx-auto w-full max-w-[460px]">

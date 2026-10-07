@@ -43,7 +43,12 @@ Usuarios de prueba y secreto TOTP: `infra/docker/keycloak/README.md` del repo re
 
 ## Modo demostración
 
-El control flotante de la esquina inferior derecha cambia **toda la aplicación en vivo** entre siete escenarios: uno por persona con acceso y el de pago vencido. Desde ese mismo control se abre la consola interna, que el afiliado no ve en su menú.
+Al portal se entra **siempre por el login** (`/entrar`):
+- Todo «Ingresar al portal» lleva ahí.
+- Una ruta del portal sin sesión redirige al login y, después de entrar, vuelve a la página pedida. Solo se aceptan rutas propias del portal como destino.
+- La sesión dura lo que la pestaña, como una cookie de sesión: recargar no te saca y «Cerrar sesión» sí.
+
+El control flotante de la **esquina inferior izquierda** cambia toda la aplicación en vivo entre siete escenarios: uno por persona con acceso y el de pago vencido. Desde ese mismo control se abre la consola interna, que el afiliado no ve en su menú.
 
 | Escenario | Qué demuestra |
 |---|---|
@@ -56,6 +61,27 @@ El control flotante de la esquina inferior derecha cambia **toda la aplicación 
 | **Contacto · empresa grande** | Aunque la empresa sea grande, el contacto no entra a la cuenta estratégica |
 
 También hay conmutador de tema claro/oscuro en el encabezado.
+
+## Sofi, la asistente virtual
+
+La mascota de la esquina inferior derecha es Sofi, la asistente de Fedesoft, llevada a robot interactivo con la identidad de la marca: cuerpo navy, ojos en azure y la barra del wordmark como boca.
+
+- **Cómo se comporta:**
+  - sus ojos siguen el puntero y parpadea sola;
+  - piensa mientras responde, habla al contestar y celebra cuando una respuesta te sirvió;
+  - se duerme tras un rato sin actividad.
+- **Movimiento reducido:** con `prefers-reduced-motion` se queda quieta.
+- **Contenido:** el del asistente actual de Fedesoft: afiliación, Softic 2026, Premios Ingenio 2026, Concurso Nacional de Programación, servicios gremiales y canales humanos por área. Acepta las opciones numeradas del menú (1 a 5).
+- **Dentro del portal responde con contexto.** Sabe tu nombre, empresa, rol y estado de la cuenta, y pregunta a `src/lib/acceso.ts` antes de ofrecer un atajo, así que nunca te manda a una sección que tu rol no alcanza:
+  - al gerente le muestra el monto pendiente y el botón de pagar;
+  - al talento humano le dice quién descarga el certificado.
+- **Fuera del portal,** sus atajos pasan por el login.
+- **Sin servicios detrás:** las intenciones se reconocen por palabras clave (`src/components/asistente/motor.ts`) y lo declara en su pie.
+- **Accesibilidad:**
+  - es un diálogo con etiqueta y la conversación se anuncia con `aria-live`;
+  - Escape cierra y devuelve el foco al lanzador;
+  - cada respuesta se puede valorar.
+- **En la consola no aparece.**
 
 ## Quién ve qué
 

@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { Logo } from "@/components/Logo";
+import { MarcaAcceso } from "@/components/acceso/MarcaAcceso";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import {
@@ -47,6 +49,19 @@ const DEMO_CASOS = [
   { correo: "mauricio.lara@sistemasvertice.com.co", etiqueta: "Cuenta bloqueada", detalle: "Mauricio Lara" },
 ];
 
+/* Secciones del portal a las que se puede volver tras entrar. Nada de la URL
+   se sigue tal cual: un destino fuera de esta lista vuelve al inicio. */
+const DESTINO_VALIDO = /^\/(portal|empresa|facturacion|formacion|comunidades|verticales|directorio|visibilidad|oportunidades|cuenta-estrategica)(\/[a-z0-9-]+)*$/;
+
+function destinoPortal(): string {
+  try {
+    const d = new URLSearchParams(window.location.search).get("destino") ?? "";
+    return DESTINO_VALIDO.test(d) ? d : "/portal";
+  } catch {
+    return "/portal";
+  }
+}
+
 const CORREO_VALIDO = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 export default function Entrar() {
@@ -63,6 +78,7 @@ function EntrarSimulado() {
   const [clave, setClave] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [cargando, setCargando] = useState(false);
+  const sesionAbierta = id.sesionLista && id.sesionPortal ? id.porId(id.sesionPortal) : undefined;
 
   const irAClave = (valor: string) => {
     setError(null);
@@ -91,7 +107,7 @@ function EntrarSimulado() {
       return;
     }
     cambiarEscenario(escenario.id);
-    router.push("/portal");
+    router.push(destinoPortal());
   };
 
   /** Lo que decide el servidor después de que el proveedor autentica. */
@@ -141,40 +157,37 @@ function EntrarSimulado() {
 
   return (
     <div className="grid min-h-dvh lg:grid-cols-[1fr_1.1fr]">
-      {/* Columna de marca */}
-      <aside className="relative hidden overflow-hidden bg-navy-abismo px-12 py-14 lg:flex lg:flex-col lg:justify-between">
-        <div
-          aria-hidden
-          className="absolute left-1/2 top-1/3 h-[560px] w-[560px] -translate-x-1/2 rounded-full opacity-35 blur-[130px]"
-          style={{ background: "radial-gradient(circle, #008BED 0%, transparent 70%)" }}
-        />
-        <Link href="/" className="relative font-display text-[13px] font-bold uppercase tracking-[0.34em] text-white/85">
-          Fedesoft
-        </Link>
-        <div className="relative">
-          <h1 className="max-w-[16ch] font-display text-[clamp(32px,3.6vw,48px)] font-light leading-[1.05] text-white">
-            Todo lo tuyo con la federación, en un solo lugar
-          </h1>
-          <p className="mt-6 max-w-[42ch] text-[16px] font-light leading-relaxed text-white/60">
-            Tu afiliación, tu estado de cuenta, tu certificado y la formación de tu equipo. El portal se adapta a tu
-            rol desde que entras.
-          </p>
-        </div>
-        <p className="relative text-[12.5px] text-white/35">Prototipo de demostración · datos simulados</p>
-      </aside>
+      <MarcaAcceso pie="Prototipo de demostración · datos simulados" />
 
       {/* Columna de acceso */}
       <main className="flex items-center bg-surface px-6 py-14 sm:px-12">
         <div className="mx-auto w-full max-w-[460px]" aria-live="polite">
-          <Link
-            href="/"
-            className="mb-8 inline-flex items-center gap-1.5 text-[13.5px] font-semibold text-muted transition hover:text-ink lg:hidden"
-          >
-            <ArrowLeft size={14} aria-hidden /> Volver
-          </Link>
+          <div className="mb-8 flex items-center justify-between gap-4 lg:hidden">
+            <Link href="/" aria-label="Fedesoft · ir al inicio" className="rounded">
+              <Logo alto={24} />
+            </Link>
+            <Link href="/" className="inline-flex items-center gap-1.5 text-[13.5px] font-semibold text-muted transition hover:text-ink">
+              <ArrowLeft size={14} aria-hidden /> Volver
+            </Link>
+          </div>
 
           {paso.id === "correo" && (
             <>
+              {sesionAbierta && (
+                <div className="mb-8 rounded-xl border border-line bg-bg p-4">
+                  <p className="text-[14.5px]">
+                    Ya tienes una sesión abierta como <span className="font-semibold">{sesionAbierta.nombre ?? sesionAbierta.correo}</span>.
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Boton tamano="sm" onClick={() => router.push(destinoPortal())}>
+                      Continuar al portal <ArrowRight size={14} aria-hidden />
+                    </Boton>
+                    <Boton tamano="sm" variante="secundario" onClick={() => id.cerrarPortal()}>
+                      Usar otra cuenta
+                    </Boton>
+                  </div>
+                </div>
+              )}
               <h2 className="font-display text-[30px] font-light leading-tight">Ingresa al portal</h2>
               <p className="mt-2 text-[15px] leading-relaxed text-muted">
                 Con tu correo corporativo. Cada contacto de una empresa afiliada ve lo que le corresponde según su rol.
