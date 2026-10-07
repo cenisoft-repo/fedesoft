@@ -1,7 +1,7 @@
 "use client";
 
 import { SinPermiso } from "./ui/SinPermiso";
-import { moduloConsola, rolesConSeccion, MODULOS_CONSOLA, type ModuloConsola, type SeccionPortal } from "@/lib/acceso";
+import { moduloConsola, rolesConSeccion, type DefModulo, type ModuloConsola, type SeccionPortal } from "@/lib/acceso";
 import { useRolPortal } from "@/lib/useAcceso";
 import { nombreRolEmpresa, nombreRolInterno, ROLES_INTERNOS } from "@/lib/mock/usuarios";
 
@@ -33,18 +33,17 @@ export function SinPermisoPortal({ seccion }: { seccion: SeccionPortal }) {
   );
 }
 
-export function SinPermisoConsola({ modulo }: { modulo: ModuloConsola }) {
+export function SinPermisoConsola({ modulo, inicio }: { modulo: ModuloConsola; inicio: DefModulo | null }) {
   const def = moduloConsola(modulo);
   const quienes = ROLES_INTERNOS.filter((r) => def.acceso[r.id] !== null).map((r) => nombreRolInterno(r.id));
-  /* Vuelve al primer módulo que todos alcanzan: Afiliados. */
-  const inicio = MODULOS_CONSOLA[0];
+  /* Vuelve al primer módulo que quien opera sí alcanza; sin ninguno, al acceso. */
   return (
     <SinPermiso
       titulo={`${def.nombre ?? def.etiqueta} no está en tu rol`}
       detalle={`${def.resumen} Tu rol interno no incluye este módulo. Si tu trabajo lo requiere, un Super Admin puede asignarte el rol que corresponde; el cambio queda en auditoría.`}
       quienes={quienes}
-      volverHref={inicio.href}
-      volverTexto={`Ir a ${inicio.etiqueta}`}
+      volverHref={inicio?.href ?? "/admin/entrar"}
+      volverTexto={inicio ? `Ir a ${inicio.etiqueta}` : "Volver al acceso"}
     />
   );
 }

@@ -87,16 +87,20 @@ Además: Laura Gómez (invitación pendiente), Andrés Mora (acceso desactivado)
 | Rol | Persona | Módulos |
 |---|---|---|
 | Super Admin | Natalia Rincón | Los 10 |
-| Operaciones · Afiliación | Lorena Mejía | Gestiona afiliados y solicitudes; consulta cartera, formación, contenidos y cuentas |
+| Operaciones · Afiliación | Lorena Mejía | Gestiona afiliados y solicitudes; verifica y modera el directorio; consulta cartera, formación, campañas y cuentas |
 | Cartera · Financiera | Andrea Villamil | Gestiona cartera; consulta afiliados, solicitudes y contenidos |
 | Formación y comunidades | Paula Andrade | Gestiona formación; consulta afiliados y contenidos |
 | Comunicaciones · Contenido | Valentina Duarte | Gestiona contenidos; consulta afiliados, formación y relacionamiento |
 | Relacionamiento · Verticales | Germán Castaño | Gestiona relacionamiento; consulta afiliados, contenidos y cuentas |
-| Gestor de cuenta | Marcela Ospina | Solo sus empresas asignadas (Sistemas Vértice) en cada módulo |
+| Gestor de cuenta | Marcela Ospina | Solo sus empresas asignadas (Sistemas Vértice) en cada módulo; consulta directorio e insights |
 | Dirección | Carolina Vélez | Lectura de todo; exporta resultados |
 | Auditor | Jorge Prieto | Lectura de todo; exporta resultados y auditoría |
 
-Resultados y Auditoría los ven todos los roles, pero cada área ve solo lo suyo.
+Resultados y Auditoría los ven todos los roles, pero cada área ve solo lo suyo. En Contenidos, campañas y directorio tienen permisos distintos y cada sección aplica el suyo.
+
+**Dos diferencias con la matriz:**
+- **Dirección consulta las solicitudes pero no las aprueba.** La matriz le da una aprobación de segundo nivel, pero ese flujo aún no está definido (`docs/01` §10).
+- **En modo API el servidor decide por permisos**, así que no existen los alcances «solo tus empresas» ni «solo tu área». Además, el API siembra hoy 4 de los 9 roles internos.
 
 ## Pantallas
 

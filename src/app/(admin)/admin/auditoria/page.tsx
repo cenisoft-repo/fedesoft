@@ -7,8 +7,7 @@ import { ASIGNACIONES_KAM } from "@/lib/mock/usuarios";
 import { NOMBRE_AREA, areasPropias, type Area } from "@/lib/acceso";
 import { useAccesoConsola } from "@/lib/useAcceso";
 import { useIdentidad } from "@/lib/identidad";
-import { Aviso } from "@/components/ui/Dialogo";
-import { AvisoNivel } from "@/components/admin/AvisoNivel";
+import { AvisoEnfocado, AvisoNivel } from "@/components/admin/AvisoNivel";
 import { Boton, Card, Chip, PageHeader, Vacio } from "@/components/ui/primitivos";
 
 export default function AuditoriaConsola() {
@@ -76,7 +75,7 @@ export default function AuditoriaConsola() {
             ? "Ves los eventos de tus empresas asignadas."
             : "Exportar el registro les corresponde a Super Admin y Auditoría."}
       />
-      {aviso && <Aviso ok>{aviso}</Aviso>}
+      <AvisoEnfocado mensaje={aviso} />
 
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative min-w-[220px] flex-1">

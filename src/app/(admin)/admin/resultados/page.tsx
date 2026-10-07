@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import { ArrowDownRight, ArrowRight, ArrowUpRight, Download } from "lucide-react";
-import { INDICADORES, type Indicador } from "@/lib/mock/consola";
+import { CUENTAS_ESTRATEGICAS, INDICADORES, type Indicador } from "@/lib/mock/consola";
+import { ASIGNACIONES_KAM } from "@/lib/mock/usuarios";
 import { NOMBRE_AREA, areasPropias, type Area } from "@/lib/acceso";
 import { useAccesoConsola } from "@/lib/useAcceso";
-import { Aviso } from "@/components/ui/Dialogo";
-import { AvisoNivel } from "@/components/admin/AvisoNivel";
+import { AvisoEnfocado, AvisoNivel } from "@/components/admin/AvisoNivel";
 import { Boton, Card, PageHeader, Seccion } from "@/components/ui/primitivos";
 
 const TENDENCIA: Record<Indicador["tendencia"], { icono: typeof ArrowUpRight; texto: string }> = {
@@ -16,14 +16,20 @@ const TENDENCIA: Record<Indicador["tendencia"], { icono: typeof ArrowUpRight; te
 };
 
 export default function ResultadosConsola() {
-  const { nivel, roles } = useAccesoConsola("resultados");
+  const { nivel, roles, operadorId } = useAccesoConsola("resultados");
   const [aviso, setAviso] = useState<string | null>(null);
 
   /* Dirección y Auditoría ven todo y exportan; cada área, sus propios
      indicadores; el gestor de cuenta, los de cuentas estratégicas. */
   const visibles: Area[] | null =
     nivel === "propia" ? areasPropias(roles) : nivel === "asignadas" ? ["cuentas"] : null;
-  const indicadores = INDICADORES.filter((i) => !visibles || visibles.includes(i.area));
+  const suyas = nivel === "asignadas" ? CUENTAS_ESTRATEGICAS.filter((c) => (ASIGNACIONES_KAM[operadorId ?? ""] ?? []).includes(c.nit)) : null;
+  const indicadores = INDICADORES.filter((i) => !visibles || visibles.includes(i.area)).map((i) =>
+    /* El gestor no ve el total del gremio: el indicador se calcula sobre sus empresas. */
+    suyas && i.area === "cuentas"
+      ? { ...i, nombre: "Tus cuentas estratégicas", valor: String(suyas.length), nota: `${suyas.filter((c) => c.salud === "riesgo").length} en riesgo` }
+      : i,
+  );
   const areas = [...new Set(indicadores.map((i) => i.area))];
 
   return (
@@ -51,7 +57,7 @@ export default function ResultadosConsola() {
           ? "Exportar los resultados les corresponde a Dirección y Auditoría."
           : "Ves los indicadores de tu área; el tablero completo es de Dirección."}
       />
-      {aviso && <Aviso ok>{aviso}</Aviso>}
+      <AvisoEnfocado mensaje={aviso} />
 
       {areas.map((area) => (
         <section key={area} className="grid gap-3">

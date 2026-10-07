@@ -22,6 +22,8 @@ export default function Empresa() {
   const puedeEditar = useNivelPortal("empresa") === "gestiona";
   /* El contacto no ve la afiliación (docs/03 §4); el talento la consulta. */
   const veAfiliacion = useNivelPortal("afiliacion") !== null;
+  /* Quién tiene acceso al portal es asunto del gerente: los demás ven la ficha, no los accesos. */
+  const veAccesos = useNivelPortal("contactos") !== null;
   const [guardado, setGuardado] = useState(false);
 
   return (
@@ -101,7 +103,7 @@ export default function Empresa() {
                   <Chip tono={c.rol === "gerente" ? "info" : c.rol === "talento" ? "exito" : "neutro"}>
                     {c.rol === "gerente" ? "Gerente" : c.rol === "talento" ? "Talento humano" : "Contacto"}
                   </Chip>
-                  {!tieneAcceso(c.correo) && <Chip tono="neutro">Sin acceso</Chip>}
+                  {veAccesos && !tieneAcceso(c.correo) && <Chip tono="neutro">Sin acceso</Chip>}
                 </div>
               ))}
             </div>
@@ -122,6 +124,7 @@ export default function Empresa() {
           </Card>
           )}
 
+          {veAfiliacion && (
           <Card className="p-5">
             <Eyebrow>Historial</Eyebrow>
             <ol className="mt-3 grid gap-3 text-[14px]">
@@ -140,6 +143,7 @@ export default function Empresa() {
               ))}
             </ol>
           </Card>
+          )}
         </aside>
       </div>
     </div>

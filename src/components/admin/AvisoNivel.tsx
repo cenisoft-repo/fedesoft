@@ -1,4 +1,6 @@
+import { useEffect, useRef } from "react";
 import { Eye, Lock } from "lucide-react";
+import { Aviso } from "@/components/ui/Dialogo";
 import { TEXTO_NIVEL, type Nivel } from "@/lib/acceso";
 
 /**
@@ -32,6 +34,23 @@ export function Ocupacion({ usados, total }: { usados: number; total: number }) 
           style={{ width: `${pct}%` }}
         />
       </span>
+    </div>
+  );
+}
+
+/**
+ * Confirmación de una acción. Recibe el foco al aparecer: el botón que la
+ * disparó suele desaparecer con la acción y, sin esto, el foco se pierde.
+ */
+export function AvisoEnfocado({ mensaje }: { mensaje: string | null }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (mensaje) ref.current?.focus();
+  }, [mensaje]);
+  if (!mensaje) return null;
+  return (
+    <div ref={ref} tabIndex={-1} className="rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-accent">
+      <Aviso ok>{mensaje}</Aviso>
     </div>
   );
 }

@@ -32,6 +32,11 @@ const AUDITORIA = [
 export default function Admin() {
   const { nivel, operadorId } = useAccesoConsola("afiliados");
   const veCartera = useAccesoConsola("cartera").nivel !== null;
+  /* La ficha muestra de cada dominio solo lo que el rol alcanza en ese dominio. */
+  const veFormacion = useAccesoConsola("formacion").nivel !== null;
+  const nivelAuditoria = useAccesoConsola("auditoria").nivel;
+  /* "Solo su área" no alcanza el historial completo de una empresa; el gestor sí ve el de las suyas. */
+  const veAuditoria = nivelAuditoria === "gestiona" || nivelAuditoria === "consulta" || nivelAuditoria === "asignadas";
   /* ABAC del gestor de cuenta: solo abre las empresas que tiene asignadas. */
   const asignadas = nivel === "asignadas" ? (ASIGNACIONES_KAM[operadorId ?? ""] ?? []) : null;
   const e = asignadas ? (asignadas.includes(VERTICE.nit) ? VERTICE : null) : DATALABS;
@@ -112,15 +117,18 @@ export default function Admin() {
           <Fila termino="Verticales" valor={e.verticales.join(", ")} />
         </Panel>
 
+        {veFormacion && (
         <Panel titulo="Participación" icono={Target}>
           <Fila termino="Formación 2026" valor={`${historial.length} registros`} />
           <Fila termino="Asistencia" valor={`${historial.filter((h) => h.asistio).length} de ${historial.length}`} />
           <Fila termino="Comunidades" valor="2 activas" />
           <Fila termino="Directorio" valor="Publicada y verificada" />
         </Panel>
+        )}
       </div>
 
       <div className="grid items-start gap-5 lg:grid-cols-2">
+        {veFormacion && (
         <section className="grid gap-3">
           <h2 className="flex items-center gap-2 text-[18px] font-extrabold">
             <GraduationCap size={18} className="text-accent" aria-hidden /> Participación del equipo
@@ -139,6 +147,8 @@ export default function Admin() {
           </Card>
         </section>
 
+        )}
+        {veAuditoria && (
         <section className="grid gap-3">
           <h2 className="flex items-center gap-2 text-[18px] font-extrabold">
             <History size={18} className="text-accent" aria-hidden /> Auditoría
@@ -157,6 +167,7 @@ export default function Admin() {
             </div>
           </Card>
         </section>
+        )}
       </div>
     </div>
   );

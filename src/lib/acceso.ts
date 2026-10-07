@@ -113,6 +113,9 @@ export const MODULOS_CONSOLA: DefModulo[] = [
     id: "solicitudes", href: "/admin/solicitudes", etiqueta: "Solicitudes", area: "afiliacion",
     resumen: "Solicitudes de afiliación y su estado.",
     permisoLectura: "affiliation:read", permisoEscritura: "affiliation:update",
+    /* Desviación declarada: la matriz da a Dirección "RS (2.º nivel)". El flujo de
+       aprobación de segundo nivel no está definido (docs/01 §10), así que aquí
+       Dirección consulta y no decide. */
     acceso: R("gestiona", "gestiona", "consulta", null, null, null, "asignadas", "consulta", "consulta"),
   },
   {
@@ -131,7 +134,9 @@ export const MODULOS_CONSOLA: DefModulo[] = [
     id: "contenidos", href: "/admin/contenidos", etiqueta: "Contenidos", area: "contenidos",
     resumen: "Comunicaciones, insights y moderación del directorio.",
     permisoLectura: "content:read", permisoEscritura: "content:update",
-    acceso: R("gestiona", "consulta", "consulta", "consulta", "gestiona", "consulta", null, "consulta", "consulta"),
+    /* Une dos recursos de la matriz con permisos distintos; cada sección de la
+       página pregunta el suyo con nivelContenidos(). Aquí va el más amplio. */
+    acceso: R("gestiona", "gestiona", "consulta", "consulta", "gestiona", "consulta", "consulta", "consulta", "consulta"),
   },
   {
     id: "relacionamiento", href: "/admin/relacionamiento", etiqueta: "Relacionamiento", area: "relacionamiento",
@@ -167,12 +172,28 @@ export const MODULOS_CONSOLA: DefModulo[] = [
 
 export const moduloConsola = (id: ModuloConsola): DefModulo => MODULOS_CONSOLA.find((m) => m.id === id)!;
 
+/* Recursos dentro de Contenidos (docs/01 §2.2, filas "Plantillas, campañas y
+   comunicaciones" y "Directorio, ofertas e insights"). */
+export type RecursoContenidos = "campanas" | "directorio";
+
+const CONTENIDOS: Record<RecursoContenidos, Record<RolInterno, Nivel | null>> = {
+  /* TAL: "RU (propias)" → solo las suyas. */
+  campanas: R("gestiona", "consulta", "consulta", "propia", "gestiona", "consulta", null, "consulta", "consulta"),
+  /* OPS: "RU (verificación)" → verifica y modera. */
+  directorio: R("gestiona", "gestiona", null, null, "gestiona", null, "consulta", "consulta", "consulta"),
+};
+
 /** Del más amplio al más estrecho: con varios roles, gana el más amplio. */
 const ORDEN: Nivel[] = ["gestiona", "consulta", "propia", "asignadas"];
 
 export function nivelConsola(roles: readonly RolInterno[], modulo: ModuloConsola): Nivel | null {
   const acceso = moduloConsola(modulo).acceso;
   const niveles = roles.map((r) => acceso[r]).filter((n): n is Nivel => n !== null);
+  return ORDEN.find((n) => niveles.includes(n)) ?? null;
+}
+
+export function nivelContenidos(roles: readonly RolInterno[], recurso: RecursoContenidos): Nivel | null {
+  const niveles = roles.map((r) => CONTENIDOS[recurso][r]).filter((n): n is Nivel => n !== null);
   return ORDEN.find((n) => niveles.includes(n)) ?? null;
 }
 

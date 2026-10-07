@@ -109,6 +109,9 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const nav = MODULOS_CONSOLA.filter((m) => operador.nivel(m.id) !== null);
 
   const pendientes = SOLICITUDES.filter((s) => s.estado === "nueva" || s.estado === "en-revision").length;
+  /* El gestor de cuenta no ve solicitudes ajenas: tampoco su contador. */
+  const nivelSolicitudes = operador.nivel("solicitudes");
+  const verPendientes = nivelSolicitudes === "gestiona" || nivelSolicitudes === "consulta";
 
   return (
     <div className="min-h-dvh bg-bg">
@@ -188,7 +191,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                 >
                   <Icono size={16} aria-hidden />
                   {e.etiqueta}
-                  {e.href === "/admin/solicitudes" && pendientes > 0 && (
+                  {e.href === "/admin/solicitudes" && pendientes > 0 && verPendientes && (
                     <span className="num rounded-full bg-info-bg px-1.5 py-0.5 text-[11.5px] font-bold text-info">
                       {pendientes}
                     </span>
@@ -204,7 +207,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       </header>
 
       <main className="mx-auto max-w-[1200px] px-4 pb-24 pt-8 sm:px-6">
-        {permitido ? children : <SinPermisoConsola modulo={modulo} />}
+        {permitido ? children : <SinPermisoConsola modulo={modulo} inicio={nav[0] ?? null} />}
       </main>
 
       <footer className="border-t border-line">

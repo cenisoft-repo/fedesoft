@@ -1,13 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { CalendarDays, FilePlus2, Network } from "lucide-react";
+import { CalendarDays, Network } from "lucide-react";
 import { OPORTUNIDADES, VERTICALES } from "@/lib/mock/catalogo";
 import { VERTICE } from "@/lib/mock/empresas";
 import { fecha } from "@/lib/format";
 import { useAccesoConsola } from "@/lib/useAcceso";
-import { Aviso } from "@/components/ui/Dialogo";
-import { AvisoNivel } from "@/components/admin/AvisoNivel";
+import { AvisoEnfocado, AvisoNivel } from "@/components/admin/AvisoNivel";
 import { Boton, Card, Chip, PageHeader, Seccion } from "@/components/ui/primitivos";
 
 /** Postulaciones recibidas por convocatoria (simulado). */
@@ -43,7 +42,6 @@ export default function RelacionamientoConsola() {
         eyebrow="Relacionamiento · Verticales y Cenisoft"
         titulo="Verticales y oportunidades"
         lede="Las mesas de cada vertical y las convocatorias que Fedesoft y Cenisoft abren para las empresas afiliadas."
-        acciones={gestiona ? <Boton tamano="sm"><FilePlus2 size={15} aria-hidden /> Publicar convocatoria</Boton> : undefined}
       />
 
       <AvisoNivel
@@ -52,7 +50,7 @@ export default function RelacionamientoConsola() {
           ? "Ves las verticales y convocatorias que tocan a tus empresas asignadas."
           : "Publicar y cerrar convocatorias le corresponde a Relacionamiento."}
       />
-      {aviso && <Aviso ok>{aviso}</Aviso>}
+      <AvisoEnfocado mensaje={aviso} />
 
       <section className="grid gap-3">
         <Seccion titulo="Verticales" extra={<span className="num text-[14px] text-muted">{verticales.length}</span>} />

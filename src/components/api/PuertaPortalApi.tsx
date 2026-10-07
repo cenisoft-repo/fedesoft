@@ -85,8 +85,10 @@ export function PuertaPortalApi({ children }: { children: ReactNode }) {
 
 /** Rol y segmento reales → escenario de demostración equivalente. */
 function escenarioPara(e: EmpresaSesion): EscenarioId {
-  if (e.role.key === "gerente") return e.segment === "GRANDE" ? "grande" : "mipyme-al-dia";
-  return "talento";
+  const grande = e.segment === "GRANDE";
+  if (e.role.key === "gerente") return grande ? "grande" : "mipyme-al-dia";
+  if (e.role.key === "talento") return grande ? "grande-talento" : "talento";
+  return grande ? "grande-contacto" : "contacto";
 }
 
 function Eleccion({

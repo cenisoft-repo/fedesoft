@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Megaphone, Send, X } from "lucide-react";
+import { Check, Send, X } from "lucide-react";
 import { CAMPANAS, MODERACION, type Campana } from "@/lib/mock/consola";
 import { INSIGHTS } from "@/lib/mock/catalogo";
 import { fecha } from "@/lib/format";
 import { useAccesoConsola } from "@/lib/useAcceso";
-import { Aviso } from "@/components/ui/Dialogo";
-import { AvisoNivel } from "@/components/admin/AvisoNivel";
+import { nivelContenidos } from "@/lib/acceso";
+import { AvisoEnfocado, AvisoNivel } from "@/components/admin/AvisoNivel";
 import { Boton, Card, Chip, PageHeader, Seccion, Vacio } from "@/components/ui/primitivos";
 
 const ESTADO_CAMPANA: Record<Campana["estado"], { tono: "neutro" | "info" | "exito"; texto: string }> = {
@@ -17,8 +17,12 @@ const ESTADO_CAMPANA: Record<Campana["estado"], { tono: "neutro" | "info" | "exi
 };
 
 export default function ContenidosConsola() {
-  const { nivel } = useAccesoConsola("contenidos");
-  const gestiona = nivel === "gestiona";
+  const { nivel, roles } = useAccesoConsola("contenidos");
+  /* Simulado: un nivel por recurso. Modo API: el del módulo, que decide el servidor. */
+  const nivelCampanas = roles.length ? nivelContenidos(roles, "campanas") : nivel;
+  const nivelDirectorio = roles.length ? nivelContenidos(roles, "directorio") : nivel;
+  const gestionaCampanas = nivelCampanas === "gestiona";
+  const gestionaDirectorio = nivelDirectorio === "gestiona";
   const [campanas, setCampanas] = useState(CAMPANAS);
   const [pendientes, setPendientes] = useState(MODERACION);
   const [aviso, setAviso] = useState<string | null>(null);
@@ -44,12 +48,15 @@ export default function ContenidosConsola() {
         eyebrow="Comunicaciones · Contenido"
         titulo="Comunicaciones y contenido"
         lede="Campañas a los afiliados, los insights publicados y la moderación de lo que las empresas publican en el directorio."
-        acciones={gestiona ? <Boton tamano="sm"><Megaphone size={15} aria-hidden /> Nueva campaña</Boton> : undefined}
       />
 
-      <AvisoNivel nivel={nivel} detalle="Programar campañas y moderar publicaciones le corresponde a Comunicaciones." />
-      {aviso && <Aviso ok>{aviso}</Aviso>}
+      <AvisoNivel
+        nivel={gestionaCampanas || gestionaDirectorio ? "gestiona" : (nivelCampanas ?? nivelDirectorio)}
+        detalle="Programar campañas y moderar publicaciones le corresponde a Comunicaciones."
+      />
+      <AvisoEnfocado mensaje={aviso} />
 
+      {nivelCampanas && (
       <section className="grid gap-3">
         <Seccion titulo="Campañas" />
         <Card className="divide-y divide-line">
@@ -64,7 +71,7 @@ export default function ContenidosConsola() {
               </div>
               <div className="flex items-center gap-2 md:justify-end">
                 <Chip tono={ESTADO_CAMPANA[c.estado].tono}>{ESTADO_CAMPANA[c.estado].texto}</Chip>
-                {gestiona && c.estado === "borrador" && (
+                {gestionaCampanas && c.estado === "borrador" && (
                   <Boton variante="secundario" tamano="sm" onClick={() => programar(c.id)}>
                     <Send size={14} aria-hidden /> Programar
                   </Boton>
@@ -74,7 +81,9 @@ export default function ContenidosConsola() {
           ))}
         </Card>
       </section>
+      )}
 
+      {nivelDirectorio && (
       <div className="grid items-start gap-8 lg:grid-cols-2">
         <section className="grid gap-3">
           <Seccion
@@ -89,7 +98,7 @@ export default function ContenidosConsola() {
                 <div key={p.id} className="grid gap-2 p-4">
                   <p className="text-[15px] font-semibold leading-snug">{p.titulo}</p>
                   <p className="text-[13px] text-muted">{p.empresa} · {p.categoria} · enviada el {fecha(p.enviada)}</p>
-                  {gestiona && (
+                  {gestionaDirectorio && (
                     <div className="flex flex-wrap gap-2 pt-1">
                       <Boton tamano="sm" onClick={() => moderar(p.id, true)}><Check size={14} aria-hidden /> Publicar</Boton>
                       <Boton variante="fantasma" tamano="sm" onClick={() => moderar(p.id, false)}><X size={14} aria-hidden /> Devolver</Boton>
@@ -116,6 +125,7 @@ export default function ContenidosConsola() {
           </Card>
         </section>
       </div>
+      )}
     </div>
   );
 }

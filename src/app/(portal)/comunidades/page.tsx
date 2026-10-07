@@ -2,14 +2,15 @@
 
 import { useState } from "react";
 import { Check, FileText, Lock, Users } from "lucide-react";
-import { useDemo } from "@/lib/demo";
+import { useNivelPortal, useRolPortal } from "@/lib/useAcceso";
 import { COMUNIDADES } from "@/lib/mock/catalogo";
 import { fecha } from "@/lib/format";
 import { Boton, Card, Chip, PageHeader, Seccion } from "@/components/ui/primitivos";
 
 export default function Comunidades() {
-  const { escenario } = useDemo();
-  const { rol } = escenario;
+  const rol = useRolPortal();
+  /* El contacto consulta las comunidades abiertas a su perfil; entrar y salir es de gerente y talento. */
+  const puedeUnirse = useNivelPortal("comunidades") === "gestiona";
   const [inscritas, setInscritas] = useState<string[]>(["com-gerentes"]);
 
   const elegible = (rolComunidad: string) => rolComunidad === "todos" || rolComunidad === rol;
@@ -79,7 +80,12 @@ export default function Comunidades() {
                 )}
 
                 <div className="mt-6 pt-1">
-                  {!puede ? (
+                  {puede && !puedeUnirse ? (
+                    <p className="text-[13.5px] text-muted">
+                      Tu perfil consulta esta comunidad. Para participar, pídele al gerente o al líder de talento de tu
+                      empresa que te inscriba.
+                    </p>
+                  ) : !puede ? (
                     <p className="text-[13.5px] text-muted">
                       Esta comunidad es para el rol de {c.rol === "gerente" ? "gerencia" : "talento humano"}. Tu
                       empresa puede inscribir al contacto que corresponda desde Mi empresa.

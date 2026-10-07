@@ -1,12 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { CalendarPlus, MapPin, UsersRound, Video } from "lucide-react";
+import { MapPin, UsersRound, Video } from "lucide-react";
 import { ACTIVIDADES, COMUNIDADES } from "@/lib/mock/catalogo";
 import { fecha } from "@/lib/format";
 import { useAccesoConsola } from "@/lib/useAcceso";
-import { Aviso } from "@/components/ui/Dialogo";
-import { AvisoNivel, Ocupacion } from "@/components/admin/AvisoNivel";
+import { AvisoEnfocado, AvisoNivel, Ocupacion } from "@/components/admin/AvisoNivel";
 import { Boton, Card, Chip, Cifra, PageHeader, Seccion } from "@/components/ui/primitivos";
 
 export default function FormacionConsola() {
@@ -31,7 +30,6 @@ export default function FormacionConsola() {
         eyebrow="Formación y comunidades"
         titulo="Programación de formación"
         lede="TrainingLAB, TIC Talks y Series C+I en un solo tablero: cupos, inscripciones y asistencia de las empresas afiliadas."
-        acciones={gestiona ? <Boton tamano="sm"><CalendarPlus size={15} aria-hidden /> Programar sesión</Boton> : undefined}
       />
 
       <AvisoNivel
@@ -40,7 +38,7 @@ export default function FormacionConsola() {
           ? "Ves la oferta; la participación de tus empresas está en su ficha 360."
           : "Programar sesiones y cerrar inscripciones le corresponde al equipo de Formación."}
       />
-      {aviso && <Aviso ok>{aviso}</Aviso>}
+      <AvisoEnfocado mensaje={aviso} />
 
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
         <Card className="p-5"><Cifra etiqueta="Sesiones abiertas" valor={String(abiertas.length)} tamano="sm" /></Card>

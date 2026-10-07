@@ -7,8 +7,7 @@ import { ASIGNACIONES_KAM } from "@/lib/mock/usuarios";
 import { HOY, fecha } from "@/lib/format";
 import { useAccesoConsola } from "@/lib/useAcceso";
 import { useIdentidad } from "@/lib/identidad";
-import { Aviso } from "@/components/ui/Dialogo";
-import { AvisoNivel } from "@/components/admin/AvisoNivel";
+import { AvisoEnfocado, AvisoNivel } from "@/components/admin/AvisoNivel";
 import { Boton, Card, Chip, Eyebrow, PageHeader, Vacio } from "@/components/ui/primitivos";
 
 const SALUD: Record<CuentaEstrategica["salud"], { tono: "exito" | "aviso" | "error"; texto: string }> = {
@@ -82,7 +81,7 @@ export default function CuentasConsola() {
               key={c.nit}
               type="button"
               onClick={() => { setSeleccion(c.nit); setAviso(null); setError(null); }}
-              aria-pressed={c.nit === cuenta.nit}
+              aria-current={c.nit === cuenta.nit ? "true" : undefined}
               className={`grid w-full gap-1 p-4 text-left transition ${c.nit === cuenta.nit ? "bg-[var(--info-bg)]" : "hover:bg-bg"}`}
             >
               <span className="text-[14.5px] font-semibold">{c.empresa}</span>
@@ -151,7 +150,7 @@ export default function CuentasConsola() {
               </form>
             </Card>
           )}
-          {aviso && <Aviso ok>{aviso}</Aviso>}
+          <AvisoEnfocado mensaje={aviso} />
 
           <Card className="divide-y divide-line">
             <h3 className="p-4 text-[15px] font-bold">Interacciones</h3>

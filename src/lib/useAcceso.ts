@@ -13,7 +13,9 @@ const ROLES_EMPRESA: readonly RolEmpresa[] = ["gerente", "talento", "contacto"];
 export function useRolPortal(): RolEmpresa {
   const { escenario } = useDemo();
   const { actual } = useSesionApi("portal");
-  if (MODO_API && actual.estado === "lista") {
+  if (MODO_API) {
+    /* Mientras la sesión real carga (o no hay), el menú no promete lo que el servidor negaría. */
+    if (actual.estado !== "lista") return "contacto";
     const clave = actual.vista.activeOrganization?.role.key;
     return ROLES_EMPRESA.find((r) => r === clave) ?? "contacto";
   }

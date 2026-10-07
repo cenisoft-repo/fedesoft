@@ -15,6 +15,7 @@ export default function Inicio() {
   const { escenario, inscripciones } = useDemo();
   const { empresa, rol } = escenario;
   const veCuentaEstrategica = useNivelPortal("cuenta-estrategica") !== null;
+  const veAfiliacion = useNivelPortal("afiliacion") !== null;
   const contacto = empresa.contactos.find((c) => c.id === escenario.contactoId);
   const nombreCorto = contacto?.nombre.split(" ")[0] ?? "";
 
@@ -49,10 +50,12 @@ export default function Inicio() {
               <BadgeCheck size={13} aria-hidden />
               Afiliación {alDia ? "al día" : "vencida"}
             </Chip>
-            <Chip tono="neutro">
-              Afiliado {empresa.tipoAfiliacion} · vigente hasta {fecha(empresa.vigenciaHasta)}
-            </Chip>
-            {empresa.segmento === "grande" && (
+            {veAfiliacion && (
+              <Chip tono="neutro">
+                Afiliado {empresa.tipoAfiliacion} · vigente hasta {fecha(empresa.vigenciaHasta)}
+              </Chip>
+            )}
+            {empresa.segmento === "grande" && veCuentaEstrategica && (
               <Chip tono="info">
                 <Star size={13} aria-hidden /> Cuenta estratégica
               </Chip>
