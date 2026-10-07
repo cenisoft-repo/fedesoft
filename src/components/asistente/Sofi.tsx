@@ -33,16 +33,13 @@ const CLAVE_AVISOS = "fedesoft-sofi-avisos";
 
 /** Escenas de cuerpo entero que Sofi muestra de vez en cuando, en este orden. */
 const ESCENAS: EscenaSofi[] = ["laptop", "mando", "cuerpo"];
-const TEXTO_ESCENA: Record<EscenaSofi, { titulo: string; detalle: string }> = {
-  laptop: { titulo: "Trabajando para ti", detalle: "Preparando tu próxima respuesta…" },
-  mando: { titulo: "Centro de mando", detalle: "500+ empresas · 4 verticales" },
-  cuerpo: { titulo: "¡Aquí estoy!", detalle: "Toca para conversar" },
-};
-/* Tarjeta de escena: la primera a los 12 s, luego cada 30 s, a lo sumo seis por visita. */
+/* Escena del avatar: la primera a los 12 s, luego cada 30 s, a lo sumo seis por visita. */
 const ESCENA_PRIMERA = 12_000;
 const ESCENA_CADA = 30_000;
 const ESCENA_DURA = 5600;
 const ESCENA_TOPE = 6;
+/** La misma curva que usa el robot para pasar de la cara a la escena. */
+const MORFO_LANZADOR = "650ms cubic-bezier(0.34, 1.2, 0.64, 1)";
 
 const hora = () => {
   const d = new Date();
@@ -146,7 +143,7 @@ export function Sofi() {
   const [estado, setEstado] = useState<EstadoSofi>("reposo");
   const [aviso, setAviso] = useState<Aviso | null>(null);
   /* Escena de cuerpo entero sobre el lanzador, y la del escenario del panel. */
-  const [escena, setEscena] = useState<{ tipo: EscenaSofi; sale: boolean } | null>(null);
+  const [escena, setEscena] = useState<EscenaSofi | null>(null);
   const [escenaPanel, setEscenaPanel] = useState<EscenaSofi | null>(null);
   const cajaAviso = useRef<HTMLDivElement>(null);
   const avisoVisible = useRef(false);
@@ -267,32 +264,27 @@ export function Sofi() {
     avisoVisible.current = Boolean(aviso);
   }, [aviso]);
 
-  /* De vez en cuando, Sofi aparece de cuerpo entero sobre el lanzador: en su laptop,
-     en su centro de mando o saludando. Solo en reposo, sin aviso y con el panel cerrado. */
+  /* De vez en cuando, el avatar se transforma: la cámara se aleja de la cara y Sofi aparece
+     de cuerpo entero, en su laptop o en su centro de mando; luego vuelve a ser un círculo.
+     Solo en reposo, sin aviso, con el panel cerrado y con pantalla suficiente. */
   useEffect(() => {
     if (sinMovimiento()) return;
     let n = 0;
-    let quitar = 0;
-    let borrar = 0;
+    let volver = 0;
     const mostrar = () => {
       if (n >= ESCENA_TOPE || abiertoRef.current || document.hidden || avisoVisible.current) return;
-      if (estadoRef.current !== "reposo") return;
-      setEscena({ tipo: ESCENAS[n % ESCENAS.length], sale: false });
+      if (estadoRef.current !== "reposo" || window.innerHeight < 560) return;
+      setEscena(ESCENAS[n % ESCENAS.length]);
       n++;
-      window.clearTimeout(quitar);
-      window.clearTimeout(borrar);
-      quitar = window.setTimeout(() => {
-        setEscena((e) => (e ? { ...e, sale: true } : e));
-        borrar = window.setTimeout(() => setEscena(null), 320);
-      }, ESCENA_DURA);
+      window.clearTimeout(volver);
+      volver = window.setTimeout(() => setEscena(null), ESCENA_DURA);
     };
     const primera = window.setTimeout(mostrar, ESCENA_PRIMERA);
     const cada = window.setInterval(mostrar, ESCENA_CADA);
     return () => {
       window.clearTimeout(primera);
       window.clearInterval(cada);
-      window.clearTimeout(quitar);
-      window.clearTimeout(borrar);
+      window.clearTimeout(volver);
     };
   }, []);
 
@@ -717,27 +709,6 @@ export function Sofi() {
         </div>
       )}
 
-      {/* Escena de cuerpo entero: decorativa (el lanzador ya abre la conversación); un clic también la abre */}
-      {escena && !abierto && !aviso && (
-        <div
-          aria-hidden
-          data-sofi-escena={escena.tipo}
-          onClick={() => abrir()}
-          className={`${escena.sale ? "sofi-escena-sale" : "sofi-escena-entra"} relative mr-1 w-[180px] cursor-pointer overflow-hidden rounded-2xl border border-line bg-surface shadow-[var(--shadow-pop)] [@media(max-height:560px)]:hidden`}
-        >
-          <RobotSofi estado="reposo" modo="cuerpo" tamano={180} escena={escena.tipo} />
-          {escena.tipo === "mando" && (
-            <span className="absolute left-2 top-2 inline-flex items-center gap-1.5 rounded-full bg-[var(--navy-700)] px-2 py-0.5 font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-white">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#4ade80] sofi-pulso" /> En vivo
-            </span>
-          )}
-          <div className="border-t border-line px-3 py-2">
-            <p className="text-[13px] font-semibold leading-tight text-ink">{TEXTO_ESCENA[escena.tipo].titulo}</p>
-            <p className="mt-0.5 text-[12px] leading-tight text-muted">{TEXTO_ESCENA[escena.tipo].detalle}</p>
-          </div>
-        </div>
-      )}
-
       {/* Sofi es el lanzador */}
       <button
         ref={lanzador}
@@ -750,12 +721,33 @@ export function Sofi() {
         aria-expanded={abierto}
         aria-controls={ID_PANEL}
         aria-label={aviso && !abierto ? "Sofi, asistente virtual de Fedesoft (tiene un aviso)" : "Sofi, asistente virtual de Fedesoft"}
-        className={`group relative grid h-[76px] w-[76px] place-items-center rounded-full transition-transform active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${
+        data-sofi-escena={escena ?? undefined}
+        className={`group relative grid place-items-center active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${
           abierto ? "[@media(max-height:560px)]:hidden" : ""
         }`}
+        style={{
+          /* El avatar se transforma en la escena y vuelve: mismo botón, mismo nombre, mismo clic. */
+          width: escena ? 186 : 76,
+          height: escena ? 186 : 76,
+          borderRadius: escena ? "30%" : "50%",
+          transition: `width ${MORFO_LANZADOR}, height ${MORFO_LANZADOR}, border-radius ${MORFO_LANZADOR}, transform 150ms`,
+        }}
       >
-        <span aria-hidden className="absolute inset-0.5 rounded-full shadow-[var(--shadow-pop)]" />
-        <RobotSofi estado={estado} tamano={66} interactivo />
+        <span
+          aria-hidden
+          className="absolute inset-0.5 shadow-[var(--shadow-pop)]"
+          style={{ borderRadius: escena ? "30%" : "50%", transition: `border-radius ${MORFO_LANZADOR}` }}
+        />
+        <RobotSofi estado={estado} tamano={escena ? 176 : 66} interactivo escena={escena ?? undefined} />
+        {escena === "mando" && (
+          <span
+            aria-hidden
+            className="sofi-chip absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-[var(--navy-700)] px-2 py-0.5 font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-white"
+            style={{ animationDelay: "350ms" }}
+          >
+            <span className="sofi-pulso h-1.5 w-1.5 rounded-full bg-[#4ade80]" /> En vivo
+          </span>
+        )}
         {aviso && !abierto && (
           <span aria-hidden className="absolute right-1 top-1 grid h-4 w-4 place-items-center">
             <span className="sofi-ping absolute h-full w-full rounded-full bg-[var(--brand-azure)]" />

@@ -144,6 +144,9 @@ const MICROS: Micro[] = [
 
 const QUIETA = { x: 0, y: 0 };
 
+/** Duración y curva de la transformación del avatar (círculo ↔ escena). */
+const MORFO = "650ms cubic-bezier(0.34, 1.2, 0.64, 1)";
+
 const sinMovimiento = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 /**
@@ -286,10 +289,10 @@ export function RobotSofi({
       ref={ref}
       aria-hidden
       className={`relative shrink-0 ${interactivo ? "sofi-aparece" : ""}`}
-      style={{ width: tamano, height: tamano, perspective: 600 }}
+      style={{ width: tamano, height: tamano, perspective: 600, transition: `width ${MORFO}, height ${MORFO}` }}
     >
       {/* Anillo de estado: gira mientras piensa, late mientras habla o celebra */}
-      {redondo && (estado === "pensando" || estado === "hablando" || estado === "feliz") && (
+      {redondo && !escena && (estado === "pensando" || estado === "hablando" || estado === "feliz") && (
         <span
           className={`absolute -inset-[3px] rounded-full ${estado === "pensando" ? "sofi-gira" : "sofi-pulso"}`}
           style={{
@@ -315,36 +318,50 @@ export function RobotSofi({
           <div className={`h-full w-full ${detalle ? (gesto ?? "") : ""}`}>
             <div
               ref={marco}
-              className={`relative h-full w-full overflow-hidden ${redondo ? "rounded-full ring-2 ring-white/70" : "rounded-2xl"}`}
-              style={{ background: FONDO, filter: dormida ? "saturate(0.6) brightness(0.94)" : undefined }}
+              className={`relative h-full w-full overflow-hidden ${redondo ? "ring-2 ring-white/70" : ""}`}
+              style={{
+                background: FONDO,
+                filter: dormida ? "saturate(0.6) brightness(0.94)" : undefined,
+                /* El círculo del avatar se vuelve un recuadro redondeado cuando entra en escena. */
+                borderRadius: redondo ? (escena ? "30%" : "50%") : "1rem",
+                transition: `border-radius ${MORFO}`,
+              }}
             >
               {POSES.map((p) => {
                 const { src, cabeza, cara, frente } = ARTE[p];
                 const activa = p === pose;
-                /* Encuadre: en cabeza, la cara ocupa ~95% del círculo; en cuerpo, la imagen entera. */
-                const zoom = redondo ? 0.95 / cabeza.ancho : 1;
-                const estilo = redondo
-                  ? {
+                /* Encuadre: en cabeza, la cara ocupa ~95% del círculo; en cuerpo o en escena, la imagen
+                   entera. Siempre con las mismas propiedades, para que el paso de uno a otro se anime
+                   como una cámara que se aleja de la cara. */
+                const completo = !redondo || Boolean(escena);
+                const zoom = completo ? 1 : 0.95 / cabeza.ancho;
+                const estilo = completo
+                  ? { width: "100%", height: "100%", left: "0%", top: "0%" }
+                  : {
                       width: `${zoom * 100}%`,
                       height: `${zoom * 100}%`,
                       left: `calc(50% - ${cabeza.x * zoom * 100}%)`,
                       top: `calc(50% - ${cabeza.y * zoom * 100}%)`,
-                    }
-                  : { inset: 0 };
+                    };
                 /* La cara LED: 100 unidades de ancho, 44 de ellas son la distancia entre ojos. */
                 const ancho = (cara.d * 100) / 44;
                 const alto = ancho * 0.72;
                 return (
                   <div
                     key={p}
-                    className="absolute transition-opacity duration-300 ease-out"
-                    style={{ ...estilo, opacity: activa ? 1 : 0 }}
+                    className="absolute"
+                    style={{
+                      ...estilo,
+                      opacity: activa ? 1 : 0,
+                      transition: `opacity 300ms ease-out, left ${MORFO}, top ${MORFO}, width ${MORFO}, height ${MORFO}`,
+                    }}
                   >
                     <Image
                       src={src}
                       alt=""
                       fill
-                      sizes={`${Math.round(tamano * zoom * 2)}px`}
+                      /* El lanzador cambia de tamaño al entrar en escena: un solo tamaño de imagen, sin recargas. */
+                      sizes={interactivo ? "400px" : `${Math.round(tamano * zoom * 2)}px`}
                       className="object-cover"
                       priority={interactivo && p === "saluda"}
                     />
@@ -371,12 +388,24 @@ export function RobotSofi({
                         >
                           <CaraSofi expresion={expresion} mirada={mirada} />
                         </div>
-                        {escena && !redondo && <Escenario escena={escena} tamano={tamano} />}
+                        {escena && <Escenario escena={escena} tamano={tamano} />}
                       </>
                     )}
                   </div>
                 );
               })}
+              {/* En escena, los bordes se oscurecen hacia el navy de la marca: sin fondo blanco plano. */}
+              {redondo && (
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute inset-0"
+                  style={{
+                    background: "radial-gradient(ellipse at 50% 45%, transparent 52%, rgba(13, 35, 67, 0.42) 100%)",
+                    opacity: escena ? 1 : 0,
+                    transition: `opacity ${MORFO}`,
+                  }}
+                />
+              )}
             </div>
           </div>
         </div>

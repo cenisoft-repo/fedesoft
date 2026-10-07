@@ -391,15 +391,6 @@ h1, h2, h3, h4 {
   0%, 100% { opacity: 0; transform: scale(0.3) rotate(0deg); }
   50% { opacity: 1; transform: scale(1) rotate(45deg); }
 }
-/* La tarjeta de la escena nace del lanzador y vuelve a él. */
-@keyframes sofi-escena-entra {
-  from { opacity: 0; transform: translateY(16px) scale(0.6); }
-  to { opacity: 1; transform: none; }
-}
-@keyframes sofi-escena-sale {
-  from { opacity: 1; transform: none; }
-  to { opacity: 0; transform: translateY(16px) scale(0.6); }
-}
 /* Chispas de celebración: salen del centro y se apagan. */
 @keyframes sofi-chispa {
   0% { opacity: 0; transform: translate(-50%, -50%) scale(0.2) rotate(0deg); }
@@ -500,8 +491,6 @@ h1, h2, h3, h4 {
 .escena-esquina { opacity: 0.3; animation: escena-esquina 1.4s ease-in-out infinite; }
 .escena-anillo { animation: sofi-gira 3.2s linear infinite; }
 .escena-destello { opacity: 0; animation: escena-destello 1.8s ease-in-out infinite; }
-.sofi-escena-entra { transform-origin: 90% 100%; animation: sofi-escena-entra 0.42s cubic-bezier(0.3, 0.8, 0.4, 1.2) both; }
-.sofi-escena-sale { transform-origin: 90% 100%; animation: sofi-escena-sale 0.3s ease-in both; }
 .sofi-chispa { opacity: 0; animation: sofi-chispa 0.9s cubic-bezier(0.2, 0.7, 0.3, 1) both; }
 .sofi-estrella { clip-path: polygon(50% 0%, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0% 50%, 39% 39%); }
 .sofi-gira { animation: sofi-gira 1.1s linear infinite; }
