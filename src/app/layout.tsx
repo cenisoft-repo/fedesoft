@@ -3,6 +3,7 @@ import { Montserrat, Lato, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { DemoProvider } from "@/lib/demo";
 import { IdentidadProvider } from "@/lib/identidad";
+import { SesionApiProvider } from "@/lib/api/sesion";
 
 const montserrat = Montserrat({ subsets: ["latin"], weight: ["300", "400", "600", "700"], variable: "--font-montserrat", display: "swap" });
 const lato = Lato({ subsets: ["latin"], weight: ["400", "700"], variable: "--font-lato", display: "swap" });
@@ -20,7 +21,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="es" suppressHydrationWarning>
       <body className={`${montserrat.variable} ${lato.variable} ${jetbrains.variable}`}>
         <DemoProvider>
-          <IdentidadProvider>{children}</IdentidadProvider>
+          <IdentidadProvider>
+            <SesionApiProvider>{children}</SesionApiProvider>
+          </IdentidadProvider>
         </DemoProvider>
       </body>
     </html>

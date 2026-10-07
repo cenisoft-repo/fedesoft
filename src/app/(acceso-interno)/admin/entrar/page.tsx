@@ -8,6 +8,8 @@ import { useIdentidad } from "@/lib/identidad";
 import { OPERADORES_DEMO, nombreRolInterno } from "@/lib/mock/usuarios";
 import { Logo } from "@/components/Logo";
 import { Boton } from "@/components/ui/primitivos";
+import { MODO_API } from "@/lib/api/cliente";
+import { EntrarConsolaApi } from "./EntrarConsolaApi";
 
 /**
  * Acceso a la consola interna (ADR-005, ADR-008).
@@ -33,6 +35,10 @@ type Paso =
   | { id: "rechazo"; motivo: "sin-rol" | "bloqueada"; correo: string };
 
 export default function EntrarConsola() {
+  return MODO_API ? <EntrarConsolaApi /> : <EntrarConsolaSimulada />;
+}
+
+function EntrarConsolaSimulada() {
   const id = useIdentidad();
   const router = useRouter();
   const [paso, setPaso] = useState<Paso>({ id: "correo" });

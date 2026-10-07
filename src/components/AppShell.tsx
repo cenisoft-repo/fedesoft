@@ -11,6 +11,9 @@ import { Firma, Logo } from "./Logo";
 import { DemoSwitcher } from "./DemoSwitcher";
 import { useDemo, useTema } from "@/lib/demo";
 import { useIdentidad } from "@/lib/identidad";
+import { MODO_API } from "@/lib/api/cliente";
+import { tienePermiso, useSesionApi } from "@/lib/api/sesion";
+import { PuertaPortalApi } from "./api/PuertaPortalApi";
 import { Chip } from "./ui/primitivos";
 
 interface Entrada {
@@ -41,6 +44,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   const contacto = escenario.empresa.contactos.find((c) => c.id === escenario.contactoId);
+  /* En modo API, quién es y en qué empresa está salen de la sesión real. */
+  const { actual } = useSesionApi("portal");
+  const vista = MODO_API && actual.estado === "lista" ? actual.vista : null;
+  const nombreVisible = MODO_API ? (vista ? (vista.user.name ?? vista.user.email) : "…") : (contacto?.nombre ?? "");
+  const empresaVisible = MODO_API
+    ? (vista?.activeOrganization?.legalName ?? (vista ? "Sin empresa elegida" : ""))
+    : escenario.empresa.razonSocial;
+  const administraAccesos = MODO_API
+    ? tienePermiso(vista?.permissions ?? [], "user:read")
+    : escenario.rol === "gerente";
 
   const visibles = NAV.filter((e) => {
     if (e.soloGerente && escenario.rol !== "gerente") return false;
@@ -63,11 +76,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </Link>
 
           <div className="ml-auto flex items-center gap-1 sm:gap-2">
-            <div className="hidden items-center gap-2 sm:flex">
-              <Chip tono={estadoChip.tono}>
-                <ShieldCheck size={13} aria-hidden /> {estadoChip.texto}
-              </Chip>
-            </div>
+            {/* Sin empresa elegida no hay estado de afiliación que mostrar. */}
+            {(!MODO_API || vista?.activeOrganization) && (
+              <div className="hidden items-center gap-2 sm:flex">
+                <Chip tono={estadoChip.tono}>
+                  <ShieldCheck size={13} aria-hidden /> {estadoChip.texto}
+                </Chip>
+              </div>
+            )}
             <button
               type="button"
               className="rounded-lg p-2 text-muted transition hover:bg-bg hover:text-ink"
@@ -83,11 +99,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             >
               {tema === "oscuro" ? <Sun size={18} aria-hidden /> : <Moon size={18} aria-hidden />}
             </button>
-            <MenuUsuario
-              nombre={contacto?.nombre ?? ""}
-              empresa={escenario.empresa.razonSocial}
-              esGerente={escenario.rol === "gerente"}
-            />
+            <MenuUsuario nombre={nombreVisible} empresa={empresaVisible} esGerente={administraAccesos} />
           </div>
         </div>
 
@@ -124,7 +136,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </nav>
       </header>
 
-      <main className="mx-auto max-w-[1200px] px-4 pb-24 pt-8 sm:px-6">{children}</main>
+      {MODO_API && (
+        <p className="border-b border-line bg-info-bg px-4 py-2 text-center text-[12.5px] font-semibold text-info">
+          Modo API · tu identidad, empresa y accesos son reales; el resto de los datos sigue simulado.
+        </p>
+      )}
+      <main className="mx-auto max-w-[1200px] px-4 pb-24 pt-8 sm:px-6">
+        {MODO_API ? <PuertaPortalApi>{children}</PuertaPortalApi> : children}
+      </main>
 
       <footer className="border-t border-line">
         <div className="mx-auto flex max-w-[1200px] flex-wrap items-center gap-x-5 gap-y-3 px-4 py-7 text-[13px] text-muted sm:px-6">
@@ -135,7 +154,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </footer>
 
-      <DemoSwitcher />
+      {/* Con identidad real, el escenario lo decide la sesión, no un selector. */}
+      {!MODO_API && <DemoSwitcher />}
     </div>
   );
 }
@@ -149,6 +169,7 @@ function MenuUsuario({ nombre, empresa, esGerente }: { nombre: string; empresa: 
   const ref = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const { cerrarPortal } = useIdentidad();
+  const { salir } = useSesionApi("portal");
 
   useEffect(() => {
     if (!abierto) return;
@@ -206,6 +227,14 @@ function MenuUsuario({ nombre, empresa, esGerente }: { nombre: string; empresa: 
             <button
               type="button"
               onClick={() => {
+                if (MODO_API) {
+                  /* Cierra en el API y, si existe, también en el proveedor:
+                     en un equipo compartido, el siguiente no entra sin clave. */
+                  void salir("portal")
+                    .catch(() => null)
+                    .then((destino) => window.location.assign(destino ?? "/entrar"));
+                  return;
+                }
                 cerrarPortal();
                 router.push("/entrar");
               }}

@@ -10,6 +10,8 @@ import { iniciales, useIdentidad } from "@/lib/identidad";
 import { nombreRolInterno } from "@/lib/mock/usuarios";
 import { Chip } from "./ui/primitivos";
 import { SOLICITUDES } from "@/lib/mock/admin";
+import { MODO_API } from "@/lib/api/cliente";
+import { tienePermiso, useSesionApi } from "@/lib/api/sesion";
 
 /**
  * La consola es otra superficie, no otra pestaña del portal: banda oscura,
@@ -29,28 +31,55 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { sesionConsola, porId, cerrarConsola, recordarDestinoConsola } = useIdentidad();
-  /* La identidad de quien opera sale de la sesión con segundo factor. */
-  const operador = sesionConsola ? porId(sesionConsola) : undefined;
+  const { actual, salir } = useSesionApi("consola");
+
+  /* Quien opera sale de la sesión con segundo factor: la real del API o la
+     simulada de la demostración. Mismo encabezado para ambas. */
+  const simulado = !MODO_API && sesionConsola ? porId(sesionConsola) : undefined;
+  const vista = MODO_API && actual.estado === "lista" ? actual.vista : null;
+  const operador = vista
+    ? {
+        nombre: vista.user.name ?? vista.user.email,
+        correo: vista.user.email,
+        rolesTexto: (vista.internalRoles ?? []).map((r) => r.name).join(" · ") || "Equipo interno",
+        esSuperAdmin: tienePermiso(vista.permissions, "role:assign"),
+      }
+    : simulado
+      ? {
+          nombre: simulado.nombre ?? simulado.correo,
+          correo: simulado.correo,
+          rolesTexto: simulado.rolesInternos.map(nombreRolInterno).join(" · "),
+          esSuperAdmin: simulado.rolesInternos.includes("super-admin"),
+        }
+      : null;
+  const sinSesion = MODO_API ? actual.estado === "anonimo" : !simulado;
 
   useEffect(() => {
-    if (!operador) {
-      recordarDestinoConsola(pathname ?? "/admin");
-      router.replace("/admin/entrar");
+    if (!sinSesion) return;
+    const destino = pathname ?? "/admin";
+    if (MODO_API) {
+      router.replace(`/admin/entrar?destino=${encodeURIComponent(destino)}`);
+      return;
     }
-  }, [operador, pathname, recordarDestinoConsola, router]);
+    recordarDestinoConsola(destino);
+    router.replace("/admin/entrar");
+  }, [sinSesion, pathname, recordarDestinoConsola, router]);
 
   if (!operador) {
     return (
       <div className="grid min-h-dvh place-items-center bg-bg text-[14px] text-muted" role="status">
         <span className="inline-flex items-center gap-2">
-          <Loader2 size={16} className="animate-spin" aria-hidden /> Verificando la sesión de consola…
+          {MODO_API && actual.estado === "error" ? (
+            actual.mensaje
+          ) : (
+            <><Loader2 size={16} className="animate-spin" aria-hidden /> Verificando la sesión de consola…</>
+          )}
         </span>
       </div>
     );
   }
 
-  const rolesTexto = operador.rolesInternos.map(nombreRolInterno).join(" · ");
-  const esSuperAdmin = operador.rolesInternos.includes("super-admin");
+  const { rolesTexto, esSuperAdmin } = operador;
 
   const pendientes = SOLICITUDES.filter((s) => s.estado === "nueva" || s.estado === "en-revision").length;
 
@@ -86,7 +115,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                 {tema === "oscuro" ? <Sun size={18} aria-hidden /> : <Moon size={18} aria-hidden />}
               </button>
               <div className="flex items-center gap-2.5 border-l border-white/20 pl-3">
-                <div className="grid h-8 w-8 place-items-center rounded-full bg-azure text-[12px] font-bold text-white">
+                <div className="grid h-8 w-8 place-items-center rounded-full bg-[var(--navy-700)] text-[12px] font-bold text-white ring-1 ring-white/40">
                   {iniciales(operador.nombre, operador.correo)}
                 </div>
                 <div className="hidden leading-tight md:block">
@@ -96,6 +125,12 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                 <button
                   type="button"
                   onClick={() => {
+                    if (MODO_API) {
+                      void salir("consola")
+                        .catch(() => null)
+                        .then((destino) => window.location.assign(destino ?? "/admin/entrar"));
+                      return;
+                    }
                     cerrarConsola();
                     router.push("/admin/entrar");
                   }}

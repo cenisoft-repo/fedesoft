@@ -1,8 +1,8 @@
 # Portal Único del Afiliado — prototipo visual
 
-Prototipo navegable de alta fidelidad del portal de afiliados de **Fedesoft**, construido para la presentación ejecutiva. **No tiene backend**: todos los datos son simulados y viven en `src/lib/mock/`.
+Prototipo navegable de alta fidelidad del portal de afiliados de **Fedesoft**, construido para la presentación ejecutiva. **Por defecto no tiene backend**: todos los datos son simulados y viven en `src/lib/mock/`.
 
-> ⚠️ Es un prototipo visual sin sistema detrás. Ninguna pantalla guarda información ni se conecta a un servicio real.
+> ⚠️ Sin configuración es un prototipo visual sin sistema detrás: ninguna pantalla guarda información ni se conecta a un servicio real. La única excepción es el **modo API** (abajo), que solo se activa a propósito.
 
 ## Ejecutar
 
@@ -12,6 +12,34 @@ pnpm dev          # http://localhost:3000
 ```
 
 Otros comandos: `pnpm build` (compilación de producción) · `pnpm typecheck`.
+
+## Modo API (opcional): identidad real
+
+Con `NEXT_PUBLIC_API_URL` definida **al compilar**, la identidad deja de ser simulada y usa el API del repo rector (`cenisoft-repo/platafor_fedesoft_v2026`, ADR-008):
+
+| Qué | En modo API |
+|---|---|
+| `/entrar` y `/admin/entrar` | Login OIDC real (Keycloak en local); la consola exige segundo factor |
+| Encabezado del portal y de la consola | Usuario, empresa y roles de la sesión real; cierre de sesión en el API y en el proveedor |
+| Invitaciones pendientes | Se aceptan o rechazan al entrar |
+| `/empresa/contactos` | Invitar, cambiar rol, desactivar y reactivar contra el API; si el servidor responde 403, la pantalla lo explica |
+| `/admin/usuarios` | Búsqueda, ficha, roles internos, bloqueo con motivo y cierre de sesiones contra el API |
+| Todo lo demás | Sigue simulado. El escenario de demostración se elige según el rol y el segmento reales |
+
+Para correrlo en local (el API redirige al portal en el puerto 3001):
+
+```bash
+# En platafor_fedesoft_v2026: Keycloak, base de datos y API
+pnpm infra:up && pnpm db:migrate && pnpm db:seed
+#   en apps/api/.env: PORTAL_URL y CONSOLE_URL = http://localhost:3001
+pnpm --filter @fedesoft/api build && pnpm --filter @fedesoft/api start
+
+# Aquí
+NEXT_PUBLIC_API_URL=http://localhost:3000 pnpm build
+pnpm start -p 3001                # http://localhost:3001/entrar
+```
+
+Usuarios de prueba y secreto TOTP: `infra/docker/keycloak/README.md` del repo rector. La sesión vive en una cookie HttpOnly del API que este código nunca lee; el prototipo solo maneja el token CSRF que el API entrega. El despliegue de Vercel se compila **sin** esa variable y sigue siendo 100 % simulado.
 
 ## Modo demostración
 
@@ -39,7 +67,10 @@ También hay conmutador de tema claro/oscuro en el encabezado.
 | `/directorio` | Buscador con las tres pestañas actuales e insignia de verificado derivada del estado real |
 | `/cuenta-estrategica` | Panel consolidado para empresas grandes, con gestora de cuenta |
 | `/oportunidades` | Convocatorias Cenisoft filtradas por el perfil de la empresa |
+| `/entrar` · `/entrar/recuperar` | Acceso con correo y proveedor de identidad, invitaciones y rechazos explicados |
+| `/empresa/contactos` | **Contactos y accesos**: el gerente invita, cambia roles, desactiva y reactiva |
 | `/admin` | Un vistazo de la **ficha 360** que ve el equipo interno de Fedesoft |
+| `/admin/entrar` · `/admin/usuarios` | Consola con segundo factor obligatorio; usuarios, roles internos, bloqueo y sesiones |
 
 ## Decisiones de construcción
 

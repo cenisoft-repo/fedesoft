@@ -11,6 +11,8 @@ import { useIdentidad } from "@/lib/identidad";
 import { EMPRESAS_POR_NIT, nombreRolEmpresa } from "@/lib/mock/usuarios";
 import { fecha, HOY } from "@/lib/format";
 import { Boton } from "@/components/ui/primitivos";
+import { MODO_API } from "@/lib/api/cliente";
+import { EntrarApi } from "./EntrarApi";
 
 /**
  * Puerta única del afiliado (P-01).
@@ -41,6 +43,11 @@ const DEMO = [
 const CORREO_VALIDO = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 export default function Entrar() {
+  /* Constante de compilación: con API real, el acceso es el login OIDC. */
+  return MODO_API ? <EntrarApi /> : <EntrarSimulado />;
+}
+
+function EntrarSimulado() {
   const { cambiarEscenario } = useDemo();
   const id = useIdentidad();
   const router = useRouter();

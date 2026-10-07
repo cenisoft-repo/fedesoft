@@ -9,6 +9,12 @@ Prototipo navegable de alta fidelidad para la **presentación ejecutiva a Presid
 
 **No tiene backend.** Todos los datos son simulados y viven en `src/lib/mock/`. Ninguna pantalla guarda información ni llama a un servicio real. Si algo parece necesitar API, se resuelve con datos simulados.
 
+**Única excepción, opcional: el modo API de identidad.** Solo si se compila con `NEXT_PUBLIC_API_URL`, el login, la sesión, Contactos y accesos y los Usuarios de la consola usan el API real del repo rector (`src/lib/api/`, componentes `*Api.tsx`). Sin esa variable —como en Vercel— todo sigue simulado. Reglas del modo API:
+- Toda pantalla nueva funciona primero en modo simulado; el modo API es una segunda implementación, nunca un reemplazo.
+- La autorización la decide el servidor: si responde 403, la pantalla lo explica; no se decide en el navegador.
+- La cookie de sesión es HttpOnly y del API: el código nunca la lee. Solo se maneja el token CSRF que el API entrega en `GET /auth/session`.
+- Nada de la URL se pinta tal cual: los motivos de error eligen textos predefinidos y los destinos de regreso se limitan a rutas propias.
+
 El repositorio rector del proyecto —plan de ejecución, catálogo de requerimientos, arquitectura de información, consola de administración y ADRs— es `cenisoft-repo/platafor_fedesoft_v2026`.
 
 ## Identidad visual — manual de marca oficial
@@ -38,6 +44,8 @@ src/components/landing/  Campo generativo, revelado por scroll, escala
 src/components/ui/    Primitivos: Boton, Card, Chip, PageHeader, Vacio
 src/lib/demo.tsx      Contexto de escenarios de demostración
 src/lib/mock/         Datos simulados con contenido real de Fedesoft
+src/lib/identidad.tsx Identidad simulada (reglas de ADR-008, en memoria)
+src/lib/api/          Cliente y sesión del API real (solo en modo API)
 ```
 
 ## Reglas de este prototipo

@@ -10,6 +10,8 @@ import {
 } from "@/lib/mock/usuarios";
 import { Boton, Card, Chip, Eyebrow } from "@/components/ui/primitivos";
 import { Aviso, Dialogo } from "@/components/ui/Dialogo";
+import { MODO_API } from "@/lib/api/cliente";
+import { UsuariosApi } from "./UsuariosApi";
 
 /**
  * Usuarios y roles de la consola (dominio Identity, docs/01-consola-administracion.md).
@@ -30,6 +32,10 @@ const FILTROS: { id: Filtro; etiqueta: string }[] = [
 ];
 
 export default function UsuariosConsola() {
+  return MODO_API ? <UsuariosApi /> : <UsuariosSimulado />;
+}
+
+function UsuariosSimulado() {
   const id = useIdentidad();
   const operador = id.sesionConsola ? id.porId(id.sesionConsola) : undefined;
   const esSuperAdmin = operador?.rolesInternos.includes("super-admin") ?? false;

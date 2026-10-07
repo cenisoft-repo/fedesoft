@@ -9,6 +9,8 @@ import { ROLES_EMPRESA, nombreRolEmpresa, type RolEmpresa } from "@/lib/mock/usu
 import { fecha, HOY } from "@/lib/format";
 import { Boton, Card, Chip, Eyebrow, PageHeader } from "@/components/ui/primitivos";
 import { Aviso, Dialogo } from "@/components/ui/Dialogo";
+import { MODO_API } from "@/lib/api/cliente";
+import { ContactosApi } from "./ContactosApi";
 
 /**
  * Contactos y accesos (P-07, RF-IDE-006, RF-AFI-005).
@@ -35,6 +37,10 @@ type Accion =
   | { tipo: "desactivar"; fila: Fila };
 
 export default function Contactos() {
+  return MODO_API ? <ContactosApi /> : <ContactosSimulado />;
+}
+
+function ContactosSimulado() {
   const { escenario } = useDemo();
   const id = useIdentidad();
   const [accion, setAccion] = useState<Accion | null>(null);
